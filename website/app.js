@@ -138,7 +138,7 @@ function renderIndividual(manikins) {
     manikins.forEach(m => {
         const age = ageCss(m);
         const loc = m.locationObj;
-        const locStr = loc ? `${loc.building} / ${loc.room}` : null;
+        const locStr = loc ? loc.building : null;
 
         const card = document.createElement('div');
         card.className = `product-card age-accent-${age}`;
@@ -213,7 +213,7 @@ function renderGrouped(manikins) {
             chip.className = 'unit-chip';
             chip.innerHTML = `<span class="unit-chip-dot ${cls}"></span>
                               <span class="unit-chip-sap">${esc(u.sap_id)}</span>
-                              ${loc ? `<span class="unit-chip-loc">${esc(loc.room)}</span>` : ''}`;
+                              ${loc ? `<span class="unit-chip-loc">${esc(loc.building)}</span>` : ''}`;
             chip.addEventListener('click', () => openDrawer(u.sap_id));
             chipsContainer.appendChild(chip);
         });
@@ -250,7 +250,7 @@ function openDrawer(sapId) {
         ${m.asset_code ? `<div class="drawer-row"><span class="drawer-key">Asset Code</span><span class="drawer-val">${esc(m.asset_code)}</span></div>` : ''}
         <div class="drawer-row">
           <span class="drawer-key">ที่ตั้ง</span>
-          <span class="drawer-val">${loc ? `📍 ${esc(loc.building)} / ${esc(loc.room)}` : '— ไม่ระบุ'}</span>
+          <span class="drawer-val">${loc ? `📍 ${esc(loc.building)}` : '— ไม่ระบุ'}</span>
         </div>
       </div>
       ${caps.length ? `
@@ -404,10 +404,10 @@ function subscribeRealtime() {
                 updateStats(allManikins);
                 render();
 
-                // Update "LIVE" timestamp
+                // Update timestamp (without LIVE prefix to hide monitoring intent)
                 const now = new Date();
                 document.getElementById('last-updated').textContent =
-                    `LIVE · ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+                    `อัปเดต ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} น.`;
             }
         )
         .subscribe((status) => {
