@@ -353,6 +353,64 @@ window.addEventListener('scroll', () => {
     document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
 });
 
+/* -------- Realtime -------- */
+// Supabase anon key is safe here — RLS blocks access to inactive/private data.
+const SUPABASE_RT_URL = 'https://ifogcvymwhcfbfjzhwsl.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_DZyIDHVZ-kfD1o3baz0qmw_tTyRCJG8';
+
+function subscribeRealtime() {
+    const supabase = window.supabase.createClient(SUPABASE_RT_URL, SUPABASE_ANON);
+
+    supabase
+        .channel('manikins-live')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'manikins' },
+            (payload) => {
+                const updated = payload.new;
+                if (!updated || !updated.sap_id) return;
+
+                // Patch the in-memory record (surgical update, no full refetch)
+                const idx = allManikins.findIndex(m => m.sap_id === updated.sap_id);
+
+                if (payload.event === 'DELETE' || updated.is_active === false || updated.needs_review === true) {
+                    // Remove from list
+                    if (idx !== -1) allManikins.splice(idx, 1);
+                } else if (idx !== -1) {
+                    // Update existing
+                    allManikins[idx] = {
+                        ...allManikins[idx],
+                        status: updated.status,
+                        asset_name: updated.asset_name,
+                        manikin_type: updated.manikin_type,
+                        location_id: updated.location_id,
+                        locationObj: updated.location_id ? locationMap[updated.location_id] : null,
+                    };
+                } else if (updated.is_active && !updated.needs_review) {
+                    // New active manikin — add to list
+                    allManikins.push({
+                        ...updated,
+                        locationObj: updated.location_id ? locationMap[updated.location_id] : null,
+                    });
+                }
+
+                // Re-render and update stats
+                updateStats(allManikins);
+                render();
+
+                // Update "LIVE" timestamp
+                const now = new Date();
+                document.getElementById('last-updated').textContent =
+                    `LIVE · ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+            }
+        )
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('[Realtime] Connected — live updates active');
+            }
+        });
+}
+
 /* -------- Init -------- */
 
 async function init() {
@@ -372,6 +430,10 @@ async function init() {
             document.getElementById('last-updated').textContent =
                 `อัปเดต ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
         }
+
+        // Subscribe to live updates after initial render
+        subscribeRealtime();
+
     } catch (err) {
         document.getElementById('loading').innerHTML = `<div class="load-error">❌ โหลดข้อมูลไม่สำเร็จ: ${err.message}</div>`;
         console.error('Init error:', err);
@@ -379,3 +441,4 @@ async function init() {
 }
 
 init();
+
