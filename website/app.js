@@ -201,18 +201,22 @@ function renderGrouped(manikins) {
           </div>
         </div>
         <div class="group-card-body">
-          <div class="unit-chips">
-            ${units.map(u => {
+          <div class="unit-chips"></div>
+        </div>`;
+
+        // Build unit chips via DOM API — avoids inline onclick handlers (CSP-friendly)
+        const chipsContainer = card.querySelector('.unit-chips');
+        units.forEach(u => {
             const cls = STATUS_CLASS[u.status] || 'other';
             const loc = u.locationObj;
-            return `<div class="unit-chip" onclick="openDrawer('${esc(u.sap_id)}')">
-                  <span class="unit-chip-dot ${cls}"></span>
-                  <span class="unit-chip-sap">${esc(u.sap_id)}</span>
-                  ${loc ? `<span class="unit-chip-loc">${esc(loc.room)}</span>` : ''}
-                </div>`;
-        }).join('')}
-          </div>
-        </div>`;
+            const chip = document.createElement('div');
+            chip.className = 'unit-chip';
+            chip.innerHTML = `<span class="unit-chip-dot ${cls}"></span>
+                              <span class="unit-chip-sap">${esc(u.sap_id)}</span>
+                              ${loc ? `<span class="unit-chip-loc">${esc(loc.room)}</span>` : ''}`;
+            chip.addEventListener('click', () => openDrawer(u.sap_id));
+            chipsContainer.appendChild(chip);
+        });
 
         card.querySelector('.group-card-header').addEventListener('click', () => card.classList.toggle('expanded'));
         grid.appendChild(card);
