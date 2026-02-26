@@ -1,0 +1,15 @@
+name             = "simset-showroom-proxy"
+main             = "worker.js"
+compatibility_date = "2025-02-26"
+
+# ── Secrets (set via CLI — never commit to source) ───────────────────────────
+# Run after deploy:
+#   wrangler secret put SUPABASE_URL
+#     → paste: https://ifogcvymwhcfbfjzhwsl.supabase.co
+#   wrangler secret put SUPABASE_KEY
+#     → paste: <your anon or service_role key>
+
+# ── Routes (optional — bind to a custom domain) ──────────────────────────────
+# [[routes]]
+# pattern = "api.yourdomain.com/*"
+# zone_name = "yourdomain.com"

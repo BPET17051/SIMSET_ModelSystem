@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SiMSET Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="admin.css" />
+</head>
+
+<body>
+    <div class="dashboard-layout">
+
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="sidebar-title">SiMSET</div>
+                    <div class="sidebar-sub">Admin Panel</div>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-group-label">ระบบหลัก</div>
+                <div class="nav-item active" data-tab="dashboard">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    Dashboard
+                </div>
+                <div class="nav-item" data-tab="review">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    รออนุมัติ
+                    <span class="nav-badge" id="review-badge">...</span>
+                </div>
+                <div class="nav-item" data-tab="manikins">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+                            stroke="currentColor" stroke-width="2" />
+                        <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    คลังหุ่นทั้งหมด
+                </div>
+                <div class="nav-group-label">ข้อมูลอ้างอิง</div>
+                <div class="nav-item" data-tab="locations">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    สถานที่ / ห้อง
+                </div>
+                <div class="nav-group-label">วิเคราะห์</div>
+                <div class="nav-item" data-tab="reports">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                        <line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                        <line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+                    รายงานและสถิติ
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">AD</div>
+                    <div class="user-email" id="user-email">admin</div>
+                </div>
+                <button class="logout-btn" id="logout-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    ออกจากระบบ
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="topbar">
+                <div>
+                    <div class="topbar-title" id="topbar-title">Dashboard</div>
+                    <div class="topbar-sub" id="topbar-sub">ภาพรวมระบบ SiMSET</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span class="live-text">LIVE</span>
+                    </div>
+                    <span class="last-sync" id="last-sync">โหลดข้อมูล...</span>
+                </div>
+            </header>
+
+            <div class="page-content">
+
+                <!-- ======================== TAB 1: DASHBOARD ======================== -->
+                <div class="tab-pane active" id="tab-dashboard">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="stat-icon" style="background:rgba(37,117,184,0.15);color:#4a9fd4">🤖</div>
+                            </div>
+                            <div class="stat-val" id="d-total">—</div>
+                            <div class="stat-label">หุ่นทั้งหมดในคลัง</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="stat-icon" style="background:rgba(34,197,94,0.12);color:#22c55e">✓</div>
+                            </div>
+                            <div class="stat-val" style="color:#22c55e" id="d-ready">—</div>
+                            <div class="stat-label">พร้อมใช้งาน</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="stat-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b">⚙</div>
+                            </div>
+                            <div class="stat-val" style="color:#f59e0b" id="d-maintenance">—</div>
+                            <div class="stat-label">รอซ่อม / ซ่อมอยู่</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="stat-icon" style="background:rgba(239,68,68,0.12);color:#ef4444">✕</div>
+                            </div>
+                            <div class="stat-val" style="color:#ef4444" id="d-broken">—</div>
+                            <div class="stat-label">ใช้งานไม่ได้</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="stat-icon" style="background:rgba(167,139,250,0.12);color:#a78bfa">⏳</div>
+                            </div>
+                            <div class="stat-val" style="color:#a78bfa" id="d-review">—</div>
+                            <div class="stat-label">รออนุมัติ</div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">สัดส่วนสถานะหุ่นทั้งหมด</div>
+                            <div class="section-sub">เฉพาะหุ่นที่ Active อยู่</div>
+                        </div>
+                    </div>
+                    <div class="report-grid" style="margin-bottom:24px">
+                        <div class="report-card" id="status-bar-chart">
+                            <div class="report-card-title">สถานะตามจำนวน</div>
+                            <div id="status-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span>โหลด...</div>
+                            </div>
+                        </div>
+                        <div class="report-card" id="age-bar-chart">
+                            <div class="report-card-title">สัดส่วนช่วงวัย</div>
+                            <div id="age-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span>โหลด...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <div class="section-title">หุ่นรออนุมัติล่าสุด</div>
+                        <button class="btn btn-primary btn-sm" onclick="switchTab('review')">ดูทั้งหมด →</button>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>SAP ID</th>
+                                    <th>ชื่อหุ่น</th>
+                                    <th>ช่วงวัย</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-review-tbody">
+                                <tr>
+                                    <td colspan="4" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 2: REVIEW QUEUE ======================== -->
+                <div class="tab-pane" id="tab-review">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">รายการรออนุมัติ</div>
+                            <div class="section-sub">หุ่นที่ดึงมาจาก Google Sheet
+                                รอตรวจสอบและอนุมัติก่อนแสดงบนเว็บสาธารณะ</div>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-success btn-sm" id="btn-approve-all">✓ อนุมัติทั้งหมดที่แสดง</button>
+                            <button class="btn btn-ghost btn-sm" onclick="loadReviewQueue()">↻ รีเฟรช</button>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                <input class="table-search" id="review-search" placeholder="ค้นหาชื่อหุ่น, SAP ID..." />
+                            </div>
+                        </div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="review-select-all" /></th>
+                                    <th>SAP ID</th>
+                                    <th>ชื่อหุ่น</th>
+                                    <th>ช่วงวัย</th>
+                                    <th>Asset Code</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="review-tbody">
+                                <tr>
+                                    <td colspan="6" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="review-pagination"></div>
+                    </div>
+
+                    <!-- Floating Bulk Action Bar -->
+                    <div class="bulk-action-bar hidden" id="bulk-action-bar">
+                        <div class="bulk-action-info">
+                            <div class="bulk-action-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 11 12 14 22 4" />
+                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                                </svg>
+                            </div>
+                            <span>เลือก <strong id="bulk-count">0</strong> รายการ</span>
+                        </div>
+                        <div class="bulk-action-btns">
+                            <button class="btn btn-success" id="btn-bulk-approve">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                อนุมัติที่เลือก
+                            </button>
+                            <button class="btn btn-danger" id="btn-bulk-reject">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                ปฏิเสธที่เลือก
+                            </button>
+                            <button class="btn btn-ghost" id="btn-bulk-clear">
+                                ล้างการเลือก
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 3: MANIKINS CRUD ======================== -->
+                <div class="tab-pane" id="tab-manikins">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">คลังหุ่นจำลอง</div>
+                            <div class="section-sub">แก้ไขสถานะ, ที่ตั้ง, และหมายเหตุ</div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="loadManikins()">↻ รีเฟรช</button>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                <input class="table-search" id="manikin-search"
+                                    placeholder="ค้นหาชื่อหุ่น, SAP ID..." />
+                            </div>
+                            <select class="status-select" id="manikin-status-filter">
+                                <option value="">ทุกสถานะ</option>
+                                <option value="ready">พร้อมใช้งาน</option>
+                                <option value="in_use">ถูกยืม</option>
+                                <option value="maintenance">รอซ่อม (ใช้ได้)</option>
+                                <option value="broken">รอซ่อม (เสีย)</option>
+                                <option value="missing">รอจำหน่าย</option>
+                            </select>
+                        </div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>SAP ID</th>
+                                    <th>ชื่อหุ่น</th>
+                                    <th>ช่วงวัย</th>
+                                    <th>สถานะ</th>
+                                    <th>ที่ตั้ง</th>
+                                    <th>หมายเหตุ</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manikin-tbody">
+                                <tr>
+                                    <td colspan="8" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="manikin-pagination"></div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 4: LOCATIONS ======================== -->
+                <div class="tab-pane" id="tab-locations">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">จัดการสถานที่</div>
+                            <div class="section-sub">อาคารและห้องที่เก็บหุ่นจำลอง</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-add-location">+ เพิ่มสถานที่</button>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>อาคาร</th>
+                                    <th>ห้อง</th>
+                                    <th>หุ่นที่มี</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="locations-tbody">
+                                <tr>
+                                    <td colspan="5" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 5: REPORTS ======================== -->
+                <div class="tab-pane" id="tab-reports">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">รายงานและสถิติ</div>
+                            <div class="section-sub">สรุปข้อมูลคลังหุ่นจำลอง</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-export">⬇ Export CSV</button>
+                    </div>
+                    <div class="report-grid" id="report-grid">
+                        <div class="report-card">
+                            <div class="report-card-title">สถานะตามจำนวน</div>
+                            <div id="rpt-status-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span></div>
+                            </div>
+                        </div>
+                        <div class="report-card">
+                            <div class="report-card-title">แบ่งตามช่วงวัย</div>
+                            <div id="rpt-age-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span></div>
+                            </div>
+                        </div>
+                        <div class="report-card" style="grid-column:span 2">
+                            <div class="report-card-title">รุ่นหุ่นที่มีมากที่สุด (Top 10)</div>
+                            <div id="rpt-model-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end page-content -->
+        </div><!-- end main-content -->
+    </div><!-- end layout -->
+
+    <!-- Modal: Edit Manikin (Premium) -->
+    <div class="modal-overlay hidden" id="edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#4a9fd4" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">แก้ไขข้อมูลหุ่น</div>
+                    <div class="modal-desc">เปลี่ยนสถานะ สถานที่ หรือเพิ่มหมายเหตุ</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('edit-modal')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="edit-sap-id" />
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">SAP ID (อ่านอย่างเดียว)</label>
+                    <input class="field-input" id="edit-display-sap" disabled />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">สถานะ</label>
+                    <select class="field-select" id="edit-status">
+                        <option value="ready">ใช้งานได้ปกติ</option>
+                        <option value="in_use">ถูกยืม</option>
+                        <option value="maintenance">รอซ่อม (ใช้งานได้)</option>
+                        <option value="broken">รอซ่อม (ใช้งานไม่ได้)</option>
+                        <option value="missing">รอจำหน่าย</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">สถานที่</label>
+                    <select class="field-select" id="edit-location">
+                        <option value="">— ยังไม่ได้ระบุ —</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">หมายเหตุ</label>
+                    <textarea class="field-textarea" id="edit-notes" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ช่วงวัย</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="ADULT" />
+                            <span class="radio-label">🟠 ผู้ใหญ่</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="CHILD" />
+                            <span class="radio-label">🟡 เด็ก</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="INFANT" />
+                            <span class="radio-label">🔵 ทารก</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="" />
+                            <span class="radio-label">— ไม่ระบุ</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ฟังก์ชัน / ความสามารถ</label>
+                    <div class="checkbox-group" id="edit-capabilities-wrap">
+                        <span style="color:var(--text-dim);font-size:0.8rem">กำลังโหลด...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="edit-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="edit-save">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add/Edit Location (Premium) -->
+    <div class="modal-overlay hidden" id="location-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon add" id="loc-modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#4a9fd4" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        <polyline points="9,22 9,12 15,12 15,22" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title" id="loc-modal-title">เพิ่มสถานที่</div>
+                    <div class="modal-desc">ระบุอาคารและห้องที่เก็บหุ่นจำลอง</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('location-modal')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="loc-edit-id" />
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">อาคาร</label>
+                    <input class="field-input" id="loc-building" placeholder="เช่น อาคาร 1, SiMSET Building" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ห้อง</label>
+                    <input class="field-input" id="loc-room" placeholder="เช่น SIM Lab 1, ห้องเก็บ A" />
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="loc-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="loc-save">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog (Custom - replaces native confirm()) -->
+    <div class="confirm-overlay hidden" id="confirm-dialog">
+        <div class="confirm-box">
+            <div class="confirm-icon danger" id="confirm-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+            </div>
+            <div class="confirm-title" id="confirm-title">ยืนยันการดำเนินการ</div>
+            <div class="confirm-msg" id="confirm-msg">คุณแน่ใจหรือไม่?</div>
+            <div class="confirm-actions">
+                <button class="btn btn-ghost" id="confirm-cancel">ยกเลิก</button>
+                <button class="btn btn-danger" id="confirm-ok">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toast-icon"></span>
+        <span id="toast-msg"></span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>
