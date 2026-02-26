@@ -359,6 +359,14 @@ window.addEventListener('scroll', () => {
     document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
 });
 
+// Auto-refresh when tab becomes visible again
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        console.log('[App] Tab visible, fetching latest data...');
+        reloadData();
+    }
+});
+
 /* -------- Realtime -------- */
 // Supabase anon key is safe here — RLS blocks access to inactive/private data.
 const SUPABASE_RT_URL = 'https://ifogcvymwhcfbfjzhwsl.supabase.co';
@@ -417,9 +425,9 @@ function subscribeRealtime() {
         });
 }
 
-/* -------- Init -------- */
+/* -------- Init & Data Load -------- */
 
-async function init() {
+async function reloadData() {
     try {
         allManikins = await fetchAll();
         updateStats(allManikins);
@@ -430,20 +438,22 @@ async function init() {
             const meta = await loadJson('meta.json');
             const ts = new Date(meta.last_updated);
             document.getElementById('last-updated').textContent =
-                `ข้อมูล ณ ${ts.toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}`;
+                `ข้อมูล ณ ${ts.toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
         } catch {
-            const now = new Date();
-            document.getElementById('last-updated').textContent =
-                `อัปเดต ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+            document.getElementById('last-updated').textContent = 'ข้อมูล ณ ตอนนี้';
         }
-
-        // Subscribe to live updates after initial render
-        subscribeRealtime();
-
     } catch (err) {
+        document.getElementById('loading').style.display = 'block';
         document.getElementById('loading').innerHTML = `<div class="load-error">❌ โหลดข้อมูลไม่สำเร็จ: ${err.message}</div>`;
-        console.error('Init error:', err);
+        console.error('Data load error:', err);
     }
+}
+
+async function init() {
+    document.getElementById('loading').style.display = 'flex';
+    await reloadData();
+    // Subscribe to live updates after initial render
+    subscribeRealtime();
 }
 
 init();
