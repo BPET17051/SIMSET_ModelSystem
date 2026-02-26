@@ -38,6 +38,8 @@ let searchQuery = '';
 
 /* -------- Helpers -------- */
 
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 function detectAge(m) {
     if (m.manikin_type) return m.manikin_type; // Trust DB first
     const n = (m.asset_name || '').toLowerCase();
@@ -125,7 +127,7 @@ function statusBadgeHtml(status) {
 function capsHtml(sapId) {
     const caps = manikinCaps[sapId] || [];
     if (!caps.length) return '';
-    return `<div class="card-caps">${caps.map(c => `<span class="cap-tag">${c}</span>`).join('')}</div>`;
+    return `<div class="card-caps">${caps.map(c => `<span class="cap-tag">${esc(c)}</span>`).join('')}</div>`;
 }
 
 function renderIndividual(manikins) {
@@ -146,13 +148,13 @@ function renderIndividual(manikins) {
           <div class="product-status">${statusBadgeHtml(m.status)}</div>
         </div>
         <div class="product-body">
-          <h3 class="product-name">${m.asset_name || 'ไม่ทราบชื่อ'}</h3>
-          ${m.asset_code ? `<div class="product-code">${m.asset_code}</div>` : ''}
+          <h3 class="product-name">${m.asset_name ? esc(m.asset_name) : 'ไม่ทราบชื่อ'}</h3>
+          ${m.asset_code ? `<div class="product-code">${esc(m.asset_code)}</div>` : ''}
           ${capsHtml(m.sap_id)}
         </div>
         <div class="product-footer">
-          ${locStr ? `<div class="product-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${locStr}</div>` : '<div></div>'}
-          <button class="quick-view-btn" data-sap="${m.sap_id}">รายละเอียด →</button>
+          ${locStr ? `<div class="product-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(locStr)}</div>` : '<div></div>'}
+          <button class="quick-view-btn" data-sap="${esc(m.sap_id)}">รายละเอียด →</button>
         </div>`;
         card.querySelector('.quick-view-btn').addEventListener('click', () => openDrawer(m.sap_id));
         grid.appendChild(card);
@@ -184,7 +186,7 @@ function renderGrouped(manikins) {
         <div class="group-card-header">
           <div class="group-age-icon ${age}">${ageEmoji(units[0])}</div>
           <div class="group-info">
-            <h3 class="group-name">${name}</h3>
+            <h3 class="group-name">${esc(name)}</h3>
             <div class="group-meta">
               ${TYPE_LABEL[detectAge(units[0])] || 'อื่นๆ'}
               · ${capsHtml(units[0].sap_id) ? manikinCaps[units[0].sap_id]?.slice(0, 2).join(', ') || '' : ''}
@@ -203,10 +205,10 @@ function renderGrouped(manikins) {
             ${units.map(u => {
             const cls = STATUS_CLASS[u.status] || 'other';
             const loc = u.locationObj;
-            return `<div class="unit-chip" onclick="openDrawer('${u.sap_id}')">
+            return `<div class="unit-chip" onclick="openDrawer('${esc(u.sap_id)}')">
                   <span class="unit-chip-dot ${cls}"></span>
-                  <span class="unit-chip-sap">${u.sap_id}</span>
-                  ${loc ? `<span class="unit-chip-loc">${loc.room}</span>` : ''}
+                  <span class="unit-chip-sap">${esc(u.sap_id)}</span>
+                  ${loc ? `<span class="unit-chip-loc">${esc(loc.room)}</span>` : ''}
                 </div>`;
         }).join('')}
           </div>
@@ -241,16 +243,16 @@ function openDrawer(sapId) {
           <span class="drawer-key">ช่วงวัย</span>
           <span class="drawer-val">${TYPE_EMOJI[detectAge(m)] || '—'} ${TYPE_LABEL[detectAge(m)] || '—'}</span>
         </div>
-        ${m.asset_code ? `<div class="drawer-row"><span class="drawer-key">Asset Code</span><span class="drawer-val">${m.asset_code}</span></div>` : ''}
+        ${m.asset_code ? `<div class="drawer-row"><span class="drawer-key">Asset Code</span><span class="drawer-val">${esc(m.asset_code)}</span></div>` : ''}
         <div class="drawer-row">
           <span class="drawer-key">ที่ตั้ง</span>
-          <span class="drawer-val">${loc ? `📍 ${loc.building} / ${loc.room}` : '— ไม่ระบุ'}</span>
+          <span class="drawer-val">${loc ? `📍 ${esc(loc.building)} / ${esc(loc.room)}` : '— ไม่ระบุ'}</span>
         </div>
       </div>
       ${caps.length ? `
       <div class="drawer-section">
         <div class="drawer-section-title">ฟังก์ชัน / ความสามารถ</div>
-        <div class="drawer-caps">${caps.map(c => `<span class="cap-tag-lg">${c}</span>`).join('')}</div>
+        <div class="drawer-caps">${caps.map(c => `<span class="cap-tag-lg">${esc(c)}</span>`).join('')}</div>
       </div>` : ''}
     `;
 
