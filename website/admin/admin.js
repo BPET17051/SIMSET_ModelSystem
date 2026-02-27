@@ -18,6 +18,21 @@ let reviewPage = 1, manikinPage = 1;
 let allLocations = [];
 let currentUser = null;
 
+/* ===== SECURE HELPERS ===== */
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+function createConfirmMsg(text1, strongTxt, text2, text3 = 'การดำเนินการนี้ไม่สามารถย้อนกลับได้') {
+    const frag = document.createDocumentFragment();
+    frag.append(text1);
+    const s = document.createElement('strong');
+    s.textContent = strongTxt;
+    frag.append(s, text2);
+    if (text3) {
+        frag.append(document.createElement('br'), text3);
+    }
+    return frag;
+}
+
 /* ===== AUTH CHECK ===== */
 async function checkAuth() {
     const { data } = await sb.auth.getSession();
@@ -98,7 +113,7 @@ function agePill(name) {
 }
 
 function statusBadge(s) {
-    return `<span class="sb ${s}">${STATUS_TH[s] || s}</span>`;
+    return `<span class="sb ${esc(s)}">${esc(STATUS_TH[s] || s)}</span>`;
 }
 
 /* ===== TOAST ===== */
@@ -134,9 +149,15 @@ function closeModal(id) {
 /* ===== CUSTOM CONFIRM DIALOG ===== */
 let _confirmResolve = null;
 
-function showConfirm({ title, message, okText, okClass }) {
+function showConfirm({ title, messageNode, okText, okClass }) {
     document.getElementById('confirm-title').textContent = title || 'ยืนยันการดำเนินการ';
-    document.getElementById('confirm-msg').innerHTML = message || 'คุณแน่ใจหรือไม่?';
+    const msgContainer = document.getElementById('confirm-msg');
+    msgContainer.innerHTML = '';
+    if (messageNode) {
+        msgContainer.appendChild(messageNode);
+    } else {
+        msgContainer.textContent = 'คุณแน่ใจหรือไม่?';
+    }
     const okBtn = document.getElementById('confirm-ok');
     okBtn.textContent = okText || 'ยืนยัน';
     okBtn.className = 'btn ' + (okClass || 'btn-danger');
@@ -199,7 +220,7 @@ function renderBars(containerId, data, colorFn) {
     const total = data.reduce((s, d) => s + d.count, 0) || 1;
     document.getElementById(containerId).innerHTML = data.map(d => `
     <div class="bar-row">
-      <div class="bar-label" title="${d.label}">${d.label}</div>
+      <div class="bar-label" title="${esc(d.label)}">${esc(d.label)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${(d.count / total * 100).toFixed(1)}%;background:${colorFn(d.key)}"></div></div>
       <div class="bar-count">${d.count}</div>
     </div>
@@ -247,10 +268,10 @@ async function loadDashboard() {
     } else {
         tbody.innerHTML = reviewData.map(m => `
       <tr>
-        <td class="sap-code">${m.sap_id}</td>
-        <td class="asset-name-cell"><div class="asset-name-text">${m.asset_name || '—'}</div></td>
+        <td class="sap-code">${esc(m.sap_id)}</td>
+        <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
         <td>${agePill(m.asset_name)}</td>
-        <td><button class="btn btn-success btn-sm" onclick="approveOne('${m.sap_id}')">✓ อนุมัติ</button></td>
+        <td><button class="btn btn-success btn-sm" onclick="approveOne('${esc(m.sap_id)}')">✓ อนุมัติ</button></td>
       </tr>
     `).join('');
     }
@@ -292,14 +313,14 @@ function renderReviewTable() {
 
     tbody.innerHTML = page.map(m => `
     <tr>
-      <td><input type="checkbox" class="review-cb" data-sap="${m.sap_id}" onchange="updateBulkBar()" /></td>
-      <td class="sap-code">${m.sap_id}</td>
-      <td class="asset-name-cell"><div class="asset-name-text">${m.asset_name || '—'}</div></td>
+      <td><input type="checkbox" class="review-cb" data-sap="${esc(m.sap_id)}" onchange="updateBulkBar()" /></td>
+      <td class="sap-code">${esc(m.sap_id)}</td>
+      <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
       <td>${agePill(m.asset_name)}</td>
-      <td class="sap-code">${m.asset_code || '—'}</td>
+      <td class="sap-code">${esc(m.asset_code) || '—'}</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-success btn-sm" onclick="approveOne('${m.sap_id}')">✓ อนุมัติ</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectOne('${m.sap_id}')">✕ ปฏิเสธ</button>
+        <button class="btn btn-success btn-sm" onclick="approveOne('${esc(m.sap_id)}')">✓ อนุมัติ</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectOne('${esc(m.sap_id)}')">✕ ปฏิเสธ</button>
       </td>
     </tr>
   `).join('');
@@ -364,7 +385,7 @@ document.getElementById('btn-bulk-reject').addEventListener('click', async () =>
     if (checked.length === 0) return;
     const ok = await showConfirm({
         title: 'ปฏิเสธแบบกลุ่ม',
-        message: 'ยืนยันปฏิเสธและลบ <strong>' + checked.length + ' รายการ</strong> ออกจากระบบ?<br>การดำเนินการนี้ไม่สามารถย้อนกลับได้',
+        messageNode: createConfirmMsg('ยืนยันปฏิเสธและลบ ', checked.length + ' รายการ', ' ออกจากระบบ?'),
         okText: 'ลบ ' + checked.length + ' รายการ',
         okClass: 'btn-danger'
     });
@@ -392,7 +413,7 @@ async function approveOne(sapId) {
 async function rejectOne(sapId) {
     const ok = await showConfirm({
         title: 'ปฏิเสธและลบรายการ',
-        message: 'ยืนยันปฏิเสธและลบ <strong>' + sapId + '</strong> ออกจากระบบ?<br>การดำเนินการนี้ไม่สามารถย้อนกลับได้',
+        messageNode: createConfirmMsg('ยืนยันปฏิเสธและลบ ', sapId, ' ออกจากระบบ?'),
         okText: 'ลบออก',
         okClass: 'btn-danger'
     });
@@ -473,7 +494,7 @@ document.getElementById('manikin-status-filter').addEventListener('change', filt
 function locationLabel(lid) {
     if (!lid) return '<span style="color:var(--text-dim)">—</span>';
     const loc = allLocations.find(l => l.id === lid);
-    return loc ? `${loc.building} / ${loc.room}` : `(${lid})`;
+    return loc ? `${esc(loc.building)} / ${esc(loc.room)}` : `(${esc(lid)})`;
 }
 
 function renderManikinTable() {
@@ -489,13 +510,13 @@ function renderManikinTable() {
 
     tbody.innerHTML = page.map(m => `
     <tr>
-      <td class="sap-code">${m.sap_id}</td>
-      <td class="asset-name-cell"><div class="asset-name-text">${m.asset_name || '—'}</div></td>
+      <td class="sap-code">${esc(m.sap_id)}</td>
+      <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
       <td>${agePill(m.asset_name)}</td>
       <td>${statusBadge(m.status)}</td>
       <td style="font-size:0.78rem;color:var(--text-secondary)">${locationLabel(m.location_id)}</td>
-      <td style="font-size:0.75rem;color:var(--text-secondary);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.note || '—'}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${m.sap_id}')">✏️ แก้ไข</button></td>
+      <td style="font-size:0.75rem;color:var(--text-secondary);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.note) || '—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${esc(m.sap_id)}')">✏️ แก้ไข</button></td>
     </tr>
   `).join('');
 
@@ -517,7 +538,7 @@ async function openEditModal(sapId) {
 
     const locSel = document.getElementById('edit-location');
     locSel.innerHTML = '<option value="">— ยังไม่ได้ระบุ —</option>' +
-        allLocations.map(l => `<option value="${l.id}" ${m.location_id === l.id ? 'selected' : ''}>${l.building} / ${l.room}</option>`).join('');
+        allLocations.map(l => `<option value="${esc(l.id)}" ${m.location_id === l.id ? 'selected' : ''}>${esc(l.building)} / ${esc(l.room)}</option>`).join('');
 
     // Load capabilities and render checkboxes
     await loadCapabilities();
@@ -529,8 +550,8 @@ async function openEditModal(sapId) {
     } else {
         wrap.innerHTML = allCapabilities.map(c => `
             <label class="checkbox-item">
-                <input type="checkbox" class="cap-cb" data-cap-id="${c.id}" ${existingIds.has(c.id) ? 'checked' : ''} />
-                <span class="checkbox-label">${c.label_th}</span>
+                <input type="checkbox" class="cap-cb" data-cap-id="${esc(c.id)}" ${existingIds.has(c.id) ? 'checked' : ''} />
+                <span class="checkbox-label">${esc(c.label_th)}</span>
             </label>`).join('');
     }
 
@@ -585,13 +606,13 @@ async function loadLocations() {
     }
     tbody.innerHTML = allLocations.map(l => `
     <tr>
-      <td class="sap-code">${l.id}</td>
-      <td>${l.building || '—'}</td>
-      <td>${l.room || '—'}</td>
+      <td class="sap-code">${esc(l.id)}</td>
+      <td>${esc(l.building) || '—'}</td>
+      <td>${esc(l.room) || '—'}</td>
       <td>${countMap[l.id] || 0} ตัว</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-ghost btn-sm" onclick="openLocationModal(${l.id})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteLocation(${l.id})">🗑</button>
+        <button class="btn btn-ghost btn-sm" onclick="openLocationModal(${esc(l.id)})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteLocation(${esc(l.id)})">🗑</button>
       </td>
     </tr>
   `).join('');
@@ -633,7 +654,7 @@ async function deleteLocation(id) {
     const locName = loc ? loc.building + ' / ' + loc.room : 'ID ' + id;
     const ok = await showConfirm({
         title: 'ลบสถานที่',
-        message: 'ยืนยันลบ <strong>' + locName + '</strong> ออกจากระบบ?<br>หุ่นที่อยู่ในสถานที่นี้จะถูกยกเลิกการผูก',
+        messageNode: createConfirmMsg('ยืนยันลบ ', locName, ' ออกจากระบบ?', 'หุ่นที่อยู่ในสถานที่นี้จะถูกยกเลิกการผูก'),
         okText: 'ลบสถานที่',
         okClass: 'btn-danger'
     });
