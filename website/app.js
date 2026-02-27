@@ -120,8 +120,10 @@ function getFiltered() {
 /* -------- Render: Individual Cards -------- */
 
 function statusBadgeHtml(status) {
-    const cls = STATUS_CLASS[status] || 'other';
-    return `<span class="status-pill ${cls}">${STATUS_LABEL[status] || status}</span>`;
+    const isKnown = status && STATUS_LABEL.hasOwnProperty(status);
+    const cls = isKnown ? STATUS_CLASS[status] : 'other';
+    const label = isKnown ? STATUS_LABEL[status] : 'สภาพไม่แน่ชัด';
+    return `<span class="status-pill ${cls}">${label}</span>`;
 }
 
 function capsHtml(sapId) {
