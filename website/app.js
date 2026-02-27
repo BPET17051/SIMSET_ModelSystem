@@ -43,6 +43,29 @@ const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 // Mask SAP ID — show only last 4 characters to reduce internal identifier leakage
 const maskSap = s => { const str = String(s ?? ''); return str.length > 4 ? '···' + str.slice(-4) : str; };
 
+// Debounced render — batches burst Realtime events (max wait 1s to prevent starvation)
+let _renderTimer = null;
+let _renderMaxTimer = null;
+function scheduleRender() {
+    if (!_renderMaxTimer) {
+        _renderMaxTimer = setTimeout(() => {
+            clearTimeout(_renderTimer);
+            _renderTimer = null;
+            _renderMaxTimer = null;
+            updateStats(allManikins);
+            render();
+        }, 1000); // Guaranteed render within 1s
+    }
+    clearTimeout(_renderTimer);
+    _renderTimer = setTimeout(() => {
+        clearTimeout(_renderMaxTimer);
+        _renderMaxTimer = null;
+        _renderTimer = null;
+        updateStats(allManikins);
+        render();
+    }, 300); // Debounce: wait 300ms after last event
+}
+
 function detectAge(m) {
     if (m.manikin_type) return m.manikin_type; // Trust DB first
     const n = (m.asset_name || '').toLowerCase();
@@ -412,11 +435,10 @@ function subscribeRealtime() {
                     };
                 }
 
-                // Re-render and update stats
-                updateStats(allManikins);
-                render();
+                // Debounce re-render to batch burst events (prevents jank)
+                scheduleRender();
 
-                // Update timestamp (without LIVE prefix to hide monitoring intent)
+                // Update timestamp immediately on each event
                 const now = new Date();
                 document.getElementById('last-updated').textContent =
                     `อัปเดต ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} น.`;
