@@ -93,3 +93,16 @@ GRANT SELECT ON public_manikins TO anon;
 -- SET LOCAL ROLE anon;
 -- SELECT * FROM public_manikins LIMIT 5;
 -- SELECT * FROM manikins WHERE is_active = false; -- should return 0 rows
+
+-- ============================================================
+-- PART 6: Realtime Publication Security
+-- ============================================================
+-- Enable Realtime for the manikins table to ensure broadcast events
+-- are generated. Because RLS is enabled on the table (PART 1),
+-- Realtime will respect the RLS policies and ONLY broadcast rows
+-- that the 'anon' role has access to via the "anon_select_manikins" policy.
+--
+-- Note: Depending on your Supabase project settings, you may need
+-- to run this explicitly if you haven't enabled Realtime via the UI.
+--
+-- ALTER PUBLICATION supabase_realtime ADD TABLE manikins;

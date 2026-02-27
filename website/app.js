@@ -379,7 +379,7 @@ function subscribeRealtime() {
         .channel('manikins-live')
         .on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: 'manikins' },
+            { event: 'UPDATE', schema: 'public', table: 'manikins', filter: 'is_active=eq.true' },
             (payload) => {
                 const updated = payload.new;
                 if (!updated || !updated.sap_id) return;
