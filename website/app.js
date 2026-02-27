@@ -40,6 +40,9 @@ let searchQuery = '';
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+// Mask SAP ID — show only last 4 characters to reduce internal identifier leakage
+const maskSap = s => { const str = String(s ?? ''); return str.length > 4 ? '···' + str.slice(-4) : str; };
+
 function detectAge(m) {
     if (m.manikin_type) return m.manikin_type; // Trust DB first
     const n = (m.asset_name || '').toLowerCase();
@@ -214,7 +217,7 @@ function renderGrouped(manikins) {
             const chip = document.createElement('div');
             chip.className = 'unit-chip';
             chip.innerHTML = `<span class="unit-chip-dot ${cls}"></span>
-                              <span class="unit-chip-sap">${esc(u.sap_id)}</span>
+                              <span class="unit-chip-sap" title="${esc(u.sap_id)}">${esc(maskSap(u.sap_id))}</span>
                               ${loc ? `<span class="unit-chip-loc">${esc(loc.building)}</span>` : ''}`;
             chip.addEventListener('click', () => openDrawer(u.sap_id));
             chipsContainer.appendChild(chip);
@@ -237,7 +240,7 @@ function openDrawer(sapId) {
 
     document.getElementById('drawer-age-icon').innerHTML = `<span class="drawer-age-badge ${age}">${ageEmoji(m)}</span>`;
     document.getElementById('drawer-name').textContent = m.asset_name || 'ไม่ทราบชื่อ';
-    document.getElementById('drawer-sap').textContent = `SAP: ${sapId}`;
+    document.getElementById('drawer-sap').textContent = `SAP: ${maskSap(sapId)}`;
 
     document.getElementById('drawer-body').innerHTML = `
       <div class="drawer-section">
