@@ -28,7 +28,7 @@ ENDPOINTS = {
     "manikins.json": (
         "/rest/v1/manikins"
         "?select=sap_id,asset_name,asset_code,status,location_id,manikin_type"
-        "&is_active=eq.true&needs_review=eq.false"
+        "&is_active=eq.true&needs_review=eq.false&deleted_at=is.null"
         "&order=asset_name.asc&limit=1000"
     ),
     "locations.json": (
