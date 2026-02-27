@@ -386,28 +386,27 @@ function subscribeRealtime() {
                 const updated = payload.new;
                 if (!updated || !updated.sap_id) return;
 
-                // Patch the in-memory record (surgical update, no full refetch)
                 const idx = allManikins.findIndex(m => m.sap_id === updated.sap_id);
 
-                if (payload.event === 'DELETE' || updated.is_active === false || updated.needs_review === true) {
-                    // Remove from list
+                // Option B: If location changed → full reload to re-sync locationMap from latest JSON
+                if (idx !== -1 && allManikins[idx].location_id !== updated.location_id) {
+                    console.log('[Realtime] location_id changed — full reload to sync maps');
+                    reloadData();
+                    return;
+                }
+
+                // Option A: Only patch status-related fields (no locationMap dependency)
+                if (updated.is_active === false || updated.needs_review === true) {
                     if (idx !== -1) allManikins.splice(idx, 1);
                 } else if (idx !== -1) {
-                    // Update existing
                     allManikins[idx] = {
                         ...allManikins[idx],
                         status: updated.status,
                         asset_name: updated.asset_name,
                         manikin_type: updated.manikin_type,
-                        location_id: updated.location_id,
-                        locationObj: updated.location_id ? locationMap[updated.location_id] : null,
+                        // location_id and locationObj intentionally NOT patched here —
+                        // location changes use full reload above to stay in sync with locationMap
                     };
-                } else if (updated.is_active && !updated.needs_review) {
-                    // New active manikin — add to list
-                    allManikins.push({
-                        ...updated,
-                        locationObj: updated.location_id ? locationMap[updated.location_id] : null,
-                    });
                 }
 
                 // Re-render and update stats
