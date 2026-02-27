@@ -26,6 +26,17 @@ async function checkAuth() {
         return;
     }
     currentUser = data.session.user;
+
+    // Verify admin role from app_metadata (set server-side in Supabase Dashboard)
+    // This is a client-side gate; the DB-level gate is enforced by RLS policies.
+    const role = currentUser.app_metadata?.role;
+    if (role !== 'admin') {
+        console.warn('[Auth] Access denied: user is not admin (role:', role, ')');
+        await sb.auth.signOut();
+        window.location.href = 'index.html?error=unauthorized';
+        return;
+    }
+
     const email = currentUser.email || '';
     document.getElementById('user-email').textContent = email;
     document.getElementById('user-avatar').textContent = email.charAt(0).toUpperCase();

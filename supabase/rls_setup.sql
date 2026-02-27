@@ -106,3 +106,56 @@ GRANT SELECT ON public_manikins TO anon;
 -- to run this explicitly if you haven't enabled Realtime via the UI.
 --
 -- ALTER PUBLICATION supabase_realtime ADD TABLE manikins;
+
+-- ============================================================
+-- PART 7: Admin Write Policies (app_metadata.role = 'admin')
+-- ============================================================
+-- Set role in Supabase Dashboard: Authentication → Users → [user]
+-- → Edit Raw app_metadata → { "role": "admin" }
+--
+-- These policies enforce the DB-level admin gate. Even if the
+-- client-side check in admin.js is bypassed, the DB will reject
+-- any write from a non-admin authenticated user.
+-- ============================================================
+
+DROP POLICY IF EXISTS "admin_all_manikins"             ON manikins;
+DROP POLICY IF EXISTS "admin_all_locations"            ON locations;
+DROP POLICY IF EXISTS "admin_all_capabilities"         ON capabilities;
+DROP POLICY IF EXISTS "admin_all_manikin_capabilities" ON manikin_capabilities;
+
+-- manikins: admin can read all rows (including inactive/review) and write
+CREATE POLICY "admin_all_manikins"
+ON manikins FOR ALL
+TO authenticated
+USING     ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+WITH CHECK((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+-- locations: admin full CRUD
+CREATE POLICY "admin_all_locations"
+ON locations FOR ALL
+TO authenticated
+USING     ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+WITH CHECK((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+-- capabilities: admin full CRUD
+CREATE POLICY "admin_all_capabilities"
+ON capabilities FOR ALL
+TO authenticated
+USING     ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+WITH CHECK((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+-- manikin_capabilities: admin full CRUD
+CREATE POLICY "admin_all_manikin_capabilities"
+ON manikin_capabilities FOR ALL
+TO authenticated
+USING     ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+WITH CHECK((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+-- =============================================
+-- Verify admin policies (run after applying):
+-- =============================================
+-- SELECT policyname, tablename, cmd, roles, qual
+-- FROM pg_policies
+-- WHERE schemaname = 'public'
+--   AND policyname LIKE 'admin%';
+
