@@ -601,12 +601,17 @@ document.getElementById('edit-save').addEventListener('click', async () => {
     const { error } = await sb.from('manikins').update(payload).eq('sap_id', sapId);
     if (error) { showToast('บันทึกล้มเหลว: ' + error.message, 'error'); return; }
 
-    // Sync capabilities: delete old, insert new
+    // Sync capabilities via atomic RPC (delete + insert in one DB transaction)
     const checkedCapIds = [...document.querySelectorAll('.cap-cb:checked')].map(cb => cb.dataset.capId);
-    await sb.from('manikin_capabilities').delete().eq('sap_id', sapId);
-    if (checkedCapIds.length > 0) {
-        await sb.from('manikin_capabilities').insert(checkedCapIds.map(cid => ({ sap_id: sapId, capability_id: cid })));
+    const { error: capErr } = await sb.rpc('sync_manikin_capabilities', {
+        p_sap_id: sapId,
+        p_cap_ids: checkedCapIds
+    });
+    if (capErr) {
+        showToast('บันทึกสำเร็จ แต่อัปเดตความสามารถล้มเหลว: ' + capErr.message, 'error');
+        return;
     }
+    await insertAuditLog('edit_manikin', [sapId]);
 
     showToast('บันทึกสำเร็จ');
     closeModal('edit-modal');
@@ -687,9 +692,10 @@ async function deleteLocation(id) {
         okClass: 'btn-danger'
     });
     if (!ok) return;
-    await sb.from('manikins').update({ location_id: null }).eq('location_id', id);
-    const { error } = await sb.from('locations').delete().eq('id', id);
+    // Atomic RPC: unlink all manikins + delete location in one transaction
+    const { error } = await sb.rpc('delete_location_atomic', { p_location_id: id });
     if (error) { showToast('ลบล้มเหลว: ' + error.message, 'error'); return; }
+    await insertAuditLog('delete_location', [String(id)], locName);
     showToast('ลบสถานที่สำเร็จ');
     loadLocations();
 }
