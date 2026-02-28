@@ -7,6 +7,16 @@ sb.auth.getSession().then(({ data }) => {
     if (data.session) window.location.href = 'dashboard.html';
 });
 
+// Check URL for errors (e.g. from admin.js redirect)
+const params = new URLSearchParams(window.location.search);
+if (params.get('error') === 'unauthorized') {
+    const errEl = document.getElementById('login-error');
+    document.getElementById('login-error-msg').textContent = '⚠️ บัญชีนี้ไม่มีสิทธิ์การเข้าถึงระดับ Admin';
+    errEl.style.display = 'flex';
+    // Remove param from URL without reloading
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 // Password toggle
 document.getElementById('pw-toggle').addEventListener('click', () => {
     const pw = document.getElementById('password');
