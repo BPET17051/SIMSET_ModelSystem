@@ -7,6 +7,13 @@
     <title>SiMSET — คลังหุ่นจำลองทางการแพทย์</title>
     <meta name="description"
         content="ศูนย์จำลองทางการแพทย์ SiMSET — สำรวจหุ่นจำลองทางการแพทย์คุณภาพสูงกว่า 150 รายการ สำหรับการเรียนรู้และฝึกทักษะทางคลินิก" />
+    <!-- Open Graph / SEO -->
+    <meta property="og:title" content="SiMSET — คลังหุ่นจำลองทางการแพทย์" />
+    <meta property="og:description"
+        content="สำรวจหุ่นจำลองทางการแพทย์คุณภาพสูงกว่า 150 รายการ สำหรับการเรียนรู้และฝึกทักษะทางคลินิก" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://simset.com/og-image.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -217,9 +224,12 @@
     </footer>
 
     <!-- Supabase JS (for Realtime WebSocket only — REST data served from static JSON) -->
-    <!-- Supabase JS (for Realtime WebSocket only — REST data served from static JSON) -->
     <script src="vendor/supabase.min.js"
         integrity="sha384-YieCqqg9gQufX7+5HcFvCEg/n3KUEdl8/Jb+A6J0npf1mB740VayvwKjTrtCeUoy" crossorigin="anonymous"
+        defer></script>
+    <!-- DOMPurify — sanitizes innerHTML to prevent XSS (self-hosted, SRI-locked) -->
+    <script src="vendor/purify.min.js"
+        integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObt+tlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous"
         defer></script>
     <script src="app.js" defer></script>
 </body>

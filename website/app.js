@@ -170,7 +170,7 @@ function renderIndividual(manikins) {
 
         const card = document.createElement('div');
         card.className = `product-card age-accent-${age}`;
-        card.innerHTML = `
+        card.innerHTML = DOMPurify.sanitize(`
         <div class="product-card-top">
           <div class="product-age-badge ${age}">${ageEmoji(m)}</div>
           <div class="product-status">${statusBadgeHtml(m.status)}</div>
@@ -183,7 +183,7 @@ function renderIndividual(manikins) {
         <div class="product-footer">
           ${locStr ? `<div class="product-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(locStr)}</div>` : '<div></div>'}
           <button class="quick-view-btn" data-sap="${esc(m.sap_id)}">รายละเอียด →</button>
-        </div>`;
+        </div>`, { FORCE_BODY: true });
         card.querySelector('.quick-view-btn').addEventListener('click', () => openDrawer(m.sap_id));
         grid.appendChild(card);
     });
@@ -210,7 +210,7 @@ function renderGrouped(manikins) {
 
         const card = document.createElement('div');
         card.className = `group-card age-accent-${age}`;
-        card.innerHTML = `
+        card.innerHTML = DOMPurify.sanitize(`
         <div class="group-card-header">
           <div class="group-age-icon ${age}">${ageEmoji(units[0])}</div>
           <div class="group-info">
@@ -230,7 +230,7 @@ function renderGrouped(manikins) {
         </div>
         <div class="group-card-body">
           <div class="unit-chips"></div>
-        </div>`;
+        </div>`, { FORCE_BODY: true });
 
         // Build unit chips via DOM API — avoids inline onclick handlers (CSP-friendly)
         const chipsContainer = card.querySelector('.unit-chips');
@@ -239,9 +239,9 @@ function renderGrouped(manikins) {
             const loc = u.locationObj;
             const chip = document.createElement('div');
             chip.className = 'unit-chip';
-            chip.innerHTML = `<span class="unit-chip-dot ${cls}"></span>
+            chip.innerHTML = DOMPurify.sanitize(`<span class="unit-chip-dot ${cls}"></span>
                               <span class="unit-chip-sap" title="${esc(u.sap_id)}">${esc(maskSap(u.sap_id))}</span>
-                              ${loc ? `<span class="unit-chip-loc">${esc(loc.building)}</span>` : ''}`;
+                              ${loc ? `<span class="unit-chip-loc">${esc(loc.building)}</span>` : ''}`);
             chip.addEventListener('click', () => openDrawer(u.sap_id));
             chipsContainer.appendChild(chip);
         });
@@ -261,11 +261,11 @@ function openDrawer(sapId) {
     const loc = m.locationObj;
     const caps = manikinCaps[sapId] || [];
 
-    document.getElementById('drawer-age-icon').innerHTML = `<span class="drawer-age-badge ${age}">${ageEmoji(m)}</span>`;
+    document.getElementById('drawer-age-icon').innerHTML = DOMPurify.sanitize(`<span class="drawer-age-badge ${age}">${ageEmoji(m)}</span>`);
     document.getElementById('drawer-name').textContent = m.asset_name || 'ไม่ทราบชื่อ';
     document.getElementById('drawer-sap').textContent = `SAP: ${maskSap(sapId)}`;
 
-    document.getElementById('drawer-body').innerHTML = `
+    document.getElementById('drawer-body').innerHTML = DOMPurify.sanitize(`
       <div class="drawer-section">
         <div class="drawer-row">
           <span class="drawer-key">สถานะ</span>
@@ -286,7 +286,7 @@ function openDrawer(sapId) {
         <div class="drawer-section-title">ฟังก์ชัน / ความสามารถ</div>
         <div class="drawer-caps">${caps.map(c => `<span class="cap-tag-lg">${esc(c)}</span>`).join('')}</div>
       </div>` : ''}
-    `;
+    `);
 
     document.getElementById('detail-drawer').classList.add('open');
     document.getElementById('drawer-overlay').classList.add('visible');

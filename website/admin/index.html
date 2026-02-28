@@ -5,11 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SiMSET Admin — เข้าสู่ระบบ</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="admin.css" />
+    <meta name="description" content="Login to SiMSET Admin Panel for medical manikin management." />
+
+    <!-- SEO / Open Graph -->
+    <meta property="og:title" content="SiMSET Admin Login" />
+    <meta property="og:description" content="Secure login for manikin inventory management." />
+    <meta property="og:type" content="website" />
+
 </head>
 
 <body class="login-body">
@@ -72,49 +74,7 @@
     <script src="../vendor/supabase.min.js"
         integrity="sha384-YieCqqg9gQufX7+5HcFvCEg/n3KUEdl8/Jb+A6J0npf1mB740VayvwKjTrtCeUoy"
         crossorigin="anonymous"></script>
-    <script>
-        const SUPABASE_URL = 'https://ifogcvymwhcfbfjzhwsl.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_DZyIDHVZ-kfD1o3baz0qmw_tTyRCJG8';
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // If already logged in, redirect to dashboard
-        sb.auth.getSession().then(({ data }) => {
-            if (data.session) window.location.href = 'dashboard.html';
-        });
-
-        // Password toggle
-        document.getElementById('pw-toggle').addEventListener('click', () => {
-            const pw = document.getElementById('password');
-            pw.type = pw.type === 'password' ? 'text' : 'password';
-        });
-
-        // Login form submit
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const errEl = document.getElementById('login-error');
-            const btnSpinner = document.getElementById('btn-spinner');
-            const btnText = document.getElementById('login-text');
-
-            errEl.style.display = 'none';
-            btnSpinner.style.display = 'block';
-            btnText.style.display = 'none';
-            document.getElementById('login-btn').disabled = true;
-
-            const { error } = await sb.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                document.getElementById('login-error-msg').textContent = 'อีเมล หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง';
-                errEl.style.display = 'flex';
-                btnSpinner.style.display = 'none';
-                btnText.style.display = 'block';
-                document.getElementById('login-btn').disabled = false;
-            } else {
-                window.location.href = 'dashboard.html';
-            }
-        });
-    </script>
+    <script src="login.js"></script>
 </body>
 
 </html>

@@ -34,18 +34,21 @@ function createConfirmMsg(text1, strongTxt, text2, text3 = 'การดำเ�
 }
 
 // Write an audit log entry to the audit_logs table.
-// Silent fail (logs to console only) so it never blocks the main operation.
-async function insertAuditLog(action, targetIds, note = null) {
-    try {
-        const actor = currentUser?.email || 'unknown';
-        await sb.from('audit_logs').insert({
-            action,
-            actor_email: actor,
-            target_ids: targetIds,
-            note
-        });
-    } catch (e) {
-        console.warn('[AuditLog] Failed to write log:', e);
+// Options: { strict: boolean } — if true, throws an error if logging fails (blocking).
+async function insertAuditLog(action, targetIds, note = null, options = { strict: false }) {
+    const { error } = await sb.from('audit_logs').insert({
+        action,
+        actor_email: currentUser?.email || 'unknown',
+        target_ids: targetIds,
+        note
+    });
+    if (error) {
+        console.error('[AuditLog] Failed to write log:', error.message);
+        if (options.strict) {
+            throw new Error(`Audit log required but failed: ${error.message}`);
+        } else {
+            showToast('⚠️ บันทึก Audit Log ล้มเหลว (กรุณาแจ้ง IT)', 'error');
+        }
     }
 }
 
@@ -88,7 +91,7 @@ const tabMeta = {
 };
 
 function switchTab(tabName) {
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
 
     const navEl = document.querySelector(`[data-tab="${tabName}"]`);
@@ -108,7 +111,7 @@ function switchTab(tabName) {
     if (tabName === 'reports') loadReports();
 }
 
-document.querySelectorAll('.nav-item').forEach(el => {
+document.querySelectorAll('.sidebar-link').forEach(el => {
     el.addEventListener('click', () => switchTab(el.dataset.tab));
 });
 
@@ -220,7 +223,7 @@ function buildPagination(containerId, total, current, onPage) {
         const btn = document.createElement('button');
         btn.className = 'page-btn' + (p === current ? ' active' : '');
         btn.textContent = p;
-        btn.onclick = () => onPage(p);
+        btn.dataset.page = p;
         el.appendChild(btn);
     }
 
@@ -234,13 +237,13 @@ function buildPagination(containerId, total, current, onPage) {
 
 function renderBars(containerId, data, colorFn) {
     const total = data.reduce((s, d) => s + d.count, 0) || 1;
-    document.getElementById(containerId).innerHTML = data.map(d => `
+    document.getElementById(containerId).innerHTML = DOMPurify.sanitize(data.map(d => `
     <div class="bar-row">
       <div class="bar-label" title="${esc(d.label)}">${esc(d.label)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${(d.count / total * 100).toFixed(1)}%;background:${colorFn(d.key)}"></div></div>
       <div class="bar-count">${d.count}</div>
     </div>
-  `).join('');
+  `).join(''));
 }
 
 /* ===== TAB 1: DASHBOARD ===== */
@@ -282,14 +285,14 @@ async function loadDashboard() {
     if (!reviewData || reviewData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="tbl-empty">✅ ไม่มีรายการรออนุมัติ</td></tr>';
     } else {
-        tbody.innerHTML = reviewData.map(m => `
+        tbody.innerHTML = DOMPurify.sanitize(reviewData.map(m => `
       <tr>
         <td class="sap-code">${esc(m.sap_id)}</td>
         <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
         <td>${agePill(m.asset_name)}</td>
-        <td><button class="btn btn-success btn-sm" onclick="approveOne('${esc(m.sap_id)}')">✓ อนุมัติ</button></td>
+        <td><button class="btn btn-success btn-sm" data-action="approve" data-id="${esc(m.sap_id)}">✓ อนุมัติ</button></td>
       </tr>
-    `).join('');
+    `).join(''));
     }
     setSync();
 }
@@ -327,19 +330,19 @@ function renderReviewTable() {
         return;
     }
 
-    tbody.innerHTML = page.map(m => `
+    tbody.innerHTML = DOMPurify.sanitize(page.map(m => `
     <tr>
-      <td><input type="checkbox" class="review-cb" data-sap="${esc(m.sap_id)}" onchange="updateBulkBar()" /></td>
+      <td><input type="checkbox" class="review-cb" data-sap="${esc(m.sap_id)}" /></td>
       <td class="sap-code">${esc(m.sap_id)}</td>
       <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
       <td>${agePill(m.asset_name)}</td>
       <td class="sap-code">${esc(m.asset_code) || '—'}</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-success btn-sm" onclick="approveOne('${esc(m.sap_id)}')">✓ อนุมัติ</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectOne('${esc(m.sap_id)}')">✕ ปฏิเสธ</button>
+        <button class="btn btn-success btn-sm" data-action="approve" data-id="${esc(m.sap_id)}">✓ อนุมัติ</button>
+        <button class="btn btn-danger btn-sm" data-action="reject" data-id="${esc(m.sap_id)}">✕ ปฏิเสธ</button>
       </td>
     </tr>
-  `).join('');
+  `).join(''));
 
     buildPagination('review-pagination', reviewFiltered.length, reviewPage, (p) => { reviewPage = p; renderReviewTable(); });
 }
@@ -416,10 +419,15 @@ document.getElementById('btn-bulk-clear').addEventListener('click', () => {
 });
 
 async function approveOne(sapId) {
-    const { error } = await sb.from('manikins').update({ is_active: true, needs_review: false, status: 'ready' }).eq('sap_id', sapId);
+    const { error } = await sb.from('manikins')
+        .update({ is_active: true, needs_review: false, status: 'ready' })
+        .eq('sap_id', sapId)
+        .eq('needs_review', true); // DB Guard
+
     if (error) { showToast('อนุมัติล้มเหลว: ' + error.message, 'error'); return; }
-    await insertAuditLog('approve_one', [sapId]);
+    await insertAuditLog('approve_one', [sapId]); // Warn-only
     showToast('อนุมัติ ' + sapId + ' สำเร็จ');
+
     reviewData = reviewData.filter(m => m.sap_id !== sapId);
     reviewFiltered = reviewFiltered.filter(m => m.sap_id !== sapId);
     renderReviewTable();
@@ -435,26 +443,44 @@ async function rejectOne(sapId) {
         okClass: 'btn-danger'
     });
     if (!ok) return;
-    // Soft delete: mark as deleted instead of hard DELETE
-    const { error } = await sb.from('manikins').update({
-        deleted_at: new Date().toISOString(),
-        is_active: false
-    }).eq('sap_id', sapId);
-    if (error) { showToast('ลบล้มเหลว: ' + error.message, 'error'); return; }
-    await insertAuditLog('reject_one', [sapId]);
-    showToast('ลบ ' + sapId + ' ออกจากระบบแล้ว (สามารถกู้คืนได้)');
-    reviewData = reviewData.filter(m => m.sap_id !== sapId);
-    reviewFiltered = reviewFiltered.filter(m => m.sap_id !== sapId);
-    renderReviewTable();
+
+    try {
+        // Strict audit log for destructive action — throws on fail!
+        await insertAuditLog('reject_one', [sapId], '', { strict: true });
+
+        // Soft delete: mark as deleted instead of hard DELETE
+        const { error } = await sb.from('manikins')
+            .update({ deleted_at: new Date().toISOString(), is_active: false })
+            .eq('sap_id', sapId)
+            .eq('needs_review', true); // DB Guard
+
+        if (error) { showToast('ลบล้มเหลว: ' + error.message, 'error'); return; }
+
+        showToast('ลบ ' + sapId + ' ออกจากระบบแล้ว (สามารถกู้คืนได้)');
+        reviewData = reviewData.filter(m => m.sap_id !== sapId);
+        reviewFiltered = reviewFiltered.filter(m => m.sap_id !== sapId);
+        renderReviewTable();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 }
 
 async function bulkApprove(sapIds) {
-    const { error } = await sb.from('manikins').update({ is_active: true, needs_review: false, status: 'ready' }).in('sap_id', sapIds);
+    // Client-side Guard: Only allow IDs that are actually in the current reviewData
+    const validIds = sapIds.filter(id => reviewData.some(m => m.sap_id === id));
+    if (validIds.length === 0) return;
+
+    const { error } = await sb.from('manikins')
+        .update({ is_active: true, needs_review: false, status: 'ready' })
+        .in('sap_id', validIds)
+        .eq('needs_review', true); // DB Guard
+
     if (error) { showToast('อนุมัติล้มเหลว', 'error'); return; }
-    await insertAuditLog('bulk_approve', sapIds);
-    showToast('อนุมัติ ' + sapIds.length + ' รายการสำเร็จ');
-    reviewData = reviewData.filter(m => !sapIds.includes(m.sap_id));
-    reviewFiltered = reviewFiltered.filter(m => !sapIds.includes(m.sap_id));
+    await insertAuditLog('bulk_approve', validIds); // Warn-only
+    showToast('อนุมัติ ' + validIds.length + ' รายการสำเร็จ');
+
+    reviewData = reviewData.filter(m => !validIds.includes(m.sap_id));
+    reviewFiltered = reviewFiltered.filter(m => !validIds.includes(m.sap_id));
     reviewPage = 1;
     renderReviewTable();
     document.getElementById('review-badge').textContent = reviewData.length;
@@ -462,20 +488,32 @@ async function bulkApprove(sapIds) {
 }
 
 async function bulkReject(sapIds) {
-    // Soft delete: set deleted_at and is_active=false in bulk
-    const { error } = await sb.from('manikins').update({
-        deleted_at: new Date().toISOString(),
-        is_active: false
-    }).in('sap_id', sapIds);
-    if (error) { showToast('ลบล้มเหลว: ' + error.message, 'error'); return; }
-    await insertAuditLog('bulk_reject', sapIds);
-    showToast('ลบ ' + sapIds.length + ' รายการออกจากระบบแล้ว (สามารถกู้คืนได้)');
-    reviewData = reviewData.filter(m => !sapIds.includes(m.sap_id));
-    reviewFiltered = reviewFiltered.filter(m => !sapIds.includes(m.sap_id));
-    reviewPage = 1;
-    renderReviewTable();
-    document.getElementById('review-badge').textContent = reviewData.length;
-    hideBulkBar();
+    // Client-side Guard
+    const validIds = sapIds.filter(id => reviewData.some(m => m.sap_id === id));
+    if (validIds.length === 0) return;
+
+    try {
+        // Strict audit log for destructive bulk action
+        await insertAuditLog('bulk_reject', validIds, '', { strict: true });
+
+        // Soft delete in bulk
+        const { error } = await sb.from('manikins')
+            .update({ deleted_at: new Date().toISOString(), is_active: false })
+            .in('sap_id', validIds)
+            .eq('needs_review', true); // DB Guard
+
+        if (error) { showToast('ลบล้มเหลว: ' + error.message, 'error'); return; }
+
+        showToast('ลบ ' + validIds.length + ' รายการออกจากระบบแล้ว (สามารถกู้คืนได้)');
+        reviewData = reviewData.filter(m => !validIds.includes(m.sap_id));
+        reviewFiltered = reviewFiltered.filter(m => !validIds.includes(m.sap_id));
+        reviewPage = 1;
+        renderReviewTable();
+        document.getElementById('review-badge').textContent = reviewData.length;
+        hideBulkBar();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 }
 
 /* ===== TAB 3: MANIKINS CRUD ===== */
@@ -536,7 +574,7 @@ function renderManikinTable() {
         return;
     }
 
-    tbody.innerHTML = page.map(m => `
+    tbody.innerHTML = DOMPurify.sanitize(page.map(m => `
     <tr>
       <td class="sap-code">${esc(m.sap_id)}</td>
       <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
@@ -544,9 +582,9 @@ function renderManikinTable() {
       <td>${statusBadge(m.status)}</td>
       <td style="font-size:0.78rem;color:var(--text-secondary)">${locationLabel(m.location_id)}</td>
       <td style="font-size:0.75rem;color:var(--text-secondary);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.note) || '—'}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${esc(m.sap_id)}')">✏️ แก้ไข</button></td>
+      <td><button class="btn btn-ghost btn-sm" data-action="edit" data-id="${esc(m.sap_id)}">✏️ แก้ไข</button></td>
     </tr>
-  `).join('');
+  `).join(''));
 
     buildPagination('manikin-pagination', manikinFiltered.length, manikinPage, (p) => { manikinPage = p; renderManikinTable(); });
 }
@@ -565,8 +603,8 @@ async function openEditModal(sapId) {
     document.querySelectorAll('[name="edit-manikin-type"]').forEach(r => r.checked = (r.value === typeVal));
 
     const locSel = document.getElementById('edit-location');
-    locSel.innerHTML = '<option value="">— ยังไม่ได้ระบุ —</option>' +
-        allLocations.map(l => `<option value="${esc(l.id)}" ${m.location_id === l.id ? 'selected' : ''}>${esc(l.building)} / ${esc(l.room)}</option>`).join('');
+    locSel.innerHTML = DOMPurify.sanitize('<option value="">— ยังไม่ได้ระบุ —</option>' +
+        allLocations.map(l => `<option value="${esc(l.id)}" ${m.location_id === l.id ? 'selected' : ''}>${esc(l.building)} / ${esc(l.room)}</option>`).join(''));
 
     // Load capabilities and render checkboxes
     await loadCapabilities();
@@ -576,11 +614,11 @@ async function openEditModal(sapId) {
     if (allCapabilities.length === 0) {
         wrap.innerHTML = '<span style="color:var(--text-dim);font-size:0.8rem">ไม่มีข้อมูลฟังก์ชัน</span>';
     } else {
-        wrap.innerHTML = allCapabilities.map(c => `
+        wrap.innerHTML = DOMPurify.sanitize(allCapabilities.map(c => `
             <label class="checkbox-item">
                 <input type="checkbox" class="cap-cb" data-cap-id="${esc(c.id)}" ${existingIds.has(c.id) ? 'checked' : ''} />
                 <span class="checkbox-label">${esc(c.label_th)}</span>
-            </label>`).join('');
+            </label>`).join(''));
     }
 
     openModal('edit-modal');
@@ -637,18 +675,18 @@ async function loadLocations() {
         tbody.innerHTML = '<tr><td colspan="5" class="tbl-empty">ยังไม่มีสถานที่ กรุณาเพิ่มใหม่</td></tr>';
         return;
     }
-    tbody.innerHTML = allLocations.map(l => `
+    tbody.innerHTML = DOMPurify.sanitize(allLocations.map(l => `
     <tr>
       <td class="sap-code">${esc(l.id)}</td>
       <td>${esc(l.building) || '—'}</td>
       <td>${esc(l.room) || '—'}</td>
       <td>${countMap[l.id] || 0} ตัว</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-ghost btn-sm" onclick="openLocationModal(${esc(l.id)})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteLocation(${esc(l.id)})">🗑</button>
+        <button class="btn btn-ghost btn-sm" data-action="editLoc" data-id="${esc(l.id)}">✏️</button>
+        <button class="btn btn-danger btn-sm" data-action="deleteLoc" data-id="${esc(l.id)}">🗑</button>
       </td>
     </tr>
-  `).join('');
+  `).join(''));
 }
 
 function openLocationModal(id = null) {
@@ -705,8 +743,8 @@ async function loadReports() {
     const { data } = await sb.from('manikins').select('status, asset_name').eq('is_active', true).eq('needs_review', false);
     const all = data || [];
 
-    const statusColors = { ready: '#22c55e', in_use: '#a78bfa', maintenance: '#f59e0b', broken: '#ef4444', missing: '#94a3b8' };
-    const ageColors = { adult: '#4a9fd4', child: '#fbbf24', infant: '#a78bfa', other: '#94a3b8' };
+    const statusColors = { ready: '#22c55e', in_use: '#06b6d4', maintenance: '#f59e0b', broken: '#ef4444', missing: '#94a3b8' };
+    const ageColors = { adult: '#4a9fd4', child: '#fbbf24', infant: '#06b6d4', other: '#94a3b8' };
 
     // Status bars
     renderBars('rpt-status-bars', ['ready', 'in_use', 'maintenance', 'broken', 'missing'].map(k => ({
@@ -756,3 +794,24 @@ async function init() {
 }
 
 init();
+
+/* ===== GLOBAL EVENT DELEGATION (STRICT CSP) ===== */
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+
+    // Static dashboard buttons
+    if (btn.id === 'btn-dash-review') switchTab('review');
+    else if (btn.id === 'btn-refresh-review') loadReviewQueue();
+    else if (btn.id === 'btn-refresh-manikins') loadManikins();
+    else if (btn.id === 'btn-close-edit') closeModal('edit-modal');
+    else if (btn.id === 'btn-close-loc') closeModal('location-modal');
+
+    // Dynamic table buttons
+    else if (btn.dataset.action === 'approve') approveOne(btn.dataset.id);
+    else if (btn.dataset.action === 'reject') rejectOne(btn.dataset.id);
+    else if (btn.dataset.action === 'edit') openEditModal(btn.dataset.id);
+    else if (btn.dataset.action === 'editLoc') openLocationModal(parseInt(btn.dataset.id));
+    else if (btn.dataset.action === 'deleteLoc') deleteLocation(parseInt(btn.dataset.id));
+    else if (btn.dataset.page) onPage(parseInt(btn.dataset.page));
+});
