@@ -56,8 +56,20 @@
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    รออนุมัติ
+                    รออนุมัติ (หุ่นใหม่)
                     <span class="nav-badge" id="review-badge">...</span>
+                </div>
+                <div class="sidebar-link" data-tab="borrow-requests">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    คำร้องยืมคืน
+                    <span class="nav-badge" style="background:#ef4444;" id="borrow-badge">...</span>
                 </div>
                 <div class="sidebar-link" data-tab="manikins">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -207,6 +219,75 @@
                             <tbody id="dash-review-tbody">
                                 <tr>
                                     <td colspan="4" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB: BORROW REQUESTS ======================== -->
+                <div class="tab-pane" id="tab-borrow-requests">
+                    <div class="stats-row" style="margin-bottom: 24px;">
+                        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+                            <div class="stat-val" style="color:#f59e0b" id="b-pending">—</div>
+                            <div class="stat-label">รออนุมัติวันนี้</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #3b82f6;">
+                            <div class="stat-val" style="color:#3b82f6" id="b-receiving">—</div>
+                            <div class="stat-label">คืนรอตรวจเช็ค</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #10b981;">
+                            <div class="stat-val" style="color:#10b981" id="b-preparing">—</div>
+                            <div class="stat-label">เตรียมของพรุ่งนี้</div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">จัดการคำร้องยืมคืนอุปกรณ์</div>
+                            <div class="section-sub">ตรวจสอบ, อนุมัติ, ยกเลิก และรับคืนอุปกรณ์</div>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-ghost btn-sm" id="btn-refresh-borrow">↻ รีเฟรช</button>
+                        </div>
+                    </div>
+
+                    <div class="admin-table-wrap">
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                <input class="table-search" id="borrow-search"
+                                    placeholder="ค้นหาชื่อผู้ยืม, โครงการ, Tracking ID" />
+                            </div>
+                            <select class="status-select" id="borrow-status-filter">
+                                <option value="">ทุกสถานะ</option>
+                                <option value="pending">รออนุมัติ</option>
+                                <option value="approved">อนุมัติแล้ว (รอรับของ/ใช้งานอยู่)</option>
+                                <option value="returned_pending_inspection">รับคืนแล้ว (รอตรวจเช็ค)</option>
+                                <option value="returned">คืนสมบูรณ์</option>
+                                <option value="cancelled">ยกเลิก</option>
+                                <option value="rejected">ถูกปฏิเสธ</option>
+                            </select>
+                        </div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Tracking ID</th>
+                                    <th>ผู้ยืม</th>
+                                    <th>โครงการ</th>
+                                    <th>วันที่เบิก</th>
+                                    <th>สถานะ</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="borrow-tbody">
+                                <tr>
+                                    <td colspan="6" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
                                     </td>
                                 </tr>
                             </tbody>
@@ -380,14 +461,37 @@
                 <div class="tab-pane" id="tab-reports">
                     <div class="section-header">
                         <div>
-                            <div class="section-title">รายงานและสถิติ</div>
-                            <div class="section-sub">สรุปข้อมูลคลังหุ่นจำลอง</div>
+                            <div class="section-title">รายงานและสถิติ (Analytics)</div>
+                            <div class="section-sub">สรุปข้อมูลคลังหุ่นจำลอง และการยืม-คืน</div>
                         </div>
                         <button class="btn btn-primary btn-sm" id="btn-export">⬇ Export CSV</button>
                     </div>
+
+                    <!-- Phase 1: Executive KPIs -->
+                    <div class="stats-row" style="margin-bottom: 24px;">
+                        <div class="stat-card" style="border-left: 4px solid #10b981;">
+                            <div class="stat-val" style="color:#10b981" id="kpi-approved">—%</div>
+                            <div class="stat-label">อัตราการจองสำเร็จ</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #ef4444;">
+                            <div class="stat-val" style="color:#ef4444" id="kpi-cancelled">—%</div>
+                            <div class="stat-label">อัตราถูกยกเลิก/ปฏิเสธ</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #14b8a6;">
+                            <div class="stat-val" style="color:#14b8a6" id="kpi-leadtime">— วัน</div>
+                            <div class="stat-label">เวลาจองล่วงหน้าเฉลี่ย</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+                            <div class="stat-val"
+                                style="color:#f59e0b; font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                id="kpi-topusage">—</div>
+                            <div class="stat-label">หุ่นยอดนิยม (เดือนนี้)</div>
+                        </div>
+                    </div>
+
                     <div class="report-grid" id="report-grid">
                         <div class="report-card">
-                            <div class="report-card-title">สถานะตามจำนวน</div>
+                            <div class="report-card-title">สถานะความพร้อมใช้งานของรุ่นต่างๆ (ชิ้น)</div>
                             <div id="rpt-status-bars">
                                 <div class="tbl-loading"><span class="spinner-sm"></span></div>
                             </div>
@@ -536,6 +640,111 @@
         </div>
     </div>
 
+    <!-- Modal: Return Inspection (Damage Tracking & Partial) -->
+    <div class="modal-overlay hidden" id="return-modal">
+        <div class="modal" style="max-width: 800px; width: 90%;">
+            <div class="modal-header">
+                <div class="modal-icon edit" style="background: rgba(59, 130, 246, 0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                        <polyline points="9 11 12 14 22 4" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">ตรวจสอบรับคืนอุปกรณ์</div>
+                    <div class="modal-desc">ระบุจำนวนที่รับคืนปกติ และชำรุด/ส่งซ่อม <br><span
+                            style="font-size:0.8rem; color:var(--text-3);" id="return-tid-display"></span></div>
+                </div>
+                <button class="modal-close" id="btn-close-return">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="return-req-id" />
+            <div class="modal-body">
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-outline btn-sm" id="btn-return-all">✅ รับคืนปกติทั้งหมด</button>
+                    <button class="btn btn-outline btn-sm" id="btn-maintenance-all"
+                        style="color:#f59e0b; border-color:#f59e0b;">🛠️ ส่งซ่อมทั้งหมด</button>
+                </div>
+                <table class="admin-table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th width="35%">อุปกรณ์</th>
+                            <th width="15%" style="text-align:center">ยืมไป (ชิ้น)</th>
+                            <th width="15%" style="text-align:center">ปกติ</th>
+                            <th width="15%" style="text-align:center">ชำรุด</th>
+                            <th width="20%" style="text-align:center">ส่งซ่อม</th>
+                        </tr>
+                    </thead>
+                    <tbody id="return-items-tbody">
+                        <!-- JS injected rows -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="return-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="return-save">บันทึกการรับคืน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Reject Reason -->
+    <div class="modal-overlay hidden" id="reject-modal">
+        <div class="modal" style="max-width: 500px; width: 90%;">
+            <div class="modal-header">
+                <div class="modal-icon danger" style="background: rgba(239, 68, 68, 0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">ระบุเหตุผลการไม่อนุมัติ</div>
+                    <div class="modal-desc">ข้อมูลนี้จะถูกส่งแจ้งเตือนไปยังผู้ยืม</div>
+                </div>
+                <button class="modal-close" id="btn-close-reject">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="reject-req-id" />
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">สาเหตุหลัก (เลือกจากรายการ)</label>
+                    <select class="field-select" id="reject-reason-select">
+                        <option value="อุปกรณ์ที่คุณต้องการไม่มีคิวว่างในช่วงเวลาดังกล่าว">
+                            อุปกรณ์ที่คุณต้องการไม่มีคิวว่างในช่วงเวลาดังกล่าว</option>
+                        <option value="ข้อมูลโครงการ / วัตถุประสงค์การยืมไม่ชัดเจน">ข้อมูลโครงการ /
+                            วัตถุประสงค์การยืมไม่ชัดเจน</option>
+                        <option value="อุปกรณ์ชำรุด หรืออยู่ระหว่างการซ่อมบำรุง">อุปกรณ์ชำรุด
+                            หรืออยู่ระหว่างการซ่อมบำรุง</option>
+                        <option value="ผู้ยืมมีประวัติค้างส่งคืนอุปกรณ์ หรือชำรุด">ผู้ยืมมีประวัติค้างส่งคืนอุปกรณ์
+                            หรือชำรุด</option>
+                        <option value="other">อื่น ๆ (ระบุเอง)</option>
+                    </select>
+                </div>
+                <div class="field-group" id="reject-reason-text-group" style="display: none;">
+                    <label class="field-label">ระบุสาเหตุเพิ่มเติม</label>
+                    <textarea class="field-textarea" id="reject-reason-text"
+                        placeholder="พิมพ์เหตุผลที่นี่..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="reject-cancel">ยกเลิก</button>
+                <button class="btn btn-danger" id="reject-save">ยืนยันการปฏิเสธ</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirm Dialog (Custom - replaces native confirm()) -->
     <div class="confirm-overlay hidden" id="confirm-dialog">
         <div class="confirm-box">
@@ -571,6 +780,7 @@
         integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu"
         crossorigin="anonymous"></script>
     <script src="admin.js"></script>
+    <script src="borrow-admin.js"></script>
 </body>
 
 </html>

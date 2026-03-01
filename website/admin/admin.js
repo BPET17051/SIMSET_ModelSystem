@@ -85,6 +85,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
 const tabMeta = {
     dashboard: { title: 'Dashboard', sub: 'ภาพรวมสถานะคลังหุ่นจำลอง' },
     review: { title: 'รออนุมัติ', sub: 'หุ่นที่ดึงมาจาก Google Sheet รอการตรวจสอบ' },
+    'borrow-requests': { title: 'คำร้องยืมคืน', sub: 'จัดการคำร้องยืมคืนอุปกรณ์ และรับคืน' },
     manikins: { title: 'คลังหุ่นทั้งหมด', sub: 'แก้ไขสถานะ ที่ตั้ง และหมายเหตุ' },
     locations: { title: 'สถานที่ / ห้อง', sub: 'จัดการข้อมูลอาคารและห้องเก็บหุ่น' },
     reports: { title: 'รายงานและสถิติ', sub: 'สรุปข้อมูลคลังหุ่นในภาพรวม' }
@@ -106,6 +107,7 @@ function switchTab(tabName) {
 
     if (tabName === 'dashboard') loadDashboard();
     if (tabName === 'review') { reviewPage = 1; loadReviewQueue(); }
+    if (tabName === 'borrow-requests') { if (typeof loadBorrowRequests === 'function') loadBorrowRequests(); }
     if (tabName === 'manikins') { manikinPage = 1; loadManikins(); }
     if (tabName === 'locations') loadLocations();
     if (tabName === 'reports') loadReports();
@@ -740,8 +742,9 @@ async function deleteLocation(id) {
 
 /* ===== TAB 5: REPORTS ===== */
 async function loadReports() {
-    const { data } = await sb.from('manikins').select('status, asset_name').eq('is_active', true).eq('needs_review', false);
-    const all = data || [];
+    // 1. Load Manikins Status Data (Existing)
+    const { data: mData } = await sb.from('manikins').select('status, asset_name').eq('is_active', true).eq('needs_review', false);
+    const all = mData || [];
 
     const statusColors = { ready: '#22c55e', in_use: '#06b6d4', maintenance: '#f59e0b', broken: '#ef4444', missing: '#94a3b8' };
     const ageColors = { adult: '#4a9fd4', child: '#fbbf24', infant: '#06b6d4', other: '#94a3b8' };
@@ -763,6 +766,74 @@ async function loadReports() {
     all.forEach(m => modelCount[m.asset_name] = (modelCount[m.asset_name] || 0) + 1);
     const top10 = Object.entries(modelCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ key: name, label: name, count }));
     renderBars('rpt-model-bars', top10, () => '#2575b8');
+
+    // 2. Load Borrow Requests for Phase 1 Executive KPIs
+    const startDate = new Date();
+    startDate.setDate(1); // Start of current month for top usage
+    const startOfThisMonth = startDate.toISOString();
+
+    const { data: bData } = await sb.from('borrow_requests')
+        .select(`
+            status, created_at, 
+            borrow_request_items(start_date, equipments(name_th))
+        `);
+
+    const reqs = bData || [];
+
+    // KPI 1 & 2: Approved / Cancelled Rates
+    let totalReqs = reqs.length;
+    let approvedReqs = 0;
+    let cancelledReqs = 0;
+
+    // KPI 3: Avg Lead Time
+    let totalLeadTimeDays = 0;
+    let leadTimeCount = 0;
+
+    // KPI 4: Top Model (Month)
+    const usageThisMonthCount = {};
+
+    reqs.forEach(r => {
+        // Status counts
+        if (['approved', 'returned_pending_inspection', 'returned'].includes(r.status)) approvedReqs++;
+        if (['cancelled', 'rejected'].includes(r.status)) cancelledReqs++;
+
+        // Lead Time (only for valid requests with items)
+        if (r.borrow_request_items && r.borrow_request_items.length > 0) {
+            const createdAt = new Date(r.created_at);
+            // Get earliest start date among items
+            const earliestStartStr = r.borrow_request_items.reduce((min, cur) => cur.start_date < min.start_date ? cur : min).start_date;
+            const earliestStart = new Date(earliestStartStr);
+            const diffTime = earliestStart - createdAt;
+            const diffDays = Math.max(0, diffTime / (1000 * 60 * 60 * 24)); // clamp to 0 if they book in the past/same day weirdly
+
+            totalLeadTimeDays += diffDays;
+            leadTimeCount++;
+
+            // Usage freq this month
+            if (r.created_at >= startOfThisMonth && r.status !== 'cancelled' && r.status !== 'rejected') {
+                r.borrow_request_items.forEach(item => {
+                    const eqName = item.equipments?.name_th || 'Unknown';
+                    usageThisMonthCount[eqName] = (usageThisMonthCount[eqName] || 0) + 1;
+                });
+            }
+        }
+    });
+
+    const approvedRate = totalReqs > 0 ? ((approvedReqs / totalReqs) * 100).toFixed(1) : 0;
+    const cancelledRate = totalReqs > 0 ? ((cancelledReqs / totalReqs) * 100).toFixed(1) : 0;
+    const avgLeadTime = leadTimeCount > 0 ? (totalLeadTimeDays / leadTimeCount).toFixed(1) : 0;
+
+    let topUsedName = 'ไม่มีข้อมูล';
+    if (Object.keys(usageThisMonthCount).length > 0) {
+        const sorted = Object.entries(usageThisMonthCount).sort((a, b) => b[1] - a[1]);
+        topUsedName = sorted[0][0]; // the name
+    }
+
+    document.getElementById('kpi-approved').textContent = `${approvedRate}%`;
+    document.getElementById('kpi-cancelled').textContent = `${cancelledRate}%`;
+    document.getElementById('kpi-leadtime').textContent = `${avgLeadTime} วัน`;
+    document.getElementById('kpi-topusage').textContent = topUsedName;
+    document.getElementById('kpi-topusage').title = topUsedName; // toolltip for long text
 
     setSync();
 }

@@ -1,0 +1,264 @@
+/* === SiMSET Tracker CSS === */
+
+.tracking-search {
+    text-align: center;
+    padding: 40px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.tracking-box {
+    margin: 0 auto;
+    max-width: 500px;
+    padding: 8px 8px 8px 16px;
+    background: rgba(13, 22, 36, 0.8);
+}
+
+.tracking-box input {
+    font-size: 1.1rem;
+    text-align: center;
+    letter-spacing: 0.05em;
+}
+
+.track-error {
+    color: #ef4444;
+    font-size: 0.9rem;
+    margin-top: 15px;
+    display: none;
+}
+
+.tracking-result {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+    padding: 30px;
+    margin-top: 30px;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.tracking-id-display {
+    font-family: 'Inter', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--blue-light);
+    letter-spacing: 0.05em;
+}
+
+.status-badge.large {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+}
+
+.status-badge.status-pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.status-approved {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.status-rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.status-cancelled {
+    background: rgba(107, 114, 128, 0.15);
+    color: #9ca3af;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.status-badge.status-expired {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.status-badge.status-returned {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.detail-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.items-section {
+    margin-bottom: 30px;
+}
+
+.track-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.track-item-row:last-child {
+    border-bottom: none;
+}
+
+.track-item-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.track-item-dates {
+    font-size: 0.8rem;
+    color: var(--text-3);
+}
+
+.track-item-qty {
+    font-weight: 600;
+    color: var(--blue-light);
+    background: rgba(37, 117, 184, 0.1);
+    padding: 4px 12px;
+    border-radius: 6px;
+}
+
+.cancel-zone {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px dashed rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.print-actions {
+    background: rgba(34, 197, 94, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* --- Print Styles --- */
+.print-view {
+    display: none;
+    background: #fff;
+    color: #000;
+    padding: 40px;
+    font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .print-view,
+    .print-view * {
+        visibility: visible;
+    }
+
+    .print-view {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+    }
+
+    .print-info-table,
+    .print-items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 12pt;
+    }
+
+    .print-info-table td {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    .print-items-table th,
+    .print-items-table td {
+        padding: 10px;
+        border: 1px solid #000;
+        text-align: left;
+    }
+
+    .print-signatures {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 60px;
+    }
+
+    .sig-box {
+        text-align: center;
+        width: 250px;
+    }
+
+    .sig-line {
+        border-bottom: 1px dotted #000;
+        height: 40px;
+        margin-bottom: 10px;
+    }
+
+    .sig-title {
+        font-size: 12pt;
+    }
+}
+/* aria-label */

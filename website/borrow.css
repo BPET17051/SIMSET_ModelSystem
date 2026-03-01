@@ -1,0 +1,394 @@
+/* === SiMSET Borrow CSS === */
+/* Extends style.css with E-commerce & Booking specific components */
+
+/* --- Date Picker & Check Avail --- */
+.date-picker-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    background: rgba(13, 22, 36, 0.8);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    margin: 0 auto;
+    max-width: 800px;
+    position: relative;
+    z-index: 10;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 180px;
+}
+
+.date-input-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-2);
+}
+
+.date-input-group input[type="date"] {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 1rem;
+    outline: none;
+    transition: var(--tr);
+}
+
+.date-input-group input[type="date"]:focus {
+    border-color: var(--blue-light);
+    box-shadow: 0 0 0 2px rgba(37, 117, 184, 0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1a4b7a, #2575b8);
+    color: #fff;
+    border: none;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--tr);
+    box-shadow: 0 4px 12px rgba(37, 117, 184, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 117, 184, 0.45);
+}
+
+.btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-3);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-hover);
+    color: var(--blue-light);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--tr);
+}
+
+.btn-outline:hover {
+    background: rgba(37, 117, 184, 0.1);
+    color: #fff;
+}
+
+/* --- Matrix Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--tr);
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
+    transform: scale(0.95);
+    transition: transform var(--tr);
+}
+
+.modal-overlay.open .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color var(--tr);
+}
+
+.modal-close:hover {
+    color: #fff;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.matrix-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.matrix-table th,
+.matrix-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.matrix-table th {
+    background: rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+    color: var(--text-2);
+}
+
+.matrix-table th:first-child {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: var(--bg-card2);
+    z-index: 2;
+}
+
+.matrix-table td.avail-0 {
+    background: rgba(239, 68, 68, 0.15);
+    /* Red for 0 */
+    color: #f87171;
+    font-weight: bold;
+}
+
+.matrix-table td.avail-low {
+    background: rgba(245, 158, 11, 0.15);
+    /* Orange for 1-2 */
+    color: #fbbf24;
+}
+
+.matrix-table td.avail-high {
+    background: rgba(34, 197, 94, 0.1);
+    /* Green for plenty */
+    color: #4ade80;
+}
+
+/* --- Cart Button & Badge --- */
+.cart-icon {
+    font-size: 1.2rem;
+    position: relative;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    transition: var(--tr);
+}
+
+.cart-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.cart-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg);
+    transition: transform var(--tr);
+}
+
+.cart-badge.bump {
+    transform: scale(1.4);
+}
+
+/* --- Equipment Cards with Cart Controls --- */
+.product-card-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 15px;
+    border-top: 1px solid var(--border);
+    padding-top: 15px;
+}
+
+.qty-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid var(--border);
+}
+
+.qty-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-2);
+    font-size: 1rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background var(--tr);
+}
+
+.qty-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.qty-btn:disabled {
+    color: var(--border);
+    cursor: not-allowed;
+}
+
+.qty-display {
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+    color: var(--text);
+}
+
+.avail-badge {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #4ade80;
+}
+
+.avail-badge.out-of-stock {
+    color: #ef4444;
+}
+
+.stock-info {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    text-align: right;
+}
+
+/* --- Next Available Date Note --- */
+.next-avail-note {
+    font-size: 0.75rem;
+    color: #f59e0b;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    display: inline-block;
+}
+
+/* --- Cart Drawer Overrides --- */
+.cart-drawer {
+    width: 450px !important;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    gap: 15px;
+}
+
+.cart-item-info h4 {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.cart-item-info p {
+    font-size: 0.8rem;
+    color: var(--text-2);
+}
+
+.cart-item-remove {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 4px;
+    opacity: 0.7;
+    transition: var(--tr);
+}
+
+.cart-item-remove:hover {
+    opacity: 1;
+}
+
+.input-field {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.9rem;
+    outline: none;
+    transition: var(--tr);
+}
+
+.input-field:focus {
+    border-color: var(--blue-light);
+}
+
+/* Layout overrides for Borrow */
+.product-card {
+    min-height: 200px;
+}
+/* aria-label */
