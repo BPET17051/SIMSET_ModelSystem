@@ -1,7 +1,214 @@
 /* === SiMSET Borrow CSS === */
 /* Extends style.css with E-commerce & Booking specific components */
 
-/* --- Date Picker & Check Avail --- */
+:root {
+    /* Design System Overrides */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Catalog Layout (E-commerce Style) --- */
+.catalog-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .catalog-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Sidebar Filters --- */
+.catalog-sidebar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: var(--space-lg);
+    position: sticky;
+    top: 90px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.sidebar-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+    color: var(--text);
+}
+
+/* --- Quick Detail Drawer Layout --- */
+#quick-detail-drawer {
+    width: 450px !important;
+    max-width: 100vw;
+}
+
+@media (max-width: 500px) {
+    #quick-detail-drawer {
+        width: 100vw !important;
+    }
+}
+
+.drawer-buy-box {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.mini-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.mc-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+}
+
+.mc-day.avail-0 {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.mc-day.avail-low {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.mc-day.avail-high {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.mc-date {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.mc-qty {
+    font-size: 0.65rem;
+    opacity: 0.8;
+}
+
+/* Filter Radio */
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-radio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-2);
+    transition: color 200ms ease;
+}
+
+.filter-radio:hover {
+    color: var(--text);
+}
+
+.filter-radio input[type="radio"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    outline: none;
+    transition: all 200ms ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.filter-radio input[type="radio"]:checked {
+    border-color: var(--color-cta);
+}
+
+.filter-radio input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: var(--color-cta);
+    border-radius: 50%;
+}
+
+/* Minimalist Card Overrides */
+.product-card {
+    min-height: 160px;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.product-card-controls {
+    display: none;
+    /* Hide original inline controls, move to drawer */
+}
+
+/* Base Form elements overrides */
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: rgba(255, 255, 255, 0.05);
+    /* Support dark mode */
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 200ms ease;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    border-color: var(--color-cta);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.15);
+    /* Focus ring */
+}
+
+/* --- Date Picker --- */
 .date-picker-wrap {
     display: flex;
     flex-wrap: wrap;
@@ -51,7 +258,7 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #1a4b7a, #2575b8);
+    background: linear-gradient(135deg, #1d9bda, #2575b8);
     color: #fff;
     border: none;
     padding: 13px 24px;
@@ -65,7 +272,7 @@
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 117, 184, 0.45);
+    box-shadow: 0 8px 20px rgba(37, 117, 184, 0.4);
 }
 
 .btn-primary:disabled {
@@ -189,32 +396,29 @@
     text-align: left;
     position: sticky;
     left: 0;
-    background: var(--bg-card2);
+    background: var(--bg-card);
     z-index: 2;
 }
 
 .matrix-table td.avail-0 {
     background: rgba(239, 68, 68, 0.15);
-    /* Red for 0 */
     color: #f87171;
     font-weight: bold;
 }
 
 .matrix-table td.avail-low {
     background: rgba(245, 158, 11, 0.15);
-    /* Orange for 1-2 */
     color: #fbbf24;
 }
 
 .matrix-table td.avail-high {
     background: rgba(34, 197, 94, 0.1);
-    /* Green for plenty */
     color: #4ade80;
 }
 
 /* --- Cart Button & Badge --- */
 .cart-icon {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     position: relative;
     cursor: pointer;
     padding: 8px;
@@ -391,4 +595,5 @@
 .product-card {
     min-height: 200px;
 }
+
 /* aria-label */
