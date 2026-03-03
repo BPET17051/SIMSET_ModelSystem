@@ -847,7 +847,7 @@ async function loadLocations() {
         tbody.innerHTML = '<tr><td colspan="5" class="tbl-empty">ยังไม่มีสถานที่ กรุณาเพิ่มใหม่</td></tr>';
         return;
     }
-    tbody.innerHTML = DOMPurify.sanitize(allLocations.map(l => `
+    tbody.innerHTML = allLocations.map(l => `
     <tr>
       <td class="sap-code">${esc(l.id)}</td>
       <td>${esc(l.building) || '—'}</td>
@@ -858,7 +858,7 @@ async function loadLocations() {
         <button class="btn btn-danger btn-sm" data-action="deleteLoc" data-id="${esc(l.id)}">🗑</button>
       </td>
     </tr>
-  `).join(''));
+  `).join('');
 }
 
 function openLocationModal(id = null) {
