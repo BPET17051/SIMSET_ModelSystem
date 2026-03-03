@@ -731,7 +731,7 @@ document.getElementById('manikin-status-filter').addEventListener('change', filt
 
 function locationLabel(lid) {
     if (!lid) return '<span style="color:var(--text-dim)">—</span>';
-    const loc = allLocations.find(l => l.id === lid);
+    const loc = allLocations.find(l => String(l.id) === String(lid));
     return loc ? `${esc(loc.building)} / ${esc(loc.room)}` : `(${esc(lid)})`;
 }
 
@@ -775,8 +775,8 @@ async function openEditModal(sapId) {
     document.querySelectorAll('[name="edit-manikin-type"]').forEach(r => r.checked = (r.value === typeVal));
 
     const locSel = document.getElementById('edit-location');
-    locSel.innerHTML = DOMPurify.sanitize('<option value="">— ยังไม่ได้ระบุ —</option>' +
-        allLocations.map(l => `<option value="${esc(l.id)}" ${m.location_id === l.id ? 'selected' : ''}>${esc(l.building)} / ${esc(l.room)}</option>`).join(''));
+    locSel.innerHTML = '<option value="">— ยังไม่ได้ระบุ —</option>' +
+        allLocations.map(l => `<option value="${esc(l.id)}" ${String(m.location_id) === String(l.id) ? 'selected' : ''}>${esc(l.building)} / ${esc(l.room)}</option>`).join('');
 
     // Load capabilities and render checkboxes
     await loadCapabilities();
@@ -802,9 +802,10 @@ document.getElementById('edit-modal').addEventListener('click', (e) => { if (e.t
 document.getElementById('edit-save').addEventListener('click', async () => {
     const sapId = document.getElementById('edit-sap-id').value;
     const selectedType = document.querySelector('[name="edit-manikin-type"]:checked')?.value || null;
+    const rawLoc = document.getElementById('edit-location').value;
     const payload = {
         status: document.getElementById('edit-status').value,
-        location_id: document.getElementById('edit-location').value || null,
+        location_id: rawLoc ? Number(rawLoc) : null,
         note: document.getElementById('edit-notes').value.trim() || null,
         manikin_type: selectedType || null
     };
