@@ -252,51 +252,62 @@ function renderBars(containerId, data, colorFn) {
 
 /* ===== TAB 1: DASHBOARD ===== */
 async function loadDashboard() {
-    const { data, error } = await sb.from('manikins')
-        .select('status, needs_review, asset_name')
+    // 1. Get ALL ACTIVE manikins for inventory stats
+    const { data: allActive, error } = await sb.from('manikins')
+        .select('status, asset_name')
         .eq('is_active', true);
 
     if (error) { showToast('โหลด Dashboard ล้มเหลว', 'error'); return; }
 
-    const all = data.filter(m => !m.needs_review);
-    const reviewCount = data.filter(m => m.needs_review).length;
+    // 2. Get COUNT of pending review manikins (they are is_active = false)
+    const { count: reviewCount } = await sb.from('manikins')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', false)
+        .eq('needs_review', true)
+        .is('deleted_at', null);
 
-    document.getElementById('d-total').textContent = all.length;
-    document.getElementById('d-ready').textContent = all.filter(m => m.status === 'ready').length;
-    document.getElementById('d-maintenance').textContent = all.filter(m => m.status === 'maintenance').length;
-    document.getElementById('d-broken').textContent = all.filter(m => m.status === 'broken').length;
-    document.getElementById('d-review').textContent = reviewCount;
-    document.getElementById('review-badge').textContent = reviewCount;
+    document.getElementById('d-total').textContent = allActive.length;
+    document.getElementById('d-ready').textContent = allActive.filter(m => m.status === 'ready').length;
+    document.getElementById('d-maintenance').textContent = allActive.filter(m => m.status === 'maintenance').length;
+    document.getElementById('d-broken').textContent = allActive.filter(m => m.status === 'broken').length;
+    document.getElementById('d-review').textContent = reviewCount || 0;
+    document.getElementById('review-badge').textContent = reviewCount || 0;
 
     // Status bars
     const statusKeys = ['ready', 'in_use', 'maintenance', 'broken', 'missing'];
     const statusColors = { ready: '#22c55e', in_use: '#a78bfa', maintenance: '#f59e0b', broken: '#ef4444', missing: '#94a3b8' };
     renderBars('status-bars', statusKeys.map(k => ({
-        key: k, label: STATUS_TH[k] || k, count: all.filter(m => m.status === k).length
+        key: k, label: STATUS_TH[k] || k, count: allActive.filter(m => m.status === k).length
     })).filter(d => d.count > 0), k => statusColors[k] || '#888');
 
     // Age bars
     const ageGroups = { adult: 0, child: 0, infant: 0, other: 0 };
-    all.forEach(m => ageGroups[detectAge(m.asset_name)]++);
+    allActive.forEach(m => ageGroups[detectAge(m.asset_name)]++);
     const ageColors = { adult: '#4a9fd4', child: '#fbbf24', infant: '#a78bfa', other: '#94a3b8' };
     renderBars('age-bars', Object.entries(ageGroups).map(([k, c]) => ({
         key: k, label: `${ageEmoji[k]} ${ageTh[k]}`, count: c
     })).filter(d => d.count > 0), k => ageColors[k] || '#888');
 
     // Mini review table
-    const { data: reviewData } = await sb.from('manikins').select('sap_id, asset_name').eq('is_active', true).eq('needs_review', true).limit(5);
+    const { data: reviewData } = await sb.from('manikins')
+        .select('sap_id, asset_name')
+        .eq('is_active', false)
+        .eq('needs_review', true)
+        .is('deleted_at', null)
+        .limit(5);
+
     const tbody = document.getElementById('dash-review-tbody');
     if (!reviewData || reviewData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="tbl-empty">✅ ไม่มีรายการรออนุมัติ</td></tr>';
     } else {
-        tbody.innerHTML = DOMPurify.sanitize(reviewData.map(m => `
+        tbody.innerHTML = reviewData.map(m => `
       <tr>
         <td class="sap-code">${esc(m.sap_id)}</td>
         <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
         <td>${agePill(m.asset_name)}</td>
         <td><button class="btn btn-success btn-sm" data-action="approve" data-id="${esc(m.sap_id)}">✓ อนุมัติ</button></td>
       </tr>
-    `).join(''));
+    `).join('');
     }
     setSync();
 }
