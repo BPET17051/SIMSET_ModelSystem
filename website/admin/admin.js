@@ -332,7 +332,7 @@ function renderReviewTable() {
         return;
     }
 
-    tbody.innerHTML = DOMPurify.sanitize(page.map(m => `
+    tbody.innerHTML = page.map(m => `
     <tr>
       <td><input type="checkbox" class="review-cb" data-sap="${esc(m.sap_id)}" /></td>
       <td class="sap-code">${esc(m.sap_id)}</td>
@@ -344,7 +344,7 @@ function renderReviewTable() {
         <button class="btn btn-danger btn-sm" data-action="reject" data-id="${esc(m.sap_id)}">✕ ปฏิเสธ</button>
       </td>
     </tr>
-  `).join(''));
+  `).join('');
 
     buildPagination('review-pagination', reviewFiltered.length, reviewPage, (p) => { reviewPage = p; renderReviewTable(); });
 }
@@ -576,7 +576,7 @@ function renderManikinTable() {
         return;
     }
 
-    tbody.innerHTML = DOMPurify.sanitize(page.map(m => `
+    tbody.innerHTML = page.map(m => `
     <tr>
       <td class="sap-code">${esc(m.sap_id)}</td>
       <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
@@ -586,7 +586,7 @@ function renderManikinTable() {
       <td style="font-size:0.75rem;color:var(--text-secondary);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.note) || '—'}</td>
       <td><button class="btn btn-ghost btn-sm" data-action="edit" data-id="${esc(m.sap_id)}">✏️ แก้ไข</button></td>
     </tr>
-  `).join(''));
+  `).join('');
 
     buildPagination('manikin-pagination', manikinFiltered.length, manikinPage, (p) => { manikinPage = p; renderManikinTable(); });
 }
