@@ -83,12 +83,13 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
 
 /* ===== NAVIGATION ===== */
 const tabMeta = {
-    dashboard: { title: 'Dashboard', sub: 'ภาพรวมสถานะคลังหุ่นจำลอง' },
-    review: { title: 'รออนุมัติ', sub: 'หุ่นที่ดึงมาจาก Google Sheet รอการตรวจสอบ' },
-    'borrow-requests': { title: 'คำร้องยืมคืน', sub: 'จัดการคำร้องยืมคืนอุปกรณ์ และรับคืน' },
-    manikins: { title: 'คลังหุ่นทั้งหมด', sub: 'แก้ไขสถานะ ที่ตั้ง และหมายเหตุ' },
-    locations: { title: 'สถานที่ / ห้อง', sub: 'จัดการข้อมูลอาคารและห้องเก็บหุ่น' },
-    reports: { title: 'รายงานและสถิติ', sub: 'สรุปข้อมูลคลังหุ่นในภาพรวม' }
+    'dashboard': { title: 'Dashboard', sub: 'ภาพรวมระบบ SiMSET' },
+    'review': { title: 'รออนุมัติ (หุ่นใหม่)', sub: 'พิจารณาหุ่นจำลองที่นำเข้าใหม่จาก AppSheet/Docs' },
+    'borrow-requests': { title: 'คำร้องยืมคืน', sub: 'รายการคำร้องขอยืมหุ่นจำลองทั้งหมด และการนำออก' },
+    'manikins': { title: 'คลังหุ่นจำลองทั้งหมด', sub: 'รายชื่อหุ่นจำลองและข้อมูลทางเทคนิค' },
+    'recycle': { title: 'ประวัติการปฏิเสธ (ถังขยะ)', sub: 'ข้อมูลที่ถูกล้อค แอดมินปฏิเสธไปแล้ว (สามารถกู้คืนได้)' },
+    'locations': { title: 'สถานที่ / ห้อง', sub: 'จัดการสถานที่จัดเก็บหุ่นจำลองและห้องฝึก' },
+    'reports': { title: 'รายงานและสถิติ', sub: 'Export ข้อมูลและดูการใช้งานย้อนหลัง' }
 };
 
 function switchTab(tabName) {
@@ -109,6 +110,7 @@ function switchTab(tabName) {
     if (tabName === 'review') { reviewPage = 1; loadReviewQueue(); }
     if (tabName === 'borrow-requests') { if (typeof loadBorrowRequests === 'function') loadBorrowRequests(); }
     if (tabName === 'manikins') { manikinPage = 1; loadManikins(); }
+    if (tabName === 'recycle') { recyclePage = 1; loadRecycleBin(); }
     if (tabName === 'locations') loadLocations();
     if (tabName === 'reports') loadReports();
 }
@@ -381,6 +383,13 @@ document.getElementById('review-search').addEventListener('input', (e) => {
     renderReviewTable();
 });
 
+document.getElementById('recycle-search')?.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    recycleFiltered = recycleData.filter(m => !q || m.asset_name?.toLowerCase().includes(q) || m.sap_id?.toLowerCase().includes(q) || m.asset_code?.toLowerCase().includes(q));
+    recyclePage = 1;
+    renderRecycleTable();
+});
+
 document.getElementById('review-select-all').addEventListener('change', (e) => {
     document.querySelectorAll('.review-cb').forEach(cb => cb.checked = e.target.checked);
     updateBulkBar();
@@ -518,9 +527,104 @@ async function bulkReject(sapIds) {
     }
 }
 
+/* ===== TAB: RECYCLE BIN ===== */
+async function loadRecycleBin() {
+    const tbody = document.getElementById('recycle-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">กำลังโหลด...</td></tr>';
+
+    const { data, error } = await sb.from('manikins')
+        .select('sap_id, asset_name, asset_code, deleted_at, status, is_active')
+        .not('deleted_at', 'is', null) // Fetch only deleted
+        .order('deleted_at', { ascending: false });
+
+    if (error) { showToast('อัปเดตถังขยะล้มเหลว', 'error'); return; }
+
+    recycleData = data || [];
+    recycleFiltered = [...recycleData];
+    renderRecycleTable();
+}
+
+function renderRecycleTable() {
+    const start = (recyclePage - 1) * PAGE_SIZE;
+    const page = recycleFiltered.slice(start, start + PAGE_SIZE);
+    const tbody = document.getElementById('recycle-tbody');
+
+    if (page.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="tbl-empty">ถังขยะว่างเปล่า</td></tr>';
+        document.getElementById('recycle-pagination').innerHTML = '';
+        return;
+    }
+
+    tbody.innerHTML = page.map(m => {
+        const dInfo = m.deleted_at ? new Date(m.deleted_at).toLocaleDateString('th-TH') : '—';
+        return `
+    <tr>
+      <td class="sap-code">${esc(m.sap_id)}</td>
+      <td class="asset-name-cell"><div class="asset-name-text">${esc(m.asset_name) || '—'}</div></td>
+      <td class="sap-code">${esc(m.asset_code) || '—'}</td>
+      <td style="color:var(--danger)">${dInfo}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" style="color:#f59e0b; border-color:rgba(245,158,11,0.3)" data-action="restore" data-id="${esc(m.sap_id)}">
+          <svg style="vertical-align:middle;margin-right:2px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          กู้คืน
+        </button>
+      </td>
+    </tr>
+  `;
+    }).join('');
+
+    buildPagination('recycle-pagination', recycleFiltered.length, recyclePage, (p) => { recyclePage = p; renderRecycleTable(); });
+}
+
+async function restoreOne(sapId) {
+    const ok = await showConfirm({
+        title: 'กู้คืนหุ่นจำลอง',
+        messageNode: createConfirmMsg('ต้องการกู้คืน ', sapId, ' กลับไปที่หน้ารออนุมัติใช่หรือไม่?'),
+        okText: 'กู้คืน',
+        okClass: 'btn-success'
+    });
+    if (!ok) return;
+
+    try {
+        await insertAuditLog('restore_one', [sapId]);
+
+        const { error } = await sb.from('manikins')
+            .update({ deleted_at: null, is_active: true, needs_review: true }) // Send back to queue
+            .eq('sap_id', sapId)
+            .not('deleted_at', 'is', null); // DB guard
+
+        if (error) throw new Error(error.message);
+
+        showToast('กู้คืน ' + sapId + ' สำเร็จ กลับไปที่หน้ารออนุมัติแล้ว');
+
+        // Remove from recycle UI
+        recycleData = recycleData.filter(m => m.sap_id !== sapId);
+        recycleFiltered = recycleFiltered.filter(m => m.sap_id !== sapId);
+        renderRecycleTable();
+
+        // Navigate to review tab after 1s
+        setTimeout(() => switchTab('review'), 1000);
+    } catch (err) {
+        showToast('กู้คืนล้มเหลว: ' + err.message, 'error');
+    }
+}
+
+// Delegate events for the recycle bin
+document.getElementById('recycle-tbody')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (action === 'restore') restoreOne(id);
+});
+
 /* ===== TAB 3: MANIKINS CRUD ===== */
 let manikinData = [];
 let manikinFiltered = [];
+let recycleData = [], recycleFiltered = [], recyclePage = 1;
 let allCapabilities = [];
 
 async function loadCapabilities() {
