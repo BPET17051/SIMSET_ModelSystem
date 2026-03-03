@@ -251,6 +251,22 @@ function renderBars(containerId, data, colorFn) {
 }
 
 /* ===== TAB 1: DASHBOARD ===== */
+let allowedReviewLocationIds = null;
+async function getAllowedReviewLocationIds() {
+    if (allowedReviewLocationIds !== null) return allowedReviewLocationIds;
+    const { data: locs, error } = await sb.from('locations').select('id, building');
+    if (error || !locs) return [];
+
+    // Normalize target strings to ignore small spacing differences
+    const targetBuildings = ['อดุลยเดชวิกรม ชั้น 10', 'อดุลยเดชวิกรม ชั้น10', 'อาคารโภชนาการ (ชั้น5)', 'อาคารโภชนาการ (ชั้น5 )', 'พระศรีฯ ชั้น 3', 'พระศรีฯ ชั้น3'];
+
+    allowedReviewLocationIds = locs
+        .filter(l => targetBuildings.includes(l.building ? l.building.trim() : ''))
+        .map(l => l.id);
+
+    return allowedReviewLocationIds;
+}
+
 async function loadDashboard() {
     // 1. Get ALL ACTIVE manikins for inventory stats
     const { data: allActive, error } = await sb.from('manikins')
@@ -260,11 +276,18 @@ async function loadDashboard() {
     if (error) { showToast('โหลด Dashboard ล้มเหลว', 'error'); return; }
 
     // 2. Get COUNT of pending review manikins (they are is_active = false)
-    const { count: reviewCount } = await sb.from('manikins')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', false)
-        .eq('needs_review', true)
-        .is('deleted_at', null);
+    const allowedLocs = await getAllowedReviewLocationIds();
+
+    let reviewCount = 0;
+    if (allowedLocs.length > 0) {
+        const { count } = await sb.from('manikins')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_active', false)
+            .eq('needs_review', true)
+            .is('deleted_at', null)
+            .in('location_id', allowedLocs);
+        reviewCount = count || 0;
+    }
 
     document.getElementById('d-total').textContent = allActive.length;
     document.getElementById('d-ready').textContent = allActive.filter(m => m.status === 'ready').length;
@@ -289,12 +312,17 @@ async function loadDashboard() {
     })).filter(d => d.count > 0), k => ageColors[k] || '#888');
 
     // Mini review table
-    const { data: reviewData } = await sb.from('manikins')
-        .select('sap_id, asset_name')
-        .eq('is_active', false)
-        .eq('needs_review', true)
-        .is('deleted_at', null)
-        .limit(5);
+    let reviewData = [];
+    if (allowedLocs.length > 0) {
+        const { data } = await sb.from('manikins')
+            .select('sap_id, asset_name')
+            .eq('is_active', false)
+            .eq('needs_review', true)
+            .is('deleted_at', null)
+            .in('location_id', allowedLocs)
+            .limit(5);
+        reviewData = data || [];
+    }
 
     const tbody = document.getElementById('dash-review-tbody');
     if (!reviewData || reviewData.length === 0) {
@@ -318,11 +346,24 @@ let reviewFiltered = [];
 
 async function loadReviewQueue() {
     document.getElementById('review-tbody').innerHTML = '<tr><td colspan="6" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...</td></tr>';
+
+    const allowedLocs = await getAllowedReviewLocationIds();
+    if (allowedLocs.length === 0) {
+        reviewData = [];
+        reviewFiltered = [];
+        reviewPage = 1;
+        renderReviewTable();
+        document.getElementById('review-badge').textContent = '0';
+        document.getElementById('d-review').textContent = '0';
+        return;
+    }
+
     const { data, error } = await sb.from('manikins')
         .select('sap_id, team_code, asset_name, asset_code')
         .eq('is_active', false)
         .eq('needs_review', true)
         .is('deleted_at', null)
+        .in('location_id', allowedLocs)
         .order('asset_name');
 
     if (error) { showToast('โหลดคิวรออนุมัติล้มเหลว', 'error'); return; }
