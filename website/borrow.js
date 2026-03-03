@@ -1,5 +1,4 @@
-﻿/* === SiMSET Borrow App === */
-const SUPABASE_URL = 'https://ifogcvymwhcfbfjzhwsl.supabase.co';
+﻿const SUPABASE_URL = 'https://simset-showroom-proxy.simset-admin.workers.dev';
 const SUPABASE_ANON = 'sb_publishable_DZyIDHVZ-kfD1o3baz0qmw_tTyRCJG8';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -89,12 +88,8 @@ async function renderMatrix(baseDate) {
 
     // Fetch overlaps for 14 days
     const { data: overlaps, error } = await supabase
-        .from('borrow_request_items')
-        .select(`
-            equipment_id, start_date, end_date, qty_borrowed,
-            borrow_requests!inner(status)
-        `)
-        .not('borrow_requests.status', 'in', '("cancelled","expired","rejected","returned")')
+        .from('vw_active_borrow_items')
+        .select(`equipment_id, start_date, end_date, qty_borrowed`)
         .lte('start_date', endDateStr)
         .gte('end_date', new Date(dates[0].getTime() - 86400000).toISOString().split('T')[0]); // -1 day for buffer check
 
@@ -188,12 +183,8 @@ btnCheckAvail.addEventListener('click', async () => {
 
 async function calculateAvailability(start, end) {
     const { data: overlaps, error } = await supabase
-        .from('borrow_request_items')
-        .select(`
-            equipment_id, start_date, end_date, qty_borrowed,
-            borrow_requests!inner(status)
-        `)
-        .not('borrow_requests.status', 'in', '("cancelled","expired","rejected","returned")')
+        .from('vw_active_borrow_items')
+        .select(`equipment_id, start_date, end_date, qty_borrowed`)
         .lte('start_date', end); // Only items starting before or on our end date
 
     // Custom filter for end_date + buffer >= start
