@@ -311,6 +311,7 @@ async function loadReviewQueue() {
         .select('sap_id, team_code, asset_name, asset_code')
         .eq('is_active', false)
         .eq('needs_review', true)
+        .is('deleted_at', null)
         .order('asset_name');
 
     if (error) { showToast('โหลดคิวรออนุมัติล้มเหลว', 'error'); return; }
