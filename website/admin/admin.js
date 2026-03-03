@@ -448,6 +448,19 @@ document.getElementById('review-select-all').addEventListener('change', (e) => {
     updateBulkBar();
 });
 
+document.getElementById('review-tbody')?.addEventListener('change', (e) => {
+    if (e.target.classList.contains('review-cb')) {
+        updateBulkBar();
+        const allCbs = document.querySelectorAll('.review-cb');
+        const checkedCbs = document.querySelectorAll('.review-cb:checked');
+        const selectAll = document.getElementById('review-select-all');
+        if (selectAll) {
+            selectAll.checked = (allCbs.length > 0 && allCbs.length === checkedCbs.length);
+            selectAll.indeterminate = (checkedCbs.length > 0 && checkedCbs.length < allCbs.length);
+        }
+    }
+});
+
 // Old "approve all shown" button — now approve only checked
 document.getElementById('btn-approve-all').addEventListener('click', async () => {
     const checked = [...document.querySelectorAll('.review-cb:checked')].map(cb => cb.dataset.sap);
