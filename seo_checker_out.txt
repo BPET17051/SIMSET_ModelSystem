@@ -1,0 +1,28 @@
+﻿
+============================================================
+  SEO CHECKER - Search Engine Optimization Audit
+============================================================
+Project: D:\Jedi_EX_HDX_BAC01\01.Jedi_SIMSET\SIMSET_Project\SIMSET_ModelSystem
+Time: 2026-03-04 16:43:57
+------------------------------------------------------------
+Found 5 page files to analyze
+
+============================================================
+SEO ANALYSIS RESULTS
+============================================================
+
+Issue Summary:
+  [1] Missing meta description
+  [1] Missing Open Graph tags
+
+Affected files (1):
+  - track.html
+
+{
+  "script": "seo_checker",
+  "project": "D:\\Jedi_EX_HDX_BAC01\\01.Jedi_SIMSET\\SIMSET_Project\\SIMSET_ModelSystem",
+  "files_checked": 5,
+  "files_with_issues": 1,
+  "issues_found": 2,
+  "passed": false
+}
