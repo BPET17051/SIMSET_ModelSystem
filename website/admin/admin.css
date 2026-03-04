@@ -1682,6 +1682,84 @@ body {
     margin-bottom: 8px;
 }
 
+/* Capabilities Section */
+.team-caps-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.team-caps-section.hidden {
+    display: none;
+}
+
+.team-caps-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.team-caps-header .header-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: block;
+}
+
+.team-caps-header .header-subtitle {
+    font-size: 0.75rem;
+    margin-top: 2px;
+}
+
+.caps-checkboxes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.cap-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.cap-item:hover {
+    border-color: var(--border-accent);
+    background: var(--bg-hover);
+}
+
+.cap-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--blue-light);
+}
+
+.cap-item .cap-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+.team-caps-footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+}
+
 /* Order badge - e.g. RA 01 */
 .order-badge {
     display: inline-flex;

@@ -1064,6 +1064,8 @@ document.addEventListener('click', (e) => {
     else if (btn.id === 'btn-dispense-check') checkDispense();
 
     // Dynamic table buttons
+    else if (btn.id === 'btn-save-team-caps') saveTeamCapabilities(currentTeamCode);
+    else if (btn.id === 'btn-sync-caps') syncCapabilitiesToTeam(currentTeamCode);
     else if (btn.dataset.action === 'approve') approveOne(btn.dataset.id);
     else if (btn.dataset.action === 'reject') rejectOne(btn.dataset.id);
     else if (btn.dataset.action === 'edit') openEditModal(btn.dataset.id);
@@ -1098,16 +1100,20 @@ async function loadTeams() {
 
 async function selectTeam(code) {
     currentTeamCode = code;
-    document.getElementById('detail-team-code').textContent = code;
+    document.querySelectorAll('.team-card').forEach(el => el.classList.toggle('active', el.dataset.code === code));
     document.getElementById('teams-detail-empty').classList.add('hidden');
     document.getElementById('teams-detail-content').classList.remove('hidden');
-    // Update display name
-    const { data: t } = await sb.from('teams').select('display_name').eq('team_code', code).single();
-    document.getElementById('detail-team-name').textContent = t ? t.display_name : '';
-    // Refresh team list highlight
-    document.querySelectorAll('.team-card').forEach(el => el.classList.toggle('active', el.dataset.code === code));
-    await loadTeamMembers(code);
-    await checkDispense();
+    document.getElementById('detail-team-code').textContent = code;
+
+    const team = (await sb.from('teams').select('display_name').eq('team_code', code).single()).data;
+    document.getElementById('detail-team-name').textContent = team ? team.display_name : '';
+
+    // Show caps section and load
+    document.getElementById('team-caps-section').classList.remove('hidden');
+    loadTeamCapabilities(code);
+
+    loadTeamMembers(code);
+    checkDispense();
 }
 
 async function loadTeamMembers(code) {
@@ -1318,17 +1324,101 @@ async function addMemberToTeam() {
 }
 
 async function removeMemberFromTeam(sapId) {
+    if (!currentTeamCode) return;
     const ok = await showConfirm({
-        title: 'เอาหุ่นออกจาก Team',
-        messageNode: createConfirmMsg('เอา ', sapId, ' ออกจาก Team ' + (currentTeamCode || ''), 'หุ่นจะยังคงอยู่ในห้องคลัง เพียงแค่ไม่อยู่ใน Team อีกต่อไป'),
+        title: 'ยืนยันการเอาออก',
+        messageNode: createConfirmMsg('นำหุ่น ', sapId, ' ออกจาก Team ' + currentTeamCode + '?'),
         okText: 'เอาออก',
         okClass: 'btn-danger'
     });
     if (!ok) return;
+
+    // Remove capabilities inherited from team
+    const { data: teamCaps } = await sb.from('team_capabilities').select('capability_id').eq('team_code', currentTeamCode);
+    if (teamCaps && teamCaps.length) {
+        const capIds = teamCaps.map(tc => tc.capability_id);
+        await sb.from('manikin_capabilities').delete().eq('sap_id', sapId).in('capability_id', capIds);
+    }
+
     const { error } = await sb.from('manikins').update({ team_code: null, team_order: null }).eq('sap_id', sapId);
-    if (error) { showToast('ล้มเหลว: ' + error.message, 'error'); return; }
-    await insertAuditLog('TEAM_REMOVE_MEMBER', [sapId], currentTeamCode);
-    showToast('เอาหุ่นออกจาก Team สำเร็จ');
-    await loadTeamMembers(currentTeamCode);
-    await checkDispense();
+    if (error) { showToast('นำออกล้มเหลว: ' + error.message, 'error'); return; }
+    await insertAuditLog('TEAM_MEMBER_REMOVE', [sapId], 'Team: ' + currentTeamCode);
+    showToast('นำหุ่น ' + sapId + ' ออกจาก Team แล้ว');
+    loadTeamMembers(currentTeamCode);
+}
+
+/* ===== TEAM CAPABILITIES LOGIC ===== */
+
+async function loadTeamCapabilities(code) {
+    const grid = document.getElementById('team-caps-checkboxes');
+    grid.innerHTML = '<div class="text-dim text-xs">กำลังโหลด Default Capabilities...</div>';
+
+    // Fetch all available caps
+    if (!allCapabilities.length) await loadCapabilities();
+
+    // Fetch team caps
+    const { data: teamCaps } = await sb.from('team_capabilities').select('capability_id').eq('team_code', code);
+    const selectedIds = (teamCaps || []).map(tc => tc.capability_id);
+
+    grid.innerHTML = allCapabilities.map(cap => `
+        <label class="cap-item">
+            <input type="checkbox" value="${cap.id}" ${selectedIds.includes(cap.id) ? 'checked' : ''}>
+            <span class="cap-label">${esc(cap.label_th || cap.code)}</span>
+        </label>
+    `).join('');
+}
+
+async function saveTeamCapabilities(code) {
+    if (!code) return;
+    const checkedIds = [...document.querySelectorAll('#team-caps-checkboxes input:checked')].map(el => el.value);
+
+    // DELETE all and INSERT selected (transactional-ish)
+    await sb.from('team_capabilities').delete().eq('team_code', code);
+    if (checkedIds.length) {
+        const payload = checkedIds.map(id => ({ team_code: code, capability_id: id }));
+        const { error } = await sb.from('team_capabilities').insert(payload);
+        if (error) { showToast('บันทึกล้มเหลว: ' + error.message, 'error'); return; }
+    }
+
+    await insertAuditLog('TEAM_CAPS_SAVE', [code], 'Caps: ' + checkedIds.length);
+    showToast('บันทึก Default Capabilities สำเร็จ');
+}
+
+async function syncCapabilitiesToTeam(code) {
+    if (!code) return;
+
+    // Get team caps
+    const { data: teamCaps } = await sb.from('team_capabilities').select('capability_id').eq('team_code', code);
+    if (!teamCaps || !teamCaps.length) {
+        showToast('กรุณากำหนด Default Capabilities ก่อน Sync', 'warning');
+        return;
+    }
+
+    // Get all members
+    const { data: members } = await sb.from('manikins').select('sap_id').eq('team_code', code);
+    if (!members || !members.length) {
+        showToast('ยังไม่มีหุ่นใน Team นี้', 'warning');
+        return;
+    }
+
+    const ok = await showConfirm({
+        title: 'ยืนยันการ Sync',
+        message: 'ต้องการใส่ Capabilities ทั้งหมดหุ่นทั้ง ' + members.length + ' ตัวในกลุ่มนี้ใช่หรือไม่? (หุ่นที่มีอยู่แล้วจะไม่ได้รับผลกระทบ)',
+        okText: 'Sync ทันที'
+    });
+    if (!ok) return;
+
+    // Prepare bulk insert
+    const payload = [];
+    members.forEach(m => {
+        teamCaps.forEach(tc => {
+            payload.push({ sap_id: m.sap_id, capability_id: tc.capability_id });
+        });
+    });
+
+    const { error } = await sb.from('manikin_capabilities').upsert(payload, { onConflict: 'sap_id,capability_id' });
+    if (error) { showToast('Sync ล้มเหลว: ' + error.message, 'error'); return; }
+
+    await insertAuditLog('TEAM_CAPS_SYNC', [code], 'Members: ' + members.length);
+    showToast('Sync Capabilities ให้หุ่นทั้ง ' + members.length + ' ตัวสำเร็จ');
 }
