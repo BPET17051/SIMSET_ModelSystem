@@ -2,16 +2,16 @@
 /* Design: Premium dark showroom · Medical Catalog · Real-time availability */
 
 :root {
-    --bg: #080e17;
-    --bg-card: #0d1624;
-    --bg-card2: #101c2e;
-    --border: rgba(255, 255, 255, 0.07);
-    --border-hover: rgba(37, 117, 184, 0.4);
-    --blue: #2575b8;
-    --blue-light: #4a9fd4;
-    --text: #e8edf5;
-    --text-2: #8ba0ba;
-    --text-3: #4e6a8a;
+    --bg: #050b14;
+    --bg-card: #0a1322;
+    --bg-card2: #111d33;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(253, 185, 19, 0.4);
+    --blue: #2458ad;
+    --blue-light: #fdb913;
+    --text: #f0f4f8;
+    --text-2: #9cb1c9;
+    --text-3: #587596;
     --font: 'Inter', 'Noto Sans Thai', sans-serif;
     --r: 12px;
     --r-lg: 18px;

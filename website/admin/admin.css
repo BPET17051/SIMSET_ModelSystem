@@ -1,25 +1,16 @@
 /* ===== ADMIN CSS — SiMSET Admin Panel ===== */
 :root {
-    --bg-base: #0F172A;
-    /* Slate 900 */
-    --bg-card: #1E293B;
-    /* Slate 800 */
-    --bg-surface: #334155;
-    /* Slate 700 */
-    --bg-hover: #475569;
-    /* Slate 600 */
+    --bg-base: #050b14;
+    --bg-card: #0a1322;
+    --bg-surface: #111d33;
+    --bg-hover: #1b2a47;
     --border: rgba(255, 255, 255, 0.08);
-    /* Slate 400 is #94A3B8, kept border low opacity */
-    --border-accent: rgba(56, 189, 248, 0.3);
-    /* Sky 400 for accent borders */
+    --border-accent: rgba(253, 185, 19, 0.4);
 
-    --navy: #0F172A;
-    /* Slate 900 */
-    --blue: #0284C7;
-    /* Sky 600 */
-    --blue-light: #38BDF8;
-    /* Sky 400 */
-    --blue-pale: rgba(2, 132, 199, 0.15);
+    --navy: #050b14;
+    --blue: #2458ad;
+    --blue-light: #fdb913;
+    --blue-pale: rgba(253, 185, 19, 0.15);
     /* Sky 600 at 15% */
 
     --text-primary: #F8FAFC;
