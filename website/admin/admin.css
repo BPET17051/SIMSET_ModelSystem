@@ -1089,6 +1089,7 @@ body {
 
 .modal-body::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
 }
 
 .modal-body::-webkit-scrollbar-thumb {
@@ -1175,7 +1176,8 @@ body {
 .radio-label {
     font-size: 0.82rem;
     color: var(--text-primary);
-    white-space: nowrap;
+    white-space: normal;
+    line-height: 1.4;
 }
 
 .checkbox-group {
@@ -1222,7 +1224,8 @@ body {
 .checkbox-label {
     font-size: 0.82rem;
     color: var(--text-primary);
-    white-space: nowrap;
+    white-space: normal;
+    line-height: 1.4;
 }
 
 /* ==== CONFIRM DIALOG ==== */
