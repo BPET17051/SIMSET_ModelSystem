@@ -1083,6 +1083,10 @@ body {
     padding: 20px 24px 20px 32px;
 }
 
+.modal-body>* {
+    flex-shrink: 0;
+}
+
 .modal-body::-webkit-scrollbar {
     width: 6px;
 }
