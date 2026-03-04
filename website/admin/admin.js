@@ -87,8 +87,9 @@ const tabMeta = {
     'review': { title: 'รออนุมัติ (หุ่นใหม่)', sub: 'พิจารณาหุ่นจำลองที่นำเข้าใหม่จาก AppSheet/Docs' },
     'borrow-requests': { title: 'คำร้องยืมคืน', sub: 'รายการคำร้องขอยืมหุ่นจำลองทั้งหมด และการนำออก' },
     'manikins': { title: 'คลังหุ่นจำลองทั้งหมด', sub: 'รายชื่อหุ่นจำลองและข้อมูลทางเทคนิค' },
-    'recycle': { title: 'ประวัติการปฏิเสธ (ถังขยะ)', sub: 'ข้อมูลที่ถูกล้อค แอดมินปฏิเสธไปแล้ว (สามารถกู้คืนได้)' },
+    'recycle': { title: 'ประวัติการปฏิเสธ (ถังขยะ)', sub: 'ข้อมูลที่ถูกล้อคค แอดมินปฏิเสธไปแล้ว (สามารถกู้คืนได้)' },
     'locations': { title: 'สถานที่ / ห้อง', sub: 'จัดการสถานที่จัดเก็บหุ่นจำลองและห้องฝึก' },
+    'teams': { title: 'จัดการ Team', sub: 'กำหนดกลุ่มหุ่น พร้อมลำดับการจ่ายและระบบแจ้งเตือน' },
     'reports': { title: 'รายงานและสถิติ', sub: 'Export ข้อมูลและดูการใช้งานย้อนหลัง' }
 };
 
@@ -112,6 +113,7 @@ function switchTab(tabName) {
     if (tabName === 'manikins') { manikinPage = 1; loadManikins(); }
     if (tabName === 'recycle') { recyclePage = 1; loadRecycleBin(); }
     if (tabName === 'locations') loadLocations();
+    if (tabName === 'teams') loadTeams();
     if (tabName === 'reports') loadReports();
 }
 
@@ -1048,6 +1050,18 @@ document.addEventListener('click', (e) => {
     else if (btn.id === 'btn-refresh-manikins') loadManikins();
     else if (btn.id === 'btn-close-edit') closeModal('edit-modal');
     else if (btn.id === 'btn-close-loc') closeModal('location-modal');
+    // Teams buttons
+    else if (btn.id === 'btn-new-team') openTeamModal();
+    else if (btn.id === 'btn-edit-team') openTeamModal(true);
+    else if (btn.id === 'btn-delete-team') deleteTeam();
+    else if (btn.id === 'btn-add-member') openAddMemberModal();
+    else if (btn.id === 'btn-close-team-modal') closeModal('team-modal');
+    else if (btn.id === 'team-modal-cancel') closeModal('team-modal');
+    else if (btn.id === 'team-modal-save') saveTeam();
+    else if (btn.id === 'btn-close-add-member') closeModal('add-member-modal');
+    else if (btn.id === 'add-member-cancel') closeModal('add-member-modal');
+    else if (btn.id === 'add-member-save') addMemberToTeam();
+    else if (btn.id === 'btn-dispense-check') checkDispense();
 
     // Dynamic table buttons
     else if (btn.dataset.action === 'approve') approveOne(btn.dataset.id);
@@ -1055,5 +1069,207 @@ document.addEventListener('click', (e) => {
     else if (btn.dataset.action === 'edit') openEditModal(btn.dataset.id);
     else if (btn.dataset.action === 'editLoc') openLocationModal(parseInt(btn.dataset.id));
     else if (btn.dataset.action === 'deleteLoc') deleteLocation(parseInt(btn.dataset.id));
+    else if (btn.dataset.action === 'selectTeam') selectTeam(btn.dataset.code);
+    else if (btn.dataset.action === 'removeMember') removeMemberFromTeam(btn.dataset.sap);
     else if (btn.dataset.page) onPage(parseInt(btn.dataset.page));
 });
+
+/* ===== TEAMS MODULE ===== */
+let currentTeamCode = null;
+
+async function loadTeams() {
+    const listEl = document.getElementById('teams-list');
+    listEl.innerHTML = '<div class="tbl-loading"><span class="spinner-sm"></span></div>';
+    const { data, error } = await sb.from('teams').select('*').order('team_code');
+    if (error) { listEl.innerHTML = '<div class="err-box">โหลดล้มเหลว</div>'; return; }
+    if (!data.length) {
+        listEl.innerHTML = '<div style="padding:16px;color:var(--text-dim);font-size:0.85rem;">ยังไม่มี Team — กด + สร้าง</div>';
+        return;
+    }
+    listEl.innerHTML = data.map(t => {
+        const active = t.team_code === currentTeamCode ? 'active' : '';
+        return '<div class="team-card ' + active + '" data-code="' + esc(t.team_code) + '">' +
+            '<div class="team-card-code">' + esc(t.team_code) + '</div>' +
+            '<div class="team-card-name">' + esc(t.display_name) + '</div>' +
+            '<button class="btn btn-sm btn-outline" style="font-size:0.72rem;" data-action="selectTeam" data-code="' + esc(t.team_code) + '">เปิด</button>' +
+            '</div>';
+    }).join('');
+}
+
+async function selectTeam(code) {
+    currentTeamCode = code;
+    document.getElementById('detail-team-code').textContent = code;
+    document.getElementById('teams-detail-empty').classList.add('hidden');
+    document.getElementById('teams-detail-content').classList.remove('hidden');
+    // Update display name
+    const { data: t } = await sb.from('teams').select('display_name').eq('team_code', code).single();
+    document.getElementById('detail-team-name').textContent = t ? t.display_name : '';
+    // Refresh team list highlight
+    document.querySelectorAll('.team-card').forEach(el => el.classList.toggle('active', el.dataset.code === code));
+    await loadTeamMembers(code);
+    await checkDispense();
+}
+
+async function loadTeamMembers(code) {
+    const tbody = document.getElementById('team-members-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><span class="spinner-sm"></span></td></tr>';
+    const { data, error } = await sb.from('manikins')
+        .select('sap_id, asset_name, status, team_order')
+        .eq('team_code', code)
+        .is('deleted_at', null)
+        .order('team_order', { ascending: true });
+    if (error || !data || !data.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);">ไม่มีสมาชิก</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(m => {
+        const orderLabel = code + ' ' + String(m.team_order).padStart(2, '0');
+        return '<tr>' +
+            '<td style="text-align:center;"><span class="order-badge">' + esc(orderLabel) + '</span></td>' +
+            '<td style="font-family:monospace;">' + esc(m.sap_id) + '</td>' +
+            '<td>' + esc(m.asset_name) + '</td>' +
+            '<td>' + statusBadge(m.status) + '</td>' +
+            '<td style="text-align:center;"><button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:0.72rem;" data-action="removeMember" data-sap="' + esc(m.sap_id) + '">✕ เอาออก</button></td>' +
+            '</tr>';
+    }).join('');
+}
+
+async function checkDispense() {
+    const code = currentTeamCode;
+    if (!code) return;
+    const { data } = await sb.from('manikins')
+        .select('sap_id, asset_name, status, team_order')
+        .eq('team_code', code)
+        .is('deleted_at', null)
+        .order('team_order', { ascending: true });
+    if (!data || !data.length) {
+        document.getElementById('dispense-next-badge').textContent = '—';
+        return;
+    }
+    const skipped = [];
+    let next = null;
+    for (const m of data) {
+        if (m.status === 'ready') { next = m; break; }
+        else { skipped.push(code + ' ' + String(m.team_order).padStart(2, '0')); }
+    }
+    const badge = document.getElementById('dispense-next-badge');
+    const alertEl = document.getElementById('team-skip-alert');
+    const alertMsg = document.getElementById('team-skip-msg');
+    if (next) {
+        badge.textContent = code + ' ' + String(next.team_order).padStart(2, '0') + ' — ' + next.asset_name;
+        if (skipped.length) {
+            alertMsg.textContent = '⚠️ ข้าม ' + skipped.join(', ') + ' เนื่องจากสถานะ In-use — จ่ายตัวถัดไป: ' + code + ' ' + String(next.team_order).padStart(2, '0');
+            alertEl.classList.remove('hidden');
+        } else {
+            alertEl.classList.add('hidden');
+        }
+    } else {
+        badge.textContent = '⚫ ไม่มีหุ่นพร้อมใช้';
+        alertMsg.textContent = '⚠️ หุ่นทุกตัวใน Team ' + code + ' ไม่พร้อม — ไม่สามารถจ่ายได้ขณะนี้';
+        alertEl.classList.remove('hidden');
+    }
+}
+
+function openTeamModal(isEdit = false) {
+    document.getElementById('team-modal-title').textContent = isEdit ? 'แก้ไขข้อมูล Team' : 'สร้าง Team ใหม่';
+    if (isEdit && currentTeamCode) {
+        document.getElementById('team-modal-code').value = currentTeamCode;
+        document.getElementById('team-modal-code').disabled = true;
+        document.getElementById('team-modal-original-code').value = currentTeamCode;
+        const nameEl = document.getElementById('detail-team-name');
+        document.getElementById('team-modal-name').value = nameEl ? nameEl.textContent : '';
+    } else {
+        document.getElementById('team-modal-code').value = '';
+        document.getElementById('team-modal-code').disabled = false;
+        document.getElementById('team-modal-original-code').value = '';
+        document.getElementById('team-modal-name').value = '';
+    }
+    openModal('team-modal');
+}
+
+async function saveTeam() {
+    const code = document.getElementById('team-modal-code').value.trim().toUpperCase();
+    const name = document.getElementById('team-modal-name').value.trim();
+    if (!code || !name) { showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error'); return; }
+    if (!/^[A-Z0-9_-]+$/.test(code)) { showToast('Team Code ต้องเป็นตัวอักษรตัวใหญ่เท่านั้น', 'error'); return; }
+    const { error } = await sb.from('teams').upsert({ team_code: code, display_name: name }, { onConflict: 'team_code' });
+    if (error) { showToast('บันทึกล้มเหลว: ' + error.message, 'error'); return; }
+    await insertAuditLog('TEAM_UPSERT', [code], 'display_name: ' + name);
+    showToast('บันทึก Team สำเร็จ');
+    closeModal('team-modal');
+    await loadTeams();
+    selectTeam(code);
+}
+
+async function deleteTeam() {
+    if (!currentTeamCode) return;
+    const ok = await showConfirm({
+        title: 'ยืนยันลบ Team',
+        messageNode: createConfirmMsg('ลบ Team ', currentTeamCode, ' หุ่นทุกตัวจะถูกเอาออกจาก Team อัตโนมัติ'),
+        okText: 'ลบ Team',
+        okClass: 'btn-danger'
+    });
+    if (!ok) return;
+    // Remove team from all manikins first
+    await sb.from('manikins').update({ team_code: null, team_order: null }).eq('team_code', currentTeamCode);
+    const { error } = await sb.from('teams').delete().eq('team_code', currentTeamCode);
+    if (error) { showToast('ลบล้มเหลว: ' + error.message, 'error'); return; }
+    await insertAuditLog('TEAM_DELETE', [currentTeamCode]);
+    showToast('ลบ Team ' + currentTeamCode + ' เรียบร้อย');
+    currentTeamCode = null;
+    document.getElementById('teams-detail-empty').classList.remove('hidden');
+    document.getElementById('teams-detail-content').classList.add('hidden');
+    await loadTeams();
+}
+
+async function openAddMemberModal() {
+    if (!currentTeamCode) return;
+    document.getElementById('add-member-team-name').textContent = currentTeamCode;
+    // Load manikins without a team
+    const sapSel = document.getElementById('add-member-sap');
+    sapSel.innerHTML = '<option value="">— กำลังโหลด... —</option>';
+    const { data } = await sb.from('manikins')
+        .select('sap_id, asset_name')
+        .is('team_code', null)
+        .is('deleted_at', null)
+        .eq('is_active', true)
+        .order('sap_id');
+    sapSel.innerHTML = (data && data.length)
+        ? data.map(m => '<option value="' + esc(m.sap_id) + '">' + esc(m.sap_id) + ' — ' + esc(m.asset_name) + '</option>').join('')
+        : '<option value="">ไม่มีหุ่นที่ยังไม่มี Team</option>';
+    // Suggest next available order
+    const { data: members } = await sb.from('manikins').select('team_order').eq('team_code', currentTeamCode).order('team_order', { ascending: false }).limit(1);
+    const nextOrder = (members && members.length && members[0].team_order) ? members[0].team_order + 1 : 1;
+    document.getElementById('add-member-order').value = nextOrder;
+    document.getElementById('add-member-order-hint').textContent = 'ลำดับถัดไปที่ว่าง: ' + currentTeamCode + ' ' + String(nextOrder).padStart(2, '0');
+    openModal('add-member-modal');
+}
+
+async function addMemberToTeam() {
+    const sapId = document.getElementById('add-member-sap').value;
+    const order = parseInt(document.getElementById('add-member-order').value);
+    if (!sapId || !order || order < 1) { showToast('กรุณาเลือกหุ่นและระบุลำดับ', 'error'); return; }
+    const { error } = await sb.from('manikins').update({ team_code: currentTeamCode, team_order: order }).eq('sap_id', sapId);
+    if (error) { showToast('เพิ่มล้มเหลว: ' + error.message, 'error'); return; }
+    await insertAuditLog('TEAM_ADD_MEMBER', [sapId], currentTeamCode + ' ' + String(order).padStart(2, '0'));
+    showToast('เพิ่มหุ่นเข้า Team สำเร็จ');
+    closeModal('add-member-modal');
+    await loadTeamMembers(currentTeamCode);
+    await checkDispense();
+}
+
+async function removeMemberFromTeam(sapId) {
+    const ok = await showConfirm({
+        title: 'เอาหุ่นออกจาก Team',
+        messageNode: createConfirmMsg('เอา ', sapId, ' ออกจาก Team ' + (currentTeamCode || ''), 'หุ่นจะยังคงอยู่ในห้องคลัง เพียงแค่ไม่อยู่ใน Team อีกต่อไป'),
+        okText: 'เอาออก',
+        okClass: 'btn-danger'
+    });
+    if (!ok) return;
+    const { error } = await sb.from('manikins').update({ team_code: null, team_order: null }).eq('sap_id', sapId);
+    if (error) { showToast('ล้มเหลว: ' + error.message, 'error'); return; }
+    await insertAuditLog('TEAM_REMOVE_MEMBER', [sapId], currentTeamCode);
+    showToast('เอาหุ่นออกจาก Team สำเร็จ');
+    await loadTeamMembers(currentTeamCode);
+    await checkDispense();
+}
