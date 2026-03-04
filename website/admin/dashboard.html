@@ -974,9 +974,12 @@
             <div class="modal-body">
                 <div class="field-group">
                     <label class="field-label">เลือกหุ่น (SAP ID)</label>
-                    <select class="field-select" id="add-member-sap">
-                        <option value="">— กำลังโหลด... —</option>
-                    </select>
+                    <div class="combobox-wrap" id="add-member-combobox-wrap">
+                        <input class="field-input" type="text" id="add-member-sap-input"
+                            placeholder="พิมพ์ SAP ID หรือชื่อหุ่นเพื่อค้นหา..." autocomplete="off" />
+                        <input type="hidden" id="add-member-sap" />
+                        <div class="combobox-dropdown hidden" id="add-member-dropdown"></div>
+                    </div>
                 </div>
                 <div class="field-group">
                     <label class="field-label">ลำดับใน Team (team_order)</label>

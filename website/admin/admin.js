@@ -1222,27 +1222,86 @@ async function deleteTeam() {
     await loadTeams();
 }
 
+let _allTeamlessManikins = [];
+
 async function openAddMemberModal() {
     if (!currentTeamCode) return;
     document.getElementById('add-member-team-name').textContent = currentTeamCode;
+
+    // Reset combobox
+    const input = document.getElementById('add-member-sap-input');
+    const hidden = document.getElementById('add-member-sap');
+    const dropdown = document.getElementById('add-member-dropdown');
+    input.value = '';
+    hidden.value = '';
+    dropdown.classList.add('hidden');
+    input.placeholder = 'โหลดรายการ...';
+
     // Load manikins without a team
-    const sapSel = document.getElementById('add-member-sap');
-    sapSel.innerHTML = '<option value="">— กำลังโหลด... —</option>';
     const { data } = await sb.from('manikins')
         .select('sap_id, asset_name')
         .is('team_code', null)
         .is('deleted_at', null)
         .eq('is_active', true)
         .order('sap_id');
-    sapSel.innerHTML = (data && data.length)
-        ? data.map(m => '<option value="' + esc(m.sap_id) + '">' + esc(m.sap_id) + ' — ' + esc(m.asset_name) + '</option>').join('')
-        : '<option value="">ไม่มีหุ่นที่ยังไม่มี Team</option>';
+
+    _allTeamlessManikins = data || [];
+    input.placeholder = _allTeamlessManikins.length
+        ? 'พิมพ์ SAP ID หรือชื่อหุ่นเพื่อค้นหา...'
+        : 'ไม่มีหุ่นที่ยังไม่มี Team';
+
+    // Attach input filter listener (replace old one)
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+    newInput.addEventListener('input', () => renderComboboxOptions(newInput.value));
+    newInput.addEventListener('focus', () => renderComboboxOptions(newInput.value));
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('add-member-combobox-wrap').contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    }, { once: true });
+
     // Suggest next available order
     const { data: members } = await sb.from('manikins').select('team_order').eq('team_code', currentTeamCode).order('team_order', { ascending: false }).limit(1);
     const nextOrder = (members && members.length && members[0].team_order) ? members[0].team_order + 1 : 1;
     document.getElementById('add-member-order').value = nextOrder;
     document.getElementById('add-member-order-hint').textContent = 'ลำดับถัดไปที่ว่าง: ' + currentTeamCode + ' ' + String(nextOrder).padStart(2, '0');
     openModal('add-member-modal');
+    // Focus the combobox after modal opens
+    setTimeout(() => document.getElementById('add-member-sap-input').focus(), 320);
+}
+
+function renderComboboxOptions(query) {
+    const dropdown = document.getElementById('add-member-dropdown');
+    const q = (query || '').toLowerCase();
+    const filtered = q
+        ? _allTeamlessManikins.filter(m => m.sap_id.toLowerCase().includes(q) || m.asset_name.toLowerCase().includes(q))
+        : _allTeamlessManikins;
+
+    if (!filtered.length) {
+        dropdown.innerHTML = '<div class="combobox-no-result">ไม่พบรายการ</div>';
+        dropdown.classList.remove('hidden');
+        return;
+    }
+
+    dropdown.innerHTML = filtered.slice(0, 30).map(m =>
+        '<div class="combobox-option" data-sap="' + esc(m.sap_id) + '" data-name="' + esc(m.asset_name) + '">' +
+        '<span class="combobox-sap">' + esc(m.sap_id) + '</span>' +
+        '<span class="combobox-name">' + esc(m.asset_name) + '</span>' +
+        '</div>'
+    ).join('');
+    dropdown.classList.remove('hidden');
+
+    // Attach click listeners to options
+    dropdown.querySelectorAll('.combobox-option').forEach(el => {
+        el.addEventListener('click', () => {
+            document.getElementById('add-member-sap-input').value = el.dataset.sap + ' — ' + el.dataset.name;
+            document.getElementById('add-member-sap').value = el.dataset.sap;
+            dropdown.classList.add('hidden');
+        });
+    });
 }
 
 async function addMemberToTeam() {

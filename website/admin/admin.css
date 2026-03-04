@@ -1726,3 +1726,65 @@ body {
         max-height: 260px;
     }
 }
+
+/* ===== COMBOBOX (Searchable Select) ===== */
+.combobox-wrap {
+    position: relative;
+}
+
+.combobox-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-accent);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 200;
+    padding: 4px;
+}
+
+.combobox-dropdown.hidden {
+    display: none;
+}
+
+.combobox-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.combobox-option:hover {
+    background: var(--bg-hover);
+}
+
+.combobox-sap {
+    font-family: monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--blue-light);
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+.combobox-name {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.combobox-no-result {
+    padding: 12px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+}
