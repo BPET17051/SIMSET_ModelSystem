@@ -770,6 +770,17 @@ body {
     background: #6366f1;
 }
 
+/* in_session: กำลังใช้งานอยู่ */
+.status-pill.neon-blue {
+    background: rgba(0, 229, 255, 0.1);
+    color: #00E5FF;
+    border: 1px solid rgba(0, 229, 255, 0.25);
+}
+
+.status-pill.neon-blue::before {
+    background: #00E5FF;
+}
+
 /* ===== GROUPED VIEW ===== */
 .grouped-grid {
     display: flex;

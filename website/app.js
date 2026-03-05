@@ -7,6 +7,7 @@ const DATA_BASE = './data';
 
 const STATUS_LABEL = {
     ready: 'พร้อมใช้งาน',
+    in_session: 'กำลังใช้งานอยู่',
     in_use: 'ถูกยืม',
     maintenance: 'รอซ่อม ใช้งานได้',
     broken: 'รอซ่อม ใช้งานไม่ได้',
@@ -19,6 +20,7 @@ const STATUS_LABEL = {
 
 const STATUS_CLASS = {
     ready: 'ready',
+    in_session: 'neon-blue',
     in_use: 'in-use',
     maintenance: 'warn',
     broken: 'bad',

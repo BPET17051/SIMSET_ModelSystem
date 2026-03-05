@@ -49,6 +49,9 @@
     --status-dept: #6366F1;
     /* Indigo 500 */
     --status-dept-bg: rgba(99, 102, 241, 0.12);
+    /* in_session: neon cyan */
+    --status-neon: #00E5FF;
+    --status-neon-bg: rgba(0, 229, 255, 0.1);
 
     --success: #10B981;
     /* Emerald 500 */
@@ -742,6 +745,15 @@ body {
 
 .sb.in_use::before {
     background: var(--status-inuse);
+}
+
+.sb.in_session {
+    background: var(--status-neon-bg);
+    color: var(--status-neon);
+}
+
+.sb.in_session::before {
+    background: var(--status-neon);
 }
 
 .sb.maintenance {

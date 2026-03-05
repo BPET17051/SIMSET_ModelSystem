@@ -6,6 +6,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STATUS_TH = {
     ready: 'ใช้งานได้ปกติ',
+    in_session: 'กำลังใช้งานอยู่',
     in_use: 'ถูกยืม',
     maintenance: 'รอซ่อม ใช้งานได้',
     broken: 'รอซ่อม ใช้งานไม่ได้',
