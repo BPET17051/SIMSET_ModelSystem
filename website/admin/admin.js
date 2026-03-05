@@ -232,7 +232,7 @@ function buildPagination(containerId, total, current, onPage) {
         const btn = document.createElement('button');
         btn.className = 'page-btn' + (p === current ? ' active' : '');
         btn.textContent = p;
-        btn.dataset.page = p;
+        btn.onclick = () => onPage(p);
         el.appendChild(btn);
     }
 
@@ -1076,7 +1076,7 @@ document.addEventListener('click', (e) => {
     else if (btn.dataset.action === 'deleteLoc') deleteLocation(parseInt(btn.dataset.id));
     else if (btn.dataset.action === 'selectTeam') selectTeam(btn.dataset.code);
     else if (btn.dataset.action === 'removeMember') removeMemberFromTeam(btn.dataset.sap);
-    else if (btn.dataset.page) onPage(parseInt(btn.dataset.page));
+    // Numbered page buttons use direct onclick in buildPagination — no delegation needed
 });
 
 /* ===== TEAMS MODULE ===== */
