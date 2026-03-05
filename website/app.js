@@ -8,10 +8,13 @@ const DATA_BASE = './data';
 const STATUS_LABEL = {
     ready: 'พร้อมใช้งาน',
     in_use: 'ถูกยืม',
-    maintenance: 'รอซ่อม (ใช้ได้)',
-    broken: 'รอซ่อม (เสีย)',
-    missing: 'หาไม่พบ',
-    cleaning: 'ทำความสะอาด'
+    maintenance: 'รอซ่อม ใช้งานได้',
+    broken: 'รอซ่อม ใช้งานไม่ได้',
+    pending_disposal: 'รอจำหน่าย',
+    disposed: 'จำหน่ายแล้ว/ส่งคืน',
+    dept_purchase: 'จัดซื้อให้หน่วยงาน',
+    pending_transfer: 'รอโอนย้าย',
+    transferred: 'โอนย้ายแล้ว'
 };
 
 const STATUS_CLASS = {
@@ -19,8 +22,11 @@ const STATUS_CLASS = {
     in_use: 'in-use',
     maintenance: 'warn',
     broken: 'bad',
-    missing: 'bad',
-    cleaning: 'warn'
+    pending_disposal: 'warn-red',
+    disposed: 'grey',
+    dept_purchase: 'info',
+    pending_transfer: 'warn',
+    transferred: 'grey'
 };
 
 const TYPE_EMOJI = { ADULT: '🟠', CHILD: '🟡', INFANT: '🔵' };

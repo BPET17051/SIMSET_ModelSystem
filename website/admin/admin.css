@@ -37,8 +37,18 @@
     /* Cyan 500 */
     --status-inuse-bg: rgba(6, 182, 212, 0.12);
     --status-missing: #94A3B8;
-    /* Slate 400 */
+    /* Slate 400 — kept for legacy alias */
     --status-missing-bg: rgba(148, 163, 184, 0.12);
+    /* New statuses */
+    --status-disposal: #F97316;
+    /* Orange 500 */
+    --status-disposal-bg: rgba(249, 115, 22, 0.12);
+    --status-grey: #6B7280;
+    /* Gray 500 */
+    --status-grey-bg: rgba(107, 114, 128, 0.12);
+    --status-dept: #6366F1;
+    /* Indigo 500 */
+    --status-dept-bg: rgba(99, 102, 241, 0.12);
 
     --success: #10B981;
     /* Emerald 500 */
@@ -752,13 +762,60 @@ body {
     background: var(--status-broken);
 }
 
+/* Legacy alias for old data */
 .sb.missing {
-    background: var(--status-missing-bg);
-    color: var(--status-missing);
+    background: var(--status-grey-bg);
+    color: var(--status-grey);
 }
 
 .sb.missing::before {
-    background: var(--status-missing);
+    background: var(--status-grey);
+}
+
+/* ── New 9-status system ── */
+.sb.pending_disposal {
+    background: var(--status-disposal-bg);
+    color: var(--status-disposal);
+}
+
+.sb.pending_disposal::before {
+    background: var(--status-disposal);
+}
+
+.sb.disposed {
+    background: var(--status-grey-bg);
+    color: var(--status-grey);
+}
+
+.sb.disposed::before {
+    background: var(--status-grey);
+}
+
+.sb.dept_purchase {
+    background: var(--status-dept-bg);
+    color: var(--status-dept);
+}
+
+.sb.dept_purchase::before {
+    background: var(--status-dept);
+}
+
+.sb.pending_transfer {
+    background: var(--status-maintenance-bg);
+    color: var(--status-maintenance);
+}
+
+.sb.pending_transfer::before {
+    background: var(--status-maintenance);
+}
+
+.sb.transferred {
+    background: var(--status-grey-bg);
+    color: var(--status-grey);
+}
+
+.sb.transferred::before {
+    background: var(--status-grey);
 }
 
 /* Inline Edit Select */

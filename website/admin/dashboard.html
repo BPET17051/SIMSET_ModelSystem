@@ -411,11 +411,15 @@
                             </div>
                             <select class="status-select" id="manikin-status-filter">
                                 <option value="">ทุกสถานะ</option>
-                                <option value="ready">พร้อมใช้งาน</option>
+                                <option value="ready">ใช้งานได้ปกติ</option>
                                 <option value="in_use">ถูกยืม</option>
-                                <option value="maintenance">รอซ่อม (ใช้ได้)</option>
-                                <option value="broken">รอซ่อม (เสีย)</option>
-                                <option value="missing">รอจำหน่าย</option>
+                                <option value="maintenance">รอซ่อม ใช้งานได้</option>
+                                <option value="broken">รอซ่อม ใช้งานไม่ได้</option>
+                                <option value="pending_disposal">รอจำหน่าย</option>
+                                <option value="disposed">จำหน่ายแล้ว/ส่งคืน</option>
+                                <option value="dept_purchase">จัดซื้อให้หน่วยงาน/ภาควิชา</option>
+                                <option value="pending_transfer">รอโอนย้าย</option>
+                                <option value="transferred">โอนย้ายแล้ว</option>
                             </select>
                         </div>
                         <table class="admin-table">
@@ -707,9 +711,13 @@
                     <select class="field-select" id="edit-status">
                         <option value="ready">ใช้งานได้ปกติ</option>
                         <option value="in_use">ถูกยืม</option>
-                        <option value="maintenance">รอซ่อม (ใช้งานได้)</option>
-                        <option value="broken">รอซ่อม (ใช้งานไม่ได้)</option>
-                        <option value="missing">รอจำหน่าย</option>
+                        <option value="maintenance">รอซ่อม ใช้งานได้</option>
+                        <option value="broken">รอซ่อม ใช้งานไม่ได้</option>
+                        <option value="pending_disposal">รอจำหน่าย</option>
+                        <option value="disposed">จำหน่ายแล้ว/ส่งคืน</option>
+                        <option value="dept_purchase">จัดซื้อให้หน่วยงาน/ภาควิชา</option>
+                        <option value="pending_transfer">รอโอนย้าย</option>
+                        <option value="transferred">โอนย้ายแล้ว</option>
                     </select>
                 </div>
                 <div class="field-group">

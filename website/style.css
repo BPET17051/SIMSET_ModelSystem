@@ -739,6 +739,37 @@ body {
     background: #ef4444;
 }
 
+/* ── Status additions for 9-status system ── */
+.status-pill.grey {
+    background: rgba(130, 138, 155, 0.12);
+    color: #9ca3af;
+    border: 1px solid rgba(130, 138, 155, 0.2);
+}
+
+.status-pill.grey::before {
+    background: #6b7280;
+}
+
+.status-pill.warn-red {
+    background: rgba(234, 88, 12, 0.12);
+    color: #fb923c;
+    border: 1px solid rgba(234, 88, 12, 0.2);
+}
+
+.status-pill.warn-red::before {
+    background: #f97316;
+}
+
+.status-pill.info {
+    background: rgba(99, 102, 241, 0.12);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.status-pill.info::before {
+    background: #6366f1;
+}
+
 /* ===== GROUPED VIEW ===== */
 .grouped-grid {
     display: flex;

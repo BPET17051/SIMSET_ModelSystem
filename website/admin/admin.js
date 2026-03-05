@@ -7,10 +7,13 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const STATUS_TH = {
     ready: 'ใช้งานได้ปกติ',
     in_use: 'ถูกยืม',
-    maintenance: 'รอซ่อม (ใช้ได้)',
-    broken: 'รอซ่อม (เสีย)',
-    missing: 'รอจำหน่าย',
-    cleaning: 'ทำความสะอาด'
+    maintenance: 'รอซ่อม ใช้งานได้',
+    broken: 'รอซ่อม ใช้งานไม่ได้',
+    pending_disposal: 'รอจำหน่าย',
+    disposed: 'จำหน่ายแล้ว/ส่งคืน',
+    dept_purchase: 'จัดซื้อให้หน่วยงาน/ภาควิชา',
+    pending_transfer: 'รอโอนย้าย',
+    transferred: 'โอนย้ายแล้ว'
 };
 
 const PAGE_SIZE = 50;
