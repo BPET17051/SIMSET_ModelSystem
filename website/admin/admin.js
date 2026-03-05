@@ -125,6 +125,25 @@ document.querySelectorAll('.sidebar-link').forEach(el => {
     el.addEventListener('click', () => switchTab(el.dataset.tab));
 });
 
+/* ===== GLOBAL REFRESH BUTTON ===== */
+function refreshCurrentTab() {
+    const activeLink = document.querySelector('.sidebar-link.active');
+    if (!activeLink) return;
+    const tabName = activeLink.dataset.tab;
+
+    const btn = document.getElementById('btn-global-refresh');
+    const icon = document.getElementById('refresh-icon');
+    btn.disabled = true;
+    icon.classList.add('spinning');
+    setTimeout(() => {
+        icon.classList.remove('spinning');
+        btn.disabled = false;
+    }, 800);
+
+    switchTab(tabName);
+}
+document.getElementById('btn-global-refresh').addEventListener('click', refreshCurrentTab);
+
 /* ===== AGE DETECTION ===== */
 function detectAge(name) {
     const n = (name || '').toLowerCase();
