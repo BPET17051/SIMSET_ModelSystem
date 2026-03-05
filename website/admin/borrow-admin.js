@@ -128,7 +128,6 @@ function renderBorrowTable() {
 
 document.getElementById('borrow-search').addEventListener('input', renderBorrowTable);
 document.getElementById('borrow-status-filter').addEventListener('change', renderBorrowTable);
-document.getElementById('btn-refresh-borrow').addEventListener('click', loadBorrowRequests);
 
 /* =========================================================
    ACTIONS: APPROVE & REJECT

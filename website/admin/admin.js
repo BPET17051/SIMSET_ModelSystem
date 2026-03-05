@@ -126,21 +126,34 @@ document.querySelectorAll('.sidebar-link').forEach(el => {
 });
 
 /* ===== GLOBAL REFRESH BUTTON ===== */
-function refreshCurrentTab() {
+async function refreshCurrentTab() {
     const activeLink = document.querySelector('.sidebar-link.active');
     if (!activeLink) return;
     const tabName = activeLink.dataset.tab;
 
     const btn = document.getElementById('btn-global-refresh');
     const icon = document.getElementById('refresh-icon');
+
+    // Make sure we don't double invoke it while spinning
+    if (btn.disabled) return;
     btn.disabled = true;
     icon.classList.add('spinning');
-    setTimeout(() => {
+
+    try {
+        if (tabName === 'dashboard') await loadDashboard();
+        if (tabName === 'review') await loadReviewQueue();
+        if (tabName === 'borrow-requests') { if (typeof loadBorrowRequests === 'function') await loadBorrowRequests(); }
+        if (tabName === 'manikins') await loadManikins();
+        if (tabName === 'recycle') await loadRecycleBin();
+        if (tabName === 'locations') await loadLocations();
+        if (tabName === 'teams') await loadTeams();
+        if (tabName === 'reports') await loadReports();
+    } catch (err) {
+        console.error('[Refresh] Error:', err);
+    } finally {
         icon.classList.remove('spinning');
         btn.disabled = false;
-    }, 800);
-
-    switchTab(tabName);
+    }
 }
 document.getElementById('btn-global-refresh').addEventListener('click', refreshCurrentTab);
 
@@ -393,9 +406,7 @@ async function loadReviewQueue() {
 
     if (error) { showToast('โหลดคิวรออนุมัติล้มเหลว', 'error'); return; }
     reviewData = data || [];
-    reviewFiltered = [...reviewData];
-    reviewPage = 1;
-    renderReviewTable();
+    filterReview();
     document.getElementById('review-badge').textContent = reviewData.length;
     setSync();
 }
@@ -454,19 +465,21 @@ function hideBulkBar() {
     if (sa) sa.checked = false;
 }
 
-document.getElementById('review-search').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
+function filterReview() {
+    const q = document.getElementById('review-search').value.toLowerCase();
     reviewFiltered = reviewData.filter(m => !q || m.asset_name?.toLowerCase().includes(q) || m.sap_id?.includes(q));
     reviewPage = 1;
     renderReviewTable();
-});
+}
+document.getElementById('review-search').addEventListener('input', filterReview);
 
-document.getElementById('recycle-search')?.addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
+function filterRecycle() {
+    const q = document.getElementById('recycle-search')?.value.toLowerCase() || '';
     recycleFiltered = recycleData.filter(m => !q || m.asset_name?.toLowerCase().includes(q) || m.sap_id?.toLowerCase().includes(q) || m.asset_code?.toLowerCase().includes(q));
     recyclePage = 1;
     renderRecycleTable();
-});
+}
+document.getElementById('recycle-search')?.addEventListener('input', filterRecycle);
 
 document.getElementById('review-select-all').addEventListener('change', (e) => {
     document.querySelectorAll('.review-cb').forEach(cb => cb.checked = e.target.checked);
@@ -631,8 +644,7 @@ async function loadRecycleBin() {
     if (error) { showToast('อัปเดตถังขยะล้มเหลว', 'error'); return; }
 
     recycleData = data || [];
-    recycleFiltered = [...recycleData];
-    renderRecycleTable();
+    filterRecycle();
 }
 
 function renderRecycleTable() {
@@ -733,9 +745,7 @@ async function loadManikins() {
 
     if (error) { showToast('โหลดข้อมูลล้มเหลว', 'error'); return; }
     manikinData = data || [];
-    manikinFiltered = [...manikinData];
-    manikinPage = 1;
-    renderManikinTable();
+    filterManikins();
     setSync();
 }
 
@@ -1087,8 +1097,6 @@ document.addEventListener('click', (e) => {
 
     // Static dashboard buttons
     if (btn.id === 'btn-dash-review') switchTab('review');
-    else if (btn.id === 'btn-refresh-review') loadReviewQueue();
-    else if (btn.id === 'btn-refresh-manikins') loadManikins();
     else if (btn.id === 'btn-close-edit') closeModal('edit-modal');
     else if (btn.id === 'btn-close-loc') closeModal('location-modal');
     // Teams buttons
