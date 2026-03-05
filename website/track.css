@@ -261,4 +261,23 @@
         font-size: 12pt;
     }
 }
+
 /* aria-label */
+
+/* ── UX: Recovery path hint ── */
+.track-hint {
+    font-size: 0.8rem;
+    color: var(--text-3);
+    margin-top: 10px;
+    text-align: center;
+}
+
+.track-hint a {
+    color: var(--blue-light);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.track-hint a:hover {
+    color: #fff;
+}

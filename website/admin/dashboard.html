@@ -25,6 +25,8 @@
 
 <body>
     <div class="dashboard-layout">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <!-- Sidebar -->
         <nav class="sidebar">
@@ -134,6 +136,15 @@
         <!-- Main Content -->
         <div class="main-content">
             <header class="topbar">
+                <!-- Mobile only: hamburger to open sidebar -->
+                <button id="btn-menu-toggle" class="btn-menu-toggle" aria-label="เปิดเมนู">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                </button>
                 <div>
                     <div class="topbar-title" id="topbar-title">Dashboard</div>
                     <div class="topbar-sub" id="topbar-sub">ภาพรวมระบบ SiMSET</div>

@@ -1042,6 +1042,24 @@ async function init() {
 
 init();
 
+/* ===== MOBILE SIDEBAR TOGGLE ===== */
+function openSidebar() {
+    document.querySelector('.sidebar').classList.add('open');
+    document.getElementById('sidebar-overlay').classList.add('open');
+}
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+}
+document.getElementById('btn-menu-toggle').addEventListener('click', openSidebar);
+document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+// Close sidebar on nav link tap (mobile)
+document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) closeSidebar();
+    });
+});
+
 /* ===== GLOBAL EVENT DELEGATION (STRICT CSP) ===== */
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
