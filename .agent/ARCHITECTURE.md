@@ -217,7 +217,7 @@ skill-name/
 
 ---
 
-## � Scripts (2)
+## Scripts (2)
 
 Master validation scripts that orchestrate skill-level scripts.
 

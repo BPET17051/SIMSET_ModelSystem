@@ -242,7 +242,7 @@ Before assigning agents, determine project type:
 ### 🔴 Step 6: Create Plan File (DYNAMIC NAMING)
 
 > 🔴 **ABSOLUTE REQUIREMENT:** Plan MUST be created before exiting PLANNING mode.
-> � **BAN:** NEVER use generic names like `plan.md`, `PLAN.md`, or `plan.dm`.
+> **BAN:** NEVER use generic names like `plan.md`, `PLAN.md`, or `plan.dm`.
 
 **Plan Storage (For PLANNING Mode):** `./{task-slug}.md` (project root)
 
@@ -403,4 +403,3 @@ python .agent/skills/webapp-testing/scripts/playwright_runner.py http://localhos
 | 10 | **Phase X** | Verification is ALWAYS final | Definition of done |
 
 ---
-

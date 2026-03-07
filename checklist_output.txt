@@ -1,42 +1,41 @@
-﻿
-[1m[96m============================================================[0m
-[1m[96m            ≡ƒÜÇ ANTIGRAVITY KIT - MASTER CHECKLIST            [0m
-[1m[96m============================================================[0m
+﻿============================================================
+ANTIGRAVITY KIT - MASTER CHECKLIST
+============================================================
 
 Project: D:\Jedi_EX_HDX_BAC01\01.Jedi_SIMSET\SIMSET_Project\SIMSET_ModelSystem
 URL: Not provided (performance checks skipped)
 
-[1m[96m============================================================[0m
-[1m[96m                       ≡ƒôï CORE CHECKS                        [0m
-[1m[96m============================================================[0m
+============================================================
+CORE CHECKS
+============================================================
 
-[1m[94m≡ƒöä Running: Security Scan[0m
-[92mΓ£à Security Scan: PASSED[0m
-[1m[94m≡ƒöä Running: Lint Check[0m
-[92mΓ£à Lint Check: PASSED[0m
-[1m[94m≡ƒöä Running: Schema Validation[0m
-[92mΓ£à Schema Validation: PASSED[0m
-[1m[94m≡ƒöä Running: Test Runner[0m
-[92mΓ£à Test Runner: PASSED[0m
-[1m[94m≡ƒöä Running: UX Audit[0m
-[91mΓ¥î UX Audit: FAILED[0m
-[1m[94m≡ƒöä Running: SEO Check[0m
-[91mΓ¥î SEO Check: FAILED[0m
+[RUN] Running: Security Scan
+[OK] Security Scan: PASSED
+[RUN] Running: Lint Check
+[OK] Lint Check: PASSED
+[RUN] Running: Schema Validation
+[OK] Schema Validation: PASSED
+[RUN] Running: Test Runner
+[OK] Test Runner: PASSED
+[RUN] Running: UX Audit
+[FAIL] UX Audit: FAILED
+[RUN] Running: SEO Check
+[FAIL] SEO Check: FAILED
 
-[1m[96m============================================================[0m
-[1m[96m                    ≡ƒôè CHECKLIST SUMMARY                     [0m
-[1m[96m============================================================[0m
+============================================================
+CHECKLIST SUMMARY
+============================================================
 
 Total Checks: 6
-[92mΓ£à Passed: 4[0m
-[91mΓ¥î Failed: 2[0m
-[93mΓÅ¡∩╕Å  Skipped: 0[0m
+Passed: 4
+Failed: 2
+Skipped: 0
 
-[92mΓ£à[0m Security Scan
-[92mΓ£à[0m Lint Check
-[92mΓ£à[0m Schema Validation
-[92mΓ£à[0m Test Runner
-[91mΓ¥î[0m UX Audit
-[91mΓ¥î[0m SEO Check
+[OK] Security Scan
+[OK] Lint Check
+[OK] Schema Validation
+[OK] Test Runner
+[FAIL] UX Audit
+[FAIL] SEO Check
 
-[91mΓ¥î 2 check(s) FAILED - Please fix before proceeding[0m
+[FAIL] 2 check(s) FAILED - Please fix before proceeding

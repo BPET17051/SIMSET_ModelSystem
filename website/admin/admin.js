@@ -97,6 +97,33 @@ const tabMeta = {
     'reports': { title: 'รายงานและสถิติ', sub: 'Export ข้อมูลและดูการใช้งานย้อนหลัง' }
 };
 
+const tabLoaders = {
+    dashboard: () => loadDashboard(),
+    review: () => loadReviewQueue(),
+    'borrow-requests': () => (typeof loadBorrowRequests === 'function' ? loadBorrowRequests() : undefined),
+    manikins: () => loadManikins(),
+    recycle: () => loadRecycleBin(),
+    locations: () => loadLocations(),
+    teams: () => loadTeams(),
+    reports: () => loadReports()
+};
+
+function runTabLoader(tabName, options = {}) {
+    const { resetPage = false } = options;
+    if (resetPage) {
+        if (tabName === 'review') reviewPage = 1;
+        if (tabName === 'manikins') manikinPage = 1;
+        if (tabName === 'recycle') recyclePage = 1;
+    }
+    const loader = tabLoaders[tabName];
+    if (!loader) return Promise.resolve();
+    try {
+        return Promise.resolve(loader());
+    } catch (err) {
+        return Promise.reject(err);
+    }
+}
+
 function switchTab(tabName) {
     document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
@@ -111,18 +138,16 @@ function switchTab(tabName) {
     document.getElementById('topbar-title').textContent = meta.title || tabName;
     document.getElementById('topbar-sub').textContent = meta.sub || '';
 
-    if (tabName === 'dashboard') loadDashboard();
-    if (tabName === 'review') { reviewPage = 1; loadReviewQueue(); }
-    if (tabName === 'borrow-requests') { if (typeof loadBorrowRequests === 'function') loadBorrowRequests(); }
-    if (tabName === 'manikins') { manikinPage = 1; loadManikins(); }
-    if (tabName === 'recycle') { recyclePage = 1; loadRecycleBin(); }
-    if (tabName === 'locations') loadLocations();
-    if (tabName === 'teams') loadTeams();
-    if (tabName === 'reports') loadReports();
+    runTabLoader(tabName, { resetPage: true }).catch((err) => {
+        console.error('[Tab] Failed to load tab:', tabName, err);
+    });
 }
 
 document.querySelectorAll('.sidebar-link').forEach(el => {
-    el.addEventListener('click', () => switchTab(el.dataset.tab));
+    el.addEventListener('click', () => {
+        switchTab(el.dataset.tab);
+        if (window.innerWidth <= 768) closeSidebar();
+    });
 });
 
 /* ===== GLOBAL REFRESH BUTTON ===== */
@@ -140,14 +165,7 @@ async function refreshCurrentTab() {
     icon.classList.add('spinning');
 
     try {
-        if (tabName === 'dashboard') await loadDashboard();
-        if (tabName === 'review') await loadReviewQueue();
-        if (tabName === 'borrow-requests') { if (typeof loadBorrowRequests === 'function') await loadBorrowRequests(); }
-        if (tabName === 'manikins') await loadManikins();
-        if (tabName === 'recycle') await loadRecycleBin();
-        if (tabName === 'locations') await loadLocations();
-        if (tabName === 'teams') await loadTeams();
-        if (tabName === 'reports') await loadReports();
+        await runTabLoader(tabName);
     } catch (err) {
         console.error('[Refresh] Error:', err);
     } finally {
@@ -210,12 +228,14 @@ function closeModal(id) {
 /* ===== CUSTOM CONFIRM DIALOG ===== */
 let _confirmResolve = null;
 
-function showConfirm({ title, messageNode, okText, okClass }) {
+function showConfirm({ title, messageNode, message, okText, okClass }) {
     document.getElementById('confirm-title').textContent = title || 'ยืนยันการดำเนินการ';
     const msgContainer = document.getElementById('confirm-msg');
     msgContainer.innerHTML = '';
     if (messageNode) {
         msgContainer.appendChild(messageNode);
+    } else if (message) {
+        msgContainer.textContent = message;
     } else {
         msgContainer.textContent = 'คุณแน่ใจหรือไม่?';
     }
@@ -1083,12 +1103,6 @@ function closeSidebar() {
 }
 document.getElementById('btn-menu-toggle').addEventListener('click', openSidebar);
 document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
-// Close sidebar on nav link tap (mobile)
-document.querySelectorAll('.sidebar-link').forEach(link => {
-    link.addEventListener('click', () => {
-        if (window.innerWidth <= 768) closeSidebar();
-    });
-});
 
 /* ===== GLOBAL EVENT DELEGATION (STRICT CSP) ===== */
 document.addEventListener('click', (e) => {
@@ -1305,25 +1319,13 @@ async function openAddMemberModal() {
         ? 'พิมพ์ SAP ID หรือชื่อหุ่นเพื่อค้นหา...'
         : 'ไม่มีหุ่นที่ยังไม่มี Team';
 
-    // Attach input filter listener (replace old one)
-    const newInput = input.cloneNode(true);
-    input.parentNode.replaceChild(newInput, input);
-    newInput.addEventListener('input', () => renderComboboxOptions(newInput.value));
-    newInput.addEventListener('focus', () => renderComboboxOptions(newInput.value));
-
-    // Close dropdown on click outside
-    document.addEventListener('click', (e) => {
-        if (!document.getElementById('add-member-combobox-wrap').contains(e.target)) {
-            dropdown.classList.add('hidden');
-        }
-    }, { once: true });
-
     // Suggest next available order
     const { data: members } = await sb.from('manikins').select('team_order').eq('team_code', currentTeamCode).order('team_order', { ascending: false }).limit(1);
     const nextOrder = (members && members.length && members[0].team_order) ? members[0].team_order + 1 : 1;
     document.getElementById('add-member-order').value = nextOrder;
     document.getElementById('add-member-order-hint').textContent = 'ลำดับถัดไปที่ว่าง: ' + currentTeamCode + ' ' + String(nextOrder).padStart(2, '0');
     openModal('add-member-modal');
+    renderComboboxOptions('');
     // Focus the combobox after modal opens
     setTimeout(() => document.getElementById('add-member-sap-input').focus(), 320);
 }
@@ -1348,16 +1350,33 @@ function renderComboboxOptions(query) {
         '</div>'
     ).join('');
     dropdown.classList.remove('hidden');
+}
 
-    // Attach click listeners to options
-    dropdown.querySelectorAll('.combobox-option').forEach(el => {
-        el.addEventListener('click', () => {
-            document.getElementById('add-member-sap-input').value = el.dataset.sap + ' — ' + el.dataset.name;
-            document.getElementById('add-member-sap').value = el.dataset.sap;
-            dropdown.classList.add('hidden');
-        });
+const addMemberInput = document.getElementById('add-member-sap-input');
+const addMemberDropdown = document.getElementById('add-member-dropdown');
+const addMemberComboboxWrap = document.getElementById('add-member-combobox-wrap');
+
+if (addMemberInput) {
+    addMemberInput.addEventListener('input', () => renderComboboxOptions(addMemberInput.value));
+    addMemberInput.addEventListener('focus', () => renderComboboxOptions(addMemberInput.value));
+}
+
+if (addMemberDropdown) {
+    addMemberDropdown.addEventListener('click', (e) => {
+        const option = e.target.closest('.combobox-option');
+        if (!option) return;
+        addMemberInput.value = option.dataset.sap + ' — ' + option.dataset.name;
+        document.getElementById('add-member-sap').value = option.dataset.sap;
+        addMemberDropdown.classList.add('hidden');
     });
 }
+
+document.addEventListener('click', (e) => {
+    if (!addMemberComboboxWrap || !addMemberDropdown) return;
+    if (!addMemberComboboxWrap.contains(e.target)) {
+        addMemberDropdown.classList.add('hidden');
+    }
+});
 
 async function addMemberToTeam() {
     const sapId = document.getElementById('add-member-sap').value;
