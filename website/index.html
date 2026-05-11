@@ -1,245 +1,70 @@
 <!DOCTYPE html>
 <html lang="th">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SiMSET — คลังหุ่นจำลองทางการแพทย์</title>
-    <meta name="description"
-        content="ศูนย์จำลองทางการแพทย์ SiMSET — สำรวจหุ่นจำลองทางการแพทย์คุณภาพสูงกว่า 150 รายการ สำหรับการเรียนรู้และฝึกทักษะทางคลินิก" />
-    <!-- Open Graph / SEO -->
-    <meta property="og:title" content="SiMSET — คลังหุ่นจำลองทางการแพทย์" />
-    <meta property="og:description"
-        content="สำรวจหุ่นจำลองทางการแพทย์คุณภาพสูงกว่า 150 รายการ สำหรับการเรียนรู้และฝึกทักษะทางคลินิก" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://simset.com/og-image.jpg" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css" />
-</head>
-
-<body>
-
-    <!-- Navigation -->
-    <nav class="nav" id="nav">
-        <div class="nav-inner container">
-            <div class="nav-brand">
-                <a href="index.html" style="text-decoration: none; display: flex; align-items: center;">
-                    <img src="img/simset_logo.png" alt="SiMSET Logo"
-                        style="height: 46px; width: auto; object-fit: contain;">
-                </a>
-            </div>
-            <div class="nav-right">
-                <span id="last-updated" class="nav-time"></span>
-            </div>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SIMSET Borrow - อุปกรณ์</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/simset-borrow.css" rel="stylesheet">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="index.html">SIMSET Borrow</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+            <li class="nav-item"><a class="nav-link active" href="index.html">อุปกรณ์</a></li>
+            <li class="nav-item"><a class="nav-link" href="track.html">ติดตามสถานะ</a></li>
+          </ul>
+          <a class="btn btn-outline-dark" href="cart.html">
+            <i class="bi-cart-fill me-1"></i>
+            รายการยืม
+            <span class="badge bg-dark text-white ms-1 rounded-pill" data-cart-count>0</span>
+          </a>
         </div>
+      </div>
     </nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-bg-grid"></div>
-        <div class="hero-glow hero-glow-1"></div>
-        <div class="hero-glow hero-glow-2"></div>
-        <div class="container hero-content">
-            <div class="hero-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-                ศูนย์จำลองทางการแพทย์ SiMSET
-            </div>
-            <h1 class="hero-title">คลังหุ่นจำลอง<br /><span class="hero-accent">ทางการแพทย์</span></h1>
-            <p class="hero-desc">ฝึกทักษะทางคลินิกด้วยหุ่นจำลองคุณภาพสูง ครอบคลุมทุกช่วงวัย<br />พร้อมข้อมูลสถานะแบบ
-                Real-time</p>
-
-            <!-- Hero Stats -->
-            <div class="hero-stats" id="hero-stats">
-                <div class="hero-stat">
-                    <div class="hero-stat-value" id="stat-total">—</div>
-                    <div class="hero-stat-label">หุ่นทั้งหมด</div>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value ready" id="stat-ready">—</div>
-                    <div class="hero-stat-label">พร้อมใช้งาน</div>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value" id="stat-models">—</div>
-                    <div class="hero-stat-label">รุ่น / โมเดล</div>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value" id="stat-locations">—</div>
-                    <div class="hero-stat-label">สถานที่จัดเก็บ</div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 60px;">
-                <a href="#catalog" class="hero-cta" style="margin-bottom: 0;">
-                    สำรวจคลังหุ่นแบบ Real-time
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                </a>
-                <a href="borrow.html" class="hero-cta"
-                    style="background: linear-gradient(135deg, #16a34a, #22c55e); margin-bottom: 0;">
-                    ยืมอุปกรณ์ (จองคิวล่วงหน้า)
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <polyline points="19 12 12 19 5 12" />
-                    </svg>
-                </a>
-            </div>
+    <header class="hero-borrow py-5">
+      <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+          <h1 class="display-4 fw-bolder">ระบบยืมอุปกรณ์</h1>
+          <p class="lead fw-normal text-white-50 mb-0">เลือกอุปกรณ์ เพิ่มรายการยืม แล้วส่งคำขอให้เจ้าหน้าที่อนุมัติ</p>
         </div>
-
-        <!-- Category Shortcuts -->
-        <div class="category-bar container">
-            <button class="cat-btn active" data-age="all">
-                <span class="cat-icon">🏥</span>
-                <span>ทั้งหมด</span>
-            </button>
-            <button class="cat-btn" data-age="adult">
-                <span class="cat-icon">🟠</span>
-                <span>ผู้ใหญ่</span>
-            </button>
-            <button class="cat-btn" data-age="child">
-                <span class="cat-icon">🟡</span>
-                <span>เด็ก</span>
-            </button>
-            <button class="cat-btn" data-age="infant">
-                <span class="cat-icon">🔵</span>
-                <span>ทารก</span>
-            </button>
+      </div>
+    </header>
+    <section class="py-4 border-bottom">
+      <div class="container px-4 px-lg-5">
+        <div class="d-flex flex-column flex-md-row borrow-toolbar">
+          <input id="catalog-search" class="form-control" type="search" placeholder="ค้นหาชื่อหรือรหัสอุปกรณ์">
+          <select id="catalog-type" class="form-select" style="max-width: 220px">
+            <option value="all">ทุกประเภท</option>
+            <option value="ผู้ใหญ่">ผู้ใหญ่</option>
+            <option value="เด็ก">เด็ก</option>
+            <option value="ทารก">ทารก</option>
+            <option value="ทั่วไป">ทั่วไป</option>
+          </select>
+          <span id="catalog-count" class="text-muted align-self-center text-nowrap">0 รายการ</span>
         </div>
+      </div>
     </section>
-
-    <!-- Catalog Section -->
-    <section class="catalog-section" id="catalog">
-        <div class="container">
-
-            <!-- Sticky Filter Bar -->
-            <div class="filter-bar-sticky" id="filter-bar">
-                <div class="filter-left">
-                    <div class="search-box">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.35-4.35" stroke-linecap="round" />
-                        </svg>
-                        <input id="search-input" type="text" placeholder="ค้นหาชื่อหุ่น, SAP ID..." />
-                        <button id="clear-search" class="search-clear" style="display:none">✕</button>
-                    </div>
-                </div>
-                <div class="filter-right">
-                    <div class="status-filters" id="status-chips">
-                        <button class="sf-btn active" data-status="all">ทั้งหมด</button>
-                        <button class="sf-btn" data-status="ready">
-                            <span class="sf-dot ready"></span>พร้อมใช้
-                        </button>
-                        <button class="sf-btn" data-status="maintenance">
-                            <span class="sf-dot warn"></span>รอซ่อม
-                        </button>
-                        <button class="sf-btn" data-status="broken">
-                            <span class="sf-dot bad"></span>เสีย
-                        </button>
-                    </div>
-                    <div class="view-btns">
-                        <button id="btn-grouped" class="view-btn active" title="มุมมองจัดกลุ่ม">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor"
-                                    stroke-width="2" />
-                                <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor"
-                                    stroke-width="2" />
-                                <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor"
-                                    stroke-width="2" />
-                                <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor"
-                                    stroke-width="2" />
-                            </svg>
-                        </button>
-                        <button id="btn-individual" class="view-btn" title="มุมมองรายตัว">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                                <line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                                <line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                                <line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                                <circle cx="3" cy="6" r="1.5" fill="currentColor" />
-                                <circle cx="3" cy="12" r="1.5" fill="currentColor" />
-                                <circle cx="3" cy="18" r="1.5" fill="currentColor" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="result-bar">
-                <span id="result-count" class="result-count"></span>
-            </div>
-
-            <!-- Grid -->
-            <div class="loading-state" id="loading">
-                <div class="loader-ring"></div>
-                <p>กำลังโหลดข้อมูล...</p>
-            </div>
-            <div id="manikin-grid"></div>
-            <div id="empty-state" class="empty-state" style="display:none">
-                <div class="empty-ico">🔍</div>
-                <h3>ไม่พบหุ่นที่ตรงกับเงื่อนไข</h3>
-                <p>ลองปรับตัวกรองหรือคำค้นหาใหม่</p>
-            </div>
-        </div>
+    <section class="py-5">
+      <div class="container px-4 px-lg-5 mt-4">
+        <div id="equipment-grid" class="row gx-4 gx-lg-5 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 justify-content-center"></div>
+      </div>
     </section>
-
-    <!-- Quick View Drawer -->
-    <div class="drawer-overlay" id="drawer-overlay"></div>
-    <aside class="drawer" id="detail-drawer">
-        <div class="drawer-header">
-            <button class="drawer-close" id="drawer-close">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-            </button>
-            <div class="drawer-title-wrap">
-                <div class="drawer-age-icon" id="drawer-age-icon"></div>
-                <div>
-                    <div class="drawer-name" id="drawer-name"></div>
-                    <div class="drawer-sap" id="drawer-sap"></div>
-                </div>
-            </div>
-        </div>
-        <div class="drawer-body" id="drawer-body"></div>
-    </aside>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container footer-inner">
-            <div class="footer-brand">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-                SiMSET Simulation Center
-            </div>
-            <p class="footer-note">ข้อมูลอัปเดตอัตโนมัติ · เพื่อการแสดงผลเท่านั้น</p>
-        </div>
+    <footer class="py-5 bg-dark">
+      <div class="container"><p class="m-0 text-center text-white">SIMSET Borrow MVP</p></div>
     </footer>
-
-    <!-- Supabase JS (for Realtime WebSocket only — REST data served from static JSON) -->
-    <script charset="utf-8" src="vendor/supabase.min.js"
-        integrity="sha384-YieCqqg9gQufX7+5HcFvCEg/n3KUEdl8/Jb+A6J0npf1mB740VayvwKjTrtCeUoy" crossorigin="anonymous"
-        defer></script>
-    <!-- DOMPurify — sanitizes innerHTML to prevent XSS (self-hosted, SRI-locked) -->
-    <script charset="utf-8" src="vendor/purify.min.js"
-        integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous"
-        defer></script>
-    <script charset="utf-8" src="app.js" defer></script>
-</body>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/supabase.min.js"></script>
+    <script src="template-js/scripts.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/catalog.js"></script>
+  </body>
 </html>

@@ -1,112 +1,89 @@
-# SiMSET Showroom — Cloudflare Worker Proxy
+# SiMSET Showroom - Cloudflare Worker Proxy
 
-Proxies browser requests to Supabase, hiding the API key entirely from client code.
+Proxies browser requests to Supabase. The current `website` app points the Supabase JS client at the Worker URL and uses the placeholder key `worker-managed-key`; the Worker injects the real Supabase key from its environment.
 
 ```
-Browser → Worker → Supabase
+Browser -> Worker -> Supabase
          (no key)  (key in secret)
 ```
 
----
-
 ## Prerequisites
 
-- [Cloudflare account](https://dash.cloudflare.com/sign-up) (free plan works)
+- Cloudflare account
 - Node.js installed
-
----
+- Wrangler CLI authenticated with `wrangler login`
 
 ## Deploy Steps
 
-### 1. Install Wrangler CLI
-
-```bash
-npm install -g wrangler
-wrangler login
-```
-
-### 2. Deploy the Worker
+### 1. Deploy the Worker
 
 ```bash
 cd cloudflare-worker
 wrangler deploy
 ```
 
-After deploy, Wrangler will print your Worker URL:
-```
-https://simset-showroom-proxy.<your-subdomain>.workers.dev
+Expected production Worker origin:
+
+```text
+https://simset-showroom-proxy.simset-admin.workers.dev
 ```
 
-### 3. Set Secrets (run these 2 commands)
+### 2. Set Secrets
 
 ```bash
 wrangler secret put SUPABASE_URL
-# → paste: https://ifogcvymwhcfbfjzhwsl.supabase.co
+# paste your Supabase project URL
 
 wrangler secret put SUPABASE_KEY
-# → paste: sb_publishable_DZyIDHVZ-kfD1o3baz0qmw_tTyRCJG8
+# paste your Supabase publishable or anon key
 ```
 
-> **Note:** Secrets are encrypted and never appear in your code or Cloudflare dashboard.
+### 3. Configure the Frontend Client
 
-### 4. Update app.js
-
-Open `website/app.js` and set `WORKER_URL` to your Worker URL:
+Open `website/js/supabase-client.js` and set the client URL to the Worker origin:
 
 ```js
-const WORKER_URL = 'https://simset-showroom-proxy.<your-subdomain>.workers.dev/api';
+const SIMSET_SUPABASE_URL = 'https://simset-showroom-proxy.simset-admin.workers.dev';
+const SIMSET_SUPABASE_ANON = 'worker-managed-key';
 ```
 
-### 5. (Optional) Lock CORS to your domain
+The placeholder key is intentionally not a Supabase key. `worker.js` overwrites `apikey` and replaces the placeholder `Authorization` header with `env.SUPABASE_KEY`, while preserving real user JWTs for RLS.
 
-In `worker.js`, change:
-```js
-const ALLOWED_ORIGIN = '*';
-```
-to:
-```js
-const ALLOWED_ORIGIN = 'https://your-showroom-domain.com';
-```
-Then redeploy with `wrangler deploy`.
+### 4. Keep CSP and CORS Aligned
 
----
+- `website/_headers` should allow `connect-src` only to the Worker origin for Supabase traffic.
+- `worker.js` should keep `ALLOWED_ORIGINS` aligned with production and local development origins.
 
 ## Test the Worker
 
 ```bash
-# Should return JSON array of manikins
-curl "https://simset-showroom-proxy.<your>.workers.dev/api/public_manikins?order=asset_name.asc&limit=5"
-
-# Should return 403 Forbidden
-curl "https://simset-showroom-proxy.<your>.workers.dev/api/secret_admin_table"
+curl "https://simset-showroom-proxy.simset-admin.workers.dev/rest/v1/equipments?select=id&limit=1"
+curl "https://simset-showroom-proxy.simset-admin.workers.dev/rest/v1/secret_admin_table"
 ```
 
----
+The first request should return JSON. The second request should return `403 Forbidden`.
 
 ## Worker Behaviour
 
 | Feature | Detail |
-|---|---|
-| Allowed endpoints | `public_manikins`, `locations`, `capabilities`, `manikin_capabilities` |
-| Cache | 60 seconds (Cloudflare edge cache) |
-| Rate limit | 60 requests / minute per IP → HTTP 429 |
-| CORS | Configurable via `ALLOWED_ORIGIN` in `worker.js` |
-| Secrets | `SUPABASE_URL`, `SUPABASE_KEY` — never in source code |
-
----
+| --- | --- |
+| Allowed endpoints | Explicit REST and RPC allowlist in `worker.js` |
+| Cache | 60 seconds for successful GET responses |
+| Rate limit | 60 requests per minute per IP |
+| CORS | Configurable via `ALLOWED_ORIGINS` in `worker.js` |
+| Secrets | `SUPABASE_URL`, `SUPABASE_KEY` are stored in Cloudflare Worker env/secrets |
 
 ## Local Development
 
 ```bash
 wrangler dev
-# Worker runs at http://localhost:8787
-# Set .dev.vars for local secrets:
 ```
 
-Create `cloudflare-worker/.dev.vars`:
-```
-SUPABASE_URL=https://ifogcvymwhcfbfjzhwsl.supabase.co
-SUPABASE_KEY=sb_publishable_DZyIDHVZ-kfD1o3baz0qmw_tTyRCJG8
+Create `cloudflare-worker/.dev.vars` locally:
+
+```text
+SUPABASE_URL=<your Supabase project URL>
+SUPABASE_KEY=<your Supabase publishable or anon key>
 ```
 
-> `.dev.vars` is gitignored automatically by Wrangler. **Never commit this file.**
+Do not commit `.dev.vars`.

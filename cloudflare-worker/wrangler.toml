@@ -13,3 +13,6 @@ compatibility_date = "2025-02-26"
 # [[routes]]
 # pattern = "api.yourdomain.com/*"
 # zone_name = "yourdomain.com"
+
+[vars]
+SUPABASE_URL = "https://ifogcvymwhcfbfjzhwsl.supabase.co"

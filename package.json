@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "verify:current-mvp": "node scripts/verify-current-mvp-contracts.js",
+    "verify:live-worker": "node scripts/verify-live-worker.mjs",
+    "smoke:deploy-workflow": "node scripts/smoke-deploy-workflow.js",
+    "smoke:main-pages": "node scripts/smoke-main-pages.js",
+    "test:smoke": "node scripts/smoke-main-pages.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2"
+  }
+}

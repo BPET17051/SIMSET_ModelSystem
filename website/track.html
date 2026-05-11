@@ -1,194 +1,32 @@
 <!DOCTYPE html>
 <html lang="th">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SiMSET — ติดตามสถานะคำร้องยืมอุปกรณ์</title>
-    <meta name="description"
-        content="ระบบติดตามสถานะคำร้องขอเบิกอุปกรณ์ศูนย์จำลองทางการแพทย์ (SiMSET) กรอก Tracking ID 32 หลักของคุณเพื่อตรวจสอบสถานะ" />
-    <meta property="og:title" content="SiMSET Tracker — ติดตามสถานะคำร้อง" />
-    <meta property="og:description" content="ระบบติดตามสถานะคำร้องขอเบิกอุปกรณ์ศูนย์จำลองทางการแพทย์ (SiMSET)" />
-    <meta property="og:type" content="website" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="borrow.css" />
-    <link rel="stylesheet" href="track.css" />
-</head>
-
-<body>
-    <!-- Navigation -->
-    <nav class="nav" id="nav">
-        <div class="nav-inner container">
-            <div class="nav-brand">
-                <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    <img src="img/simset_logo.png" alt="SiMSET Logo"
-                        style="height: 46px; width: auto; object-fit: contain;">
-                </a>
-            </div>
-            <div class="nav-right">
-                <a href="borrow.html" class="btn-outline"
-                    style="padding: 6px 14px; font-size: 0.8rem;">ยืมอุปกรณ์เพิ่ม</a>
-            </div>
-        </div>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SIMSET Borrow - ติดตามสถานะ</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/simset-borrow.css" rel="stylesheet">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="index.html">SIMSET Borrow</a>
+        <a class="btn btn-outline-dark" href="index.html">อุปกรณ์</a>
+      </div>
     </nav>
-
-    <main class="container" style="padding-top: 120px; padding-bottom: 80px; max-width: 800px;">
-        <!-- Tracking Input Section -->
-        <div class="tracking-search" id="tracking-search">
-            <h1 style="font-size: 2rem; margin-bottom: 10px;">ตรวจสอบสถานะคำร้อง</h1>
-            <p style="color: var(--text-2); margin-bottom: 24px;">กรอก Tracking ID 32 หลัก ที่ได้รับจากการจองอุปกรณ์</p>
-
-            <div class="search-box tracking-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" stroke-linecap="round" />
-                </svg>
-                <input type="text" id="track-id-input" placeholder="ตัวอย่าง: 5f4dcc3b5aa765d61d8327deb882cf99"
-                    autocomplete="off" />
-                <button id="btn-track" class="btn-primary"
-                    style="padding: 10px 20px; border-radius: 6px;">ตรวจสอบ</button>
-            </div>
-            <div id="track-error" class="track-error"></div>
-            <p class="track-hint">
-                💡 Tracking ID อยู่ในอีเมลยืนยันการจอง ·
-                ไม่มี ID? <a href="/borrow.html">ยื่นคำร้องใหม่</a>
-            </p>
-        </div>
-
-        <!-- Tracking Result Section -->
-        <div class="tracking-result" id="tracking-result" style="display: none;">
-            <div class="result-header">
-                <div>
-                    <div style="font-size: 0.85rem; color: var(--text-3); margin-bottom: 4px;">หมายเลข Tracking ID</div>
-                    <div class="tracking-id-display" id="display-tid"></div>
-                </div>
-                <div>
-                    <div id="display-status" class="status-badge large"></div>
-                </div>
-            </div>
-
-            <!-- Print Actions -->
-            <div class="print-actions" id="print-actions" style="display: none;">
-                <p style="font-size: 0.85rem; color: var(--text-2); margin-bottom: 15px;">
-                    ✨ คำร้องนี้ได้รับการอนุมัติแล้ว คุณสามารถพิมพ์ใบเบิกอุปกรณ์เพื่อนำมายื่นในวันรับของได้
-                </p>
-                <button onclick="window.print()" class="btn-primary"
-                    style="display: inline-flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                        <rect x="6" y="14" width="12" height="8"></rect>
-                    </svg>
-                    พิมพ์ใบเบิกอุปกรณ์
-                </button>
-            </div>
-
-            <!-- Details Grid -->
-            <div class="details-grid">
-                <div class="detail-box">
-                    <div class="detail-label">ชื่อผู้ยืม</div>
-                    <div class="detail-value" id="display-name"></div>
-                </div>
-                <div class="detail-box">
-                    <div class="detail-label">โครงการ / รายวิชา</div>
-                    <div class="detail-value" id="display-purpose"></div>
-                </div>
-                <div class="detail-box">
-                    <div class="detail-label">วันที่ส่งคำร้อง</div>
-                    <div class="detail-value" id="display-date"></div>
-                </div>
-                <div class="detail-box" id="expires-box">
-                    <div class="detail-label" style="color: #ef4444;">คำร้องจะหมดอายุใน</div>
-                    <div class="detail-value" style="color: #fca5a5;" id="display-expires"></div>
-                </div>
-            </div>
-
-            <div class="items-section">
-                <h3
-                    style="margin-bottom: 16px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
-                    รายการอุปกรณ์</h3>
-                <div class="items-list" id="display-items">
-                    <!-- JS Filled -->
-                </div>
-            </div>
-
-            <!-- Cancellation Zone -->
-            <div class="cancel-zone" id="cancel-zone">
-                <div style="margin-bottom: 10px;">
-                    <strong>ต้องการยกเลิกคำร้องนี้หรือไม่?</strong>
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-3); margin-bottom: 15px;">
-                    *สามารถยกเลิกด้วยตนเองได้ในกรณีที่อยู่ในสถานะ "รออนุมัติ" หรือ "อนุมัติแล้ว"
-                    หากยกเลิกล่วงหน้าก่อนวันรับของ > 1 วัน
-                </p>
-                <button id="btn-cancel-request" class="btn-outline"
-                    style="border-color: #ef4444; color: #ef4444;">ยกเลิกคำร้อง</button>
-                <div class="cancel-warning" id="cancel-warning"
-                    style="display: none; color: #f59e0b; font-size: 0.85rem; margin-top: 10px;">
-                    ไม่สามารถยกเลิกด้วยตนเองได้แล้ว (เหลือน้อยกว่า 1 วันก่อนถึงกำหนดรับของ) กรุณาติดต่อ Admin
-                    โดยตรงเพื่อทำการยกเลิก
-                </div>
-            </div>
-        </div>
+    <main class="py-5">
+      <div class="container px-4 px-lg-5">
+        <h1 class="h2">ติดตามสถานะ</h1>
+        <form id="track-form" class="row g-2 my-4">
+          <div class="col-md-9"><input id="track-id" class="form-control form-control-lg" placeholder="กรอก Tracking ID เช่น BR-2026-ABC123"></div>
+          <div class="col-md-3 d-grid"><button class="btn btn-dark btn-lg" type="submit">ค้นหา</button></div>
+        </form>
+        <div id="track-result"></div>
+      </div>
     </main>
-
-    <!-- Printing Overlay (Only visible during window.print()) -->
-    <div id="print-view" class="print-view">
-        <div class="print-header">
-            <div style="font-weight: bold; font-size: 16pt;">ศูนย์จำลองทางการแพทย์ (SiMSET)</div>
-            <div style="font-size: 14pt;">ใบเบิกอุปกรณ์ทางการแพทย์</div>
-        </div>
-        <table class="print-info-table">
-            <tr>
-                <td width="20%"><strong>Tracking ID:</strong></td>
-                <td width="30%" id="pv-tid"></td>
-                <td width="20%"><strong>วันที่พิมพ์:</strong></td>
-                <td width="30%" id="pv-print-date"></td>
-            </tr>
-            <tr>
-                <td><strong>ชื่อผู้ยืม:</strong></td>
-                <td id="pv-name"></td>
-                <td><strong>โครงการ:</strong></td>
-                <td id="pv-purpose"></td>
-            </tr>
-        </table>
-
-        <table class="print-items-table">
-            <thead>
-                <tr>
-                    <th width="5%">ลำดับ</th>
-                    <th width="40%">รายการอุปกรณ์</th>
-                    <th width="15%">วันที่รับ</th>
-                    <th width="15%">วันที่คืน</th>
-                    <th width="10%">จำนวน</th>
-                    <th width="15%">ลายเซ็นผู้รับ</th>
-                </tr>
-            </thead>
-            <tbody id="pv-items">
-                <!-- JS Filled -->
-            </tbody>
-        </table>
-
-        <div class="print-signatures">
-            <div class="sig-box">
-                <div class="sig-line"></div>
-                <div class="sig-title">ผู้ขอเบิกอุปกรณ์<br><span id="pv-sig-name"></span></div>
-            </div>
-            <div class="sig-box">
-                <div class="sig-line"></div>
-                <div class="sig-title">
-                    ผู้อนุมัติ/เจ้าหน้าที่คลัง<br>(...................................................)</div>
-            </div>
-        </div>
-    </div>
-
-    <script charset="utf-8" src="vendor/supabase.min.js" defer></script>
-    <script charset="utf-8" src="track.js" defer></script>
-</body>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/track.js"></script>
+  </body>
 </html>

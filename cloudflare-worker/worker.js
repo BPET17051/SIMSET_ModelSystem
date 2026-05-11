@@ -21,34 +21,67 @@ const ALLOWED_PATHS = new Set([
 
     // Borrowing System paths (GET & POST)
     '/rest/v1/equipments',
+    '/rest/v1/manikins',
+    '/rest/v1/locations',
+    '/rest/v1/capabilities',
+    '/rest/v1/manikin_capabilities',
+    '/rest/v1/borrow_requests',
+    '/rest/v1/borrow_request_items',
+    '/rest/v1/audit_logs',
+    '/rest/v1/teams',
+    '/rest/v1/team_capabilities',
     '/rest/v1/vw_active_borrow_items',
     '/rest/v1/rpc/get_next_available_date',
+    '/rest/v1/rpc/get_borrow_availability',
+    '/rest/v1/rpc/get_borrow_request_status',
+    '/rest/v1/rpc/submit_public_borrow_request',
     '/rest/v1/rpc/submit_borrow_request',
+    '/rest/v1/rpc/cancel_borrow_request',
+    '/rest/v1/rpc/admin_update_borrow_request_status',
+    '/rest/v1/rpc/admin_approve_request',
+    '/rest/v1/rpc/admin_reject_request',
+    '/rest/v1/rpc/admin_receive_return',
+    '/rest/v1/rpc/admin_receive_return_detailed',
+    '/rest/v1/rpc/sync_manikin_capabilities',
+    '/rest/v1/rpc/delete_location_atomic',
 ]);
 
 const ALLOWED_PREFIXES = [
-    '/auth/v1/' // Allow all Supabase SDK Auth native endpoints
+    '/auth/v1/',     // Allow all Supabase SDK Auth native endpoints
+    '/realtime/v1/'  // Realtime websocket and polling endpoints
 ];
 
 const RATE_LIMIT = 60;          // max requests per window per IP
 const RATE_WINDOW_MS = 60_000;  // 1 minute window
 const CACHE_TTL_S = 60;         // cache lifetime in seconds
+const CLIENT_PLACEHOLDER_KEY = 'worker-managed-key';
 
 const rateLimitMap = new Map(); // ip → { count, resetAt }
 
-const ALLOWED_ORIGIN = '*'; // Consider changing to actual domain in production
+const ALLOWED_ORIGINS = new Set([
+    'https://simset-showroom.pages.dev',
+    'https://encoding-preview.simset-showroom.pages.dev',
+    'http://localhost:8788',   // wrangler pages dev
+    'http://127.0.0.1:5500',  // local live-server dev
+]);
 
-function corsHeaders() {
+function corsHeaders(origin) {
+    const allowedOrigin = ALLOWED_ORIGINS.has(origin)
+        ? origin
+        : 'https://simset-showroom.pages.dev';
+
     return {
-        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+        'Access-Control-Allow-Origin': allowedOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, apikey, Authorization, x-client-info',
+        'Access-Control-Allow-Headers': 'Content-Type, apikey, Authorization, x-client-info, Prefer, x-supabase-api-version, content-profile, accept-profile, range, range-unit',
+        'Vary': 'Origin',
     };
 }
 
 export default {
     async fetch(request, env, ctx) {
-        const cors = corsHeaders();
+        const origin = request.headers.get('Origin') || '';
+        const cors = corsHeaders(origin);
 
         if (request.method === 'OPTIONS') {
             return new Response(null, { status: 204, headers: cors });
@@ -117,9 +150,12 @@ export default {
         const fetchHeaders = new Headers(request.headers);
         fetchHeaders.set('apikey', env.SUPABASE_KEY);
 
-        // Critical Fix: Do not override Authorization if the client provided a Bearer token
-        // This allows RLS (Row Level Security) and auth.uid() inside RPCs to work correctly.
-        if (!fetchHeaders.has('Authorization')) {
+        const authHeader = fetchHeaders.get('Authorization') || '';
+        const hasClientSession = authHeader.startsWith('Bearer ')
+            && authHeader !== `Bearer ${CLIENT_PLACEHOLDER_KEY}`;
+
+        // Preserve real user JWTs for RLS. Replace the public placeholder used by the browser SDK.
+        if (!hasClientSession) {
             fetchHeaders.set('Authorization', `Bearer ${env.SUPABASE_KEY}`);
         }
 
@@ -133,6 +169,7 @@ export default {
                 method: request.method,
                 headers: fetchHeaders,
                 body: request.method === 'POST' ? await request.arrayBuffer() : undefined,
+                redirect: 'manual'
             });
         } catch {
             return new Response('Bad Gateway', { status: 502, headers: cors });

@@ -1,0 +1,199 @@
+body {
+  font-family: "Noto Sans Thai", Arial, Helvetica, sans-serif;
+}
+
+.hero-borrow {
+  background: linear-gradient(180deg, #121314 0%, #000 100%);
+}
+
+.equipment-card .card-img-top {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.equipment-card {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.equipment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.12);
+}
+
+.status-pill {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+}
+
+.status-ready,
+.status-approved,
+.status-returned {
+  background: #e8f5ee;
+  color: #116c3a;
+}
+
+.status-pending,
+.status-borrowed {
+  background: #fff4de;
+  color: #936000;
+}
+
+.status-rejected {
+  background: #fde7e9;
+  color: #a4172b;
+}
+
+.borrow-toolbar {
+  gap: 0.75rem;
+}
+
+.borrow-item-thumb {
+  align-items: center;
+  background: #f1f3f5;
+  border-radius: 0.5rem;
+  color: #495057;
+  display: inline-flex;
+  font-weight: 700;
+  height: 3rem;
+  justify-content: center;
+  width: 3rem;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.empty-state {
+  border: 1px dashed #ced4da;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.admin-tabs {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-user-email {
+  color: #6c757d;
+  font-size: 0.875rem;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-auth-state {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  color: #495057;
+  padding: 0.9rem 1rem;
+}
+
+.admin-login-page {
+  background: #f3f7f8;
+  min-height: 100vh;
+}
+
+.admin-login-shell {
+  align-items: center;
+  display: flex;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+.admin-login-panel {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.08);
+  margin: 0 auto;
+  max-width: 28rem;
+  padding: 2rem;
+  width: 100%;
+}
+
+.admin-login-brand {
+  color: #0f766e;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+}
+
+.admin-login-back {
+  color: #495057;
+  display: inline-block;
+  font-size: 0.925rem;
+  margin-top: 1rem;
+  text-decoration: none;
+}
+
+.admin-login-back:hover {
+  color: #111;
+  text-decoration: underline;
+}
+
+.admin-tab {
+  background: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  padding: 1rem;
+}
+
+.admin-tab.is-active {
+  background: #111;
+  border-color: #111;
+  color: #fff;
+}
+
+.admin-action-btn {
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 800;
+  min-width: 9rem;
+  padding: 0.85rem 1rem;
+}
+
+.admin-action-ready {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: #fff;
+}
+
+.admin-action-borrowed {
+  background: #198754;
+  border-color: #198754;
+  color: #fff;
+}
+
+.admin-action-returned {
+  background: #212529;
+  border-color: #212529;
+  color: #fff;
+}
+
+.admin-work-table td {
+  padding-bottom: 1rem;
+  padding-top: 1rem;
+}
+
+@media (max-width: 767.98px) {
+  .admin-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-action-btn {
+    width: 100%;
+  }
+}

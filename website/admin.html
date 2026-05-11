@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SIMSET Borrow - Admin</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/simset-borrow.css" rel="stylesheet">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="index.html">SIMSET Borrow Admin</a>
+        <div class="d-flex align-items-center gap-2">
+          <span class="admin-user-email" id="admin-user-email">กำลังตรวจสิทธิ์...</span>
+          <button class="btn btn-outline-secondary btn-sm" type="button" id="admin-logout" hidden>ออกจากระบบ</button>
+          <a class="btn btn-outline-dark" href="index.html">หน้าอุปกรณ์</a>
+        </div>
+      </div>
+    </nav>
+    <main class="py-5">
+      <div class="container px-4 px-lg-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 class="h2 mb-1">จัดการคำขอยืม</h1>
+            <p class="text-muted mb-0">เจ้าหน้าที่จัดงานหน้างานตามลำดับสถานะ ไม่มีการข้ามขั้น</p>
+          </div>
+        </div>
+        <div class="admin-auth-state mb-4" id="admin-auth-state" role="status">กำลังตรวจสอบสิทธิ์ผู้ดูแลระบบ...</div>
+        <div class="admin-tabs mb-4" role="tablist" aria-label="สถานะงาน">
+          <button class="admin-tab is-active" type="button" data-admin-tab="approved">ต้องเตรียม</button>
+          <button class="admin-tab" type="button" data-admin-tab="ready">พร้อมจ่าย</button>
+          <button class="admin-tab" type="button" data-admin-tab="borrowed">กำลังใช้งาน</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table admin-work-table">
+            <thead><tr><th>Tracking ID</th><th>ชื่อ</th><th>หน่วยงาน</th><th>อุปกรณ์</th><th class="text-end">ปุ่มจัดการ</th></tr></thead>
+            <tbody id="admin-requests"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>
