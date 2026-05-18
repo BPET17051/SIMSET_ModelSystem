@@ -36,6 +36,15 @@ wrangler secret put SUPABASE_URL
 
 wrangler secret put SUPABASE_KEY
 # paste your Supabase publishable or anon key
+
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# paste your Supabase service-role key for notification log writes
+
+wrangler secret put TURNSTILE_SECRET_KEY
+# paste your Cloudflare Turnstile secret key
+
+wrangler secret put EMAIL_WEBHOOK_URL
+# paste the email provider / automation webhook URL that sends approved/rejected emails
 ```
 
 ### 3. Configure the Frontend Client
@@ -71,7 +80,9 @@ The first request should return JSON. The second request should return `403 Forb
 | Cache | 60 seconds for successful GET responses |
 | Rate limit | 60 requests per minute per IP |
 | CORS | Configurable via `ALLOWED_ORIGINS` in `worker.js` |
-| Secrets | `SUPABASE_URL`, `SUPABASE_KEY` are stored in Cloudflare Worker env/secrets |
+| Turnstile | `submit_public_borrow_request` is blocked until the Worker verifies `p_turnstile_token` server-side |
+| Email notification | `/api/notifications/borrow-request` sends approved/rejected webhook payloads and records `notification_logs` |
+| Secrets | `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `TURNSTILE_SECRET_KEY`, `EMAIL_WEBHOOK_URL` are stored in Cloudflare Worker env/secrets |
 
 ## Local Development
 
@@ -84,6 +95,9 @@ Create `cloudflare-worker/.dev.vars` locally:
 ```text
 SUPABASE_URL=<your Supabase project URL>
 SUPABASE_KEY=<your Supabase publishable or anon key>
+SUPABASE_SERVICE_ROLE_KEY=<your Supabase service-role key>
+TURNSTILE_SECRET_KEY=<your Turnstile secret key>
+EMAIL_WEBHOOK_URL=<your email webhook URL>
 ```
 
 Do not commit `.dev.vars`.

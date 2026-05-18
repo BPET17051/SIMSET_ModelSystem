@@ -89,6 +89,7 @@ DECLARE
     v_borrower_id uuid;
     v_status text;
     v_reason text := COALESCE(NULLIF(trim(p_reason), ''), 'Cancelled by borrower');
+    v_min_start date;
 BEGIN
     IF auth.uid() IS NULL THEN
         RAISE EXCEPTION 'Authentication required';
@@ -109,6 +110,15 @@ BEGIN
 
     IF v_status <> 'pending' THEN
         RAISE EXCEPTION 'Request is not cancellable in status: %', v_status;
+    END IF;
+
+    SELECT MIN(start_date)
+    INTO v_min_start
+    FROM public.borrow_request_items
+    WHERE request_id = v_request_id;
+
+    IF v_min_start <= CURRENT_DATE + INTERVAL '1 day' THEN
+        RAISE EXCEPTION 'Cannot cancel within 1 day of start date. Contact staff.';
     END IF;
 
     UPDATE public.borrow_requests
@@ -253,7 +263,6 @@ BEGIN
     END IF;
 
     v_allowed_next := CASE p_current_status
-        WHEN 'pending' THEN 'approved'
         WHEN 'approved' THEN 'ready'
         WHEN 'ready' THEN 'borrowed'
         WHEN 'borrowed' THEN 'returned'

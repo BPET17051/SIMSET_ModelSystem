@@ -113,14 +113,30 @@ function supabaseMock({ adminSession = true } = {}) {
                 data: {
                   tracking_id: args.p_tracking_id,
                   status: 'approved',
-                  purpose: 'Training',
                   created_at: '2026-03-20T08:00:00Z',
                   items: [{ equipment_name: 'Adult CPR Manikin', qty_borrowed: 1 }]
                 },
                 error: null
               };
             }
+            if (name === 'get_admin_kpis') {
+              return {
+                data: {
+                  pending_all: 1,
+                  approved_rate: 50,
+                  closed_negative_rate: 0,
+                  avg_lead_time_days: 3,
+                  top_equipment_name: 'Adult CPR Manikin',
+                  top_equipment_qty: 2
+                },
+                error: null
+              };
+            }
             if (name === 'submit_public_borrow_request') return { data: 'SIM-REQ-002', error: null };
+            if (name === 'cancel_borrow_request_public') return { data: { tracking_id: args.p_tracking_id, status: 'cancelled' }, error: null };
+            if (name === 'admin_approve_request') return { data: { request_id: args.p_request_id, status: 'approved' }, error: null };
+            if (name === 'admin_reject_request') return { data: { request_id: args.p_request_id, status: 'rejected' }, error: null };
+            if (name === 'admin_cancel_request') return { data: { request_id: args.p_request_id, status: 'cancelled' }, error: null };
             if (name === 'admin_update_borrow_request_status') return { data: { status: args.p_next_status }, error: null };
             return { data: null, error: null };
           }
@@ -170,7 +186,7 @@ const cases = [
   {
     name: 'Admin page',
     path: 'admin.html',
-    selectors: ['#admin-auth-state', '#admin-requests', '[data-admin-tab="approved"]'],
+    selectors: ['#admin-auth-state', '#admin-requests', '[data-admin-tab="pending"]', '[data-admin-tab="approved"]', '[data-kpi="avgLeadTime"]'],
   },
 ];
 

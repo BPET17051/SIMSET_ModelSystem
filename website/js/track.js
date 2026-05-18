@@ -6,11 +6,20 @@
     ready: 'พร้อมรับอุปกรณ์',
     borrowed: 'กำลังยืม',
     returned: 'คืนแล้ว',
-    rejected: 'ไม่อนุมัติ'
+    rejected: 'ไม่อนุมัติ',
+    cancelled: 'ยกเลิกแล้ว'
   };
 
   const $ = (selector) => document.querySelector(selector);
   const esc = (value) => (app.esc ? app.esc(value) : String(value ?? ''));
+
+  function friendlyError(error) {
+    const message = String(error?.message || '');
+    console.error(error);
+    if (message.includes('Tracking ID not found')) return 'ไม่พบรหัสติดตามนี้';
+    if (message.includes('Cannot cancel within 1 day')) return 'ไม่สามารถยกเลิกได้ กรุณาติดต่อเจ้าหน้าที่เพื่อยกเลิก';
+    return 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+  }
 
   function render(request) {
     const root = $('#track-result');
@@ -20,6 +29,9 @@
       return;
     }
     const items = request.items || [];
+    const cancelAction = request.status === 'pending'
+      ? `<button class="btn btn-outline-danger mt-3" type="button" data-cancel-request="${esc(request.tracking_id)}">ยกเลิกคำร้อง</button>`
+      : '';
     root.innerHTML = `
       <div class="card">
         <div class="card-body">
@@ -31,7 +43,6 @@
             <span class="status-pill status-${esc(request.status)}">${esc(STATUS_LABELS[request.status] || request.status)}</span>
           </div>
           <hr>
-          <p class="mb-1"><strong>Purpose:</strong> ${esc(request.purpose || '-')}</p>
           <p class="mb-3"><strong>Created:</strong> ${esc(request.created_at || '-')}</p>
           <div class="list-group">
             ${items.map((item) => `
@@ -41,6 +52,7 @@
               </div>
             `).join('')}
           </div>
+          ${cancelAction}
         </div>
       </div>`;
   }
@@ -57,7 +69,22 @@
     try {
       render(await findRequest(id));
     } catch (error) {
-      root.innerHTML = `<div class="empty-state text-danger">ค้นหาจาก Supabase ไม่สำเร็จ: ${esc(error.message)}</div>`;
+      root.innerHTML = `<div class="empty-state text-danger">${esc(friendlyError(error))}</div>`;
+    }
+  }
+
+  async function cancelRequest(trackingId) {
+    if (!trackingId || !confirm('ยืนยันยกเลิกคำร้องนี้?')) return;
+    try {
+      const { error } = await app.supabase.rpc('cancel_borrow_request_public', {
+        p_tracking_id: trackingId,
+        p_reason: 'Cancelled by borrower from tracking page'
+      });
+      if (error) throw error;
+      await search(trackingId);
+      alert('ยกเลิกคำร้องแล้ว');
+    } catch (error) {
+      alert(friendlyError(error));
     }
   }
 
@@ -73,6 +100,11 @@
         return;
       }
       search(tracking);
+    });
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-cancel-request]');
+      if (!button) return;
+      cancelRequest(button.getAttribute('data-cancel-request'));
     });
   });
 }());

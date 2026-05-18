@@ -66,8 +66,8 @@
     $('#catalog-count').textContent = `${filtered.length} รายการ`;
 
     grid.innerHTML = filtered.map((item) => {
-      const available = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
-      const disabled = available <= 0;
+      const baselineStock = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
+      const disabled = baselineStock <= 0;
       return `
         <div class="col mb-5">
           <div class="card h-100 equipment-card">
@@ -77,7 +77,8 @@
               <div class="text-center">
                 <h5 class="fw-bolder">${esc(item.name)}</h5>
                 <div class="small text-muted mt-2">${esc(item.id)}</div>
-                <div class="mt-3"><span class="status-pill ${disabled ? 'status-rejected' : 'status-ready'}">${disabled ? 'ไม่พร้อมให้ยืม' : `พร้อมให้ยืม ${available}`}</span></div>
+                <div class="mt-3"><span class="status-pill ${disabled ? 'status-rejected' : 'status-ready'}">${disabled ? 'ไม่พร้อมให้ยืม' : `มีในระบบ ${baselineStock}`}</span></div>
+                <div class="small text-muted mt-2">ตรวจช่วงวันที่ตอนส่งคำขอ</div>
               </div>
             </div>
             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
@@ -100,17 +101,17 @@
       root.innerHTML = '<div class="empty-state">ไม่พบข้อมูลอุปกรณ์จาก Supabase</div>';
       return;
     }
-    const available = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
+    const baselineStock = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
     root.innerHTML = `
       <div class="row gx-4 gx-lg-5 align-items-start">
         <div class="col-md-6"><img class="card-img-top mb-5 mb-md-0 rounded" src="${item.image}" alt="${esc(item.name)}"></div>
         <div class="col-md-6">
           <div class="small mb-1 text-muted">รหัสอุปกรณ์: ${esc(item.id)}</div>
           <h1 class="display-6 fw-bolder">${esc(item.name)}</h1>
-          <div class="fs-5 mb-4"><span class="status-pill ${available > 0 ? 'status-ready' : 'status-rejected'}">${available > 0 ? `พร้อมให้ยืม ${available}` : 'ไม่พร้อมให้ยืม'}</span></div>
-          <p class="lead">ข้อมูลนี้โหลดจาก Supabase โดยตรงเท่านั้น</p>
+          <div class="fs-5 mb-4"><span class="status-pill ${baselineStock > 0 ? 'status-ready' : 'status-rejected'}">${baselineStock > 0 ? `มีในระบบ ${baselineStock}` : 'ไม่พร้อมให้ยืม'}</span></div>
+          <p class="lead">จำนวนนี้ยังไม่หักการจองทับช่วงวันที่ ระบบจะตรวจวันยืมอีกครั้งตอนส่งคำขอ</p>
           <div class="d-flex gap-2">
-            <a class="btn btn-dark flex-shrink-0 ${available <= 0 ? 'disabled' : ''}" href="cart.html?equipment_id=${encodeURIComponent(item.id)}&qty=1">
+            <a class="btn btn-dark flex-shrink-0 ${baselineStock <= 0 ? 'disabled' : ''}" href="cart.html?equipment_id=${encodeURIComponent(item.id)}&qty=1">
               <i class="bi-cart-fill me-1"></i> เพิ่มรายการยืม
             </a>
             <a class="btn btn-outline-dark" href="index.html">กลับไปหน้าอุปกรณ์</a>
