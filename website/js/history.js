@@ -13,23 +13,23 @@
   async function sendHistoryMagicLink() {
     const email = document.getElementById('history-email')?.value || '';
     await app.auth.sendMagicLink(email, `${location.origin}/history.html`);
-    showMessage('info', 'Magic link sent. Open it in this browser to view your history.');
+    showMessage('info', 'ส่งลิงก์เข้าสู่ระบบแล้ว กรุณาเปิดจากเบราว์เซอร์นี้เพื่อดูประวัติการยืม');
   }
 
   async function renderAuth() {
     const root = document.getElementById('history-auth');
     currentSession = await app.auth.getSession();
     if (currentSession) {
-      root.innerHTML = `<div class="alert alert-success mb-0">Signed in as ${esc(currentSession.user.email)}.</div>`;
+      root.innerHTML = `<div class="alert alert-success mb-0">เข้าสู่ระบบแล้ว: ${esc(currentSession.user.email)}</div>`;
       return true;
     }
 
     root.innerHTML = `
       <div class="border rounded bg-white p-3">
-        <label class="form-label" for="history-email">Mahidol email</label>
+        <label class="form-label" for="history-email">อีเมล Mahidol</label>
         <div class="input-group">
           <input id="history-email" type="email" class="form-control" placeholder="name@mahidol.ac.th">
-          <button id="history-magic-link" class="btn btn-outline-dark" type="button">Send magic link</button>
+          <button id="history-magic-link" class="btn btn-outline-dark" type="button">ส่งลิงก์เข้าสู่ระบบ</button>
         </div>
       </div>`;
     document.getElementById('history-list').innerHTML = '';
@@ -39,7 +39,7 @@
   function renderHistory(rows) {
     const root = document.getElementById('history-list');
     if (!rows.length) {
-      root.innerHTML = '<div class="empty-state">No borrow requests yet.</div>';
+      root.innerHTML = '<div class="empty-state">ยังไม่มีประวัติคำขอยืม</div>';
       return;
     }
 
@@ -57,8 +57,8 @@
           ${(request.items || []).map((item) => `<li>${esc(item.equipment_name)} x${esc(item.qty_borrowed || 1)}</li>`).join('')}
         </ul>
         <div class="d-flex gap-2">
-          <a class="btn btn-sm btn-outline-dark" href="track.html?id=${encodeURIComponent(request.tracking_id)}">Track</a>
-          ${request.can_cancel ? `<button class="btn btn-sm btn-outline-danger" type="button" data-cancel-request="${esc(request.id)}">Cancel</button>` : ''}
+          <a class="btn btn-sm btn-outline-dark" href="track.html?id=${encodeURIComponent(request.tracking_id)}">ติดตามสถานะ</a>
+          ${request.can_cancel ? `<button class="btn btn-sm btn-outline-danger" type="button" data-cancel-request="${esc(request.id)}">ยกเลิกคำขอ</button>` : ''}
         </div>
       </div>`).join('');
   }
@@ -70,7 +70,7 @@
   }
 
   async function cancelRequest(requestId) {
-    const reason = prompt('Reason for cancellation');
+    const reason = prompt('เหตุผลที่ต้องการยกเลิกคำขอ');
     if (!reason || !reason.trim()) return;
     const { error } = await app.supabase.rpc('transition_borrow_request_status', {
       p_request_id: requestId,
@@ -81,7 +81,7 @@
       p_reason: reason.trim()
     });
     if (error) throw error;
-    showMessage('success', 'Request cancelled.');
+    showMessage('success', 'ยกเลิกคำขอแล้ว');
     await loadHistory();
   }
 

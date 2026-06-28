@@ -31,8 +31,8 @@
             <span class="status-pill status-${esc(request.status)}">${esc(STATUS_LABELS[request.status] || request.status)}</span>
           </div>
           <hr>
-          <p class="mb-1"><strong>Purpose:</strong> ${esc(request.purpose || '-')}</p>
-          <p class="mb-3"><strong>Created:</strong> ${esc(request.created_at || '-')}</p>
+          <p class="mb-1"><strong>วัตถุประสงค์:</strong> ${esc(request.purpose || '-')}</p>
+          <p class="mb-3"><strong>วันที่ส่งคำขอ:</strong> ${esc(request.created_at || '-')}</p>
           <div class="list-group">
             ${items.map((item) => `
               <div class="list-group-item d-flex justify-content-between">

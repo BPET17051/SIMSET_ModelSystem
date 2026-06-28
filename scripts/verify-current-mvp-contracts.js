@@ -142,8 +142,8 @@ assertContains(simsetBorrowCss, /--sb-brand:\s*#0f766e[\s\S]*--sb-brand-dark:\s*
 assertContains(simsetBorrowCss, /\.hero-borrow\s*{[\s\S]*linear-gradient\(135deg,\s*#0f766e 0%,\s*#064e3b 100%\)/, 'website/css/simset-borrow.css teal hero');
 assertContains(simsetBorrowCss, /font-family:\s*"Noto Sans Thai", system-ui, sans-serif/, 'website/css/simset-borrow.css font stack');
 assertContains(simsetBorrowCss, /\.btn-brand\s*{[\s\S]*box-shadow:\s*var\(--sb-shadow-btn\)/, 'website/css/simset-borrow.css brand button');
-assertContains(catalogJs, /function typeLabel[\s\S]*function allocationNotice[\s\S]*equipment-choice-summary/, 'website/js/catalog.js catalog recognition helpers');
-assertContains(catalogJs, /<h5 class="fw-bolder">\$\{esc\(item\.name\)\}<\/h5>\s*<div class="equipment-choice-summary mt-3">/, 'website/js/catalog.js catalog card hides internal UUID');
+assertContains(catalogJs, /function typeLabel[\s\S]*function borrowerAvailabilityText[\s\S]*function borrowerRestrictionText[\s\S]*equipment-choice-summary/, 'website/js/catalog.js catalog recognition helpers');
+assertContains(catalogJs, /<h5 class="fw-bolder equipment-card-title">\$\{esc\(item\.name\)\}<\/h5>\s*<div class="equipment-choice-summary mt-3">/, 'website/js/catalog.js catalog card hides internal UUID');
 assertContains(catalogJs, /return `พร้อมยืม \$\{available\}`;/, 'website/js/catalog.js catalog card hides total stock from borrowers');
 assertContains(historyJs, /\.rpc\(['"]get_my_borrow_requests['"]/, 'website/js/history.js');
 assertContains(historyJs, /\.rpc\(['"]transition_borrow_request_status['"]/, 'website/js/history.js');

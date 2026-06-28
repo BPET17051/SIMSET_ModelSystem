@@ -91,8 +91,8 @@
 
     const items = getItems();
     if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5">No borrow items yet.</td></tr>';
-      if (summary) summary.textContent = '0 items';
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5">ยังไม่มีรายการยืม</td></tr>';
+      if (summary) summary.textContent = '0 รายการ';
       updateCartBadge();
       return;
     }
@@ -107,22 +107,21 @@
         return `
           <tr>
             <td>
-              <div class="fw-semibold">${esc(equipment?.name_th || 'Unknown equipment')}</div>
-              <div class="small text-muted">${esc(cartItem.equipment_id)}</div>
+              <div class="fw-semibold">${esc(equipment?.name_th || 'ไม่พบชื่ออุปกรณ์')}</div>
             </td>
-            <td>Equipment</td>
+            <td>อุปกรณ์</td>
             <td style="max-width: 120px">
               <input class="form-control form-control-sm" type="number" min="1" max="${available || 99}" value="${cartItem.qty}" data-cart-qty="${esc(cartItem.equipment_id)}">
             </td>
             <td class="text-end">
-              <button class="btn btn-sm btn-outline-danger" type="button" data-remove-cart="${esc(cartItem.equipment_id)}">Remove</button>
+              <button class="btn btn-sm btn-outline-danger" type="button" data-remove-cart="${esc(cartItem.equipment_id)}">ลบ</button>
             </td>
           </tr>`;
       }).join('');
-      if (summary) summary.textContent = `${count()} items`;
+      if (summary) summary.textContent = `${count()} รายการ`;
     } catch (error) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-5 text-danger">Could not load cart: ${esc(error.message)}</td></tr>`;
-      if (summary) summary.textContent = 'Supabase error';
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-5 text-danger">โหลดรายการยืมไม่สำเร็จ: ${esc(error.message)}</td></tr>`;
+      if (summary) summary.textContent = 'โหลดข้อมูลไม่สำเร็จ';
     }
 
     updateCartBadge();
@@ -132,8 +131,8 @@
     const addButton = event.target.closest('[data-add-to-cart]');
     if (addButton) {
       addItem(addButton.getAttribute('data-add-to-cart'), 1);
-      addButton.textContent = 'Added';
-      setTimeout(() => { addButton.textContent = 'Add to borrow cart'; }, 1200);
+      addButton.textContent = 'เพิ่มแล้ว';
+      setTimeout(() => { addButton.textContent = 'เพิ่มรายการยืม'; }, 1200);
     }
 
     const removeButton = event.target.closest('[data-remove-cart]');

@@ -31,11 +31,11 @@
 
   function allocationLabel(allocationType) {
     const labels = {
-      rotating: 'Rotating',
-      room_dedicated: 'Room dedicated',
-      advance_course_dedicated: 'Advance course'
+      rotating: 'หมุนเวียน',
+      room_dedicated: 'ประจำห้อง',
+      advance_course_dedicated: 'ประจำคอร์ส Advance'
     };
-    return labels[allocationType] || allocationType || 'Rotating';
+    return labels[allocationType] || allocationType || 'หมุนเวียน';
   }
 
   function renderRuleAlerts(rules = allocationRules) {
@@ -48,7 +48,7 @@
         <div class="alert ${rule.blocked ? 'alert-danger' : 'alert-warning'} py-2">
           <strong>${esc(rule.equipment_name || rule.equipment_id)}</strong>
           <div>${esc(rule.warning || '')}</div>
-          ${conflicts ? `<div class="small mt-1">Course: ${conflicts}</div>` : ''}
+          ${conflicts ? `<div class="small mt-1">คอร์ส: ${conflicts}</div>` : ''}
         </div>`;
     }).join('');
   }
@@ -99,9 +99,10 @@
       return `
         <li class="list-group-item d-flex justify-content-between lh-sm">
           <div>
-            <h6 class="my-0">${esc(equipment?.name_th || 'Unknown equipment')}</h6>
-            <small class="text-muted">${esc(item.equipment_id)}</small>
-            <div class="mt-1"><span class="allocation-badge allocation-${esc(equipment?.allocation_type || 'rotating')}">${esc(allocationLabel(equipment?.allocation_type))}</span></div>
+            <h6 class="my-0">${esc(equipment?.name_th || 'ไม่พบชื่ออุปกรณ์')}</h6>
+            ${equipment?.allocation_type && equipment.allocation_type !== 'rotating'
+              ? `<div class="mt-1"><span class="allocation-badge allocation-${esc(equipment.allocation_type)}">${esc(allocationLabel(equipment.allocation_type))}</span></div>`
+              : ''}
           </div>
           <span class="text-muted">x${item.qty}</span>
         </li>`;
@@ -118,7 +119,7 @@
 
     const items = app.cart?.getItems() || [];
     if (!items.length) {
-      showMessage('warning', 'Your cart is empty. Add equipment before checkout.');
+      showMessage('warning', 'ยังไม่มีรายการยืม กรุณาเลือกอุปกรณ์ก่อนส่งคำขอ');
       return;
     }
 
@@ -134,11 +135,11 @@
     const endDate = formValue('#end_date');
 
     if (!name || !department || !phone || !borrowPurposeOwner || !workPurpose || !usageLocation || !startDate || !endDate) {
-      showMessage('warning', 'Complete all required fields before submitting.');
+      showMessage('warning', 'กรอกข้อมูลที่มีเครื่องหมาย * ให้ครบก่อนส่งคำขอ');
       return;
     }
     if (endDate < startDate) {
-      showMessage('warning', 'Return date cannot be before borrow date.');
+      showMessage('warning', 'วันที่คืนต้องไม่อยู่ก่อนวันที่ยืม');
       return;
     }
 
@@ -150,12 +151,12 @@
         return;
       }
     } catch (error) {
-      showMessage('danger', `Could not check borrow rules: ${error.message}`);
+      showMessage('danger', `ตรวจเงื่อนไขการยืมไม่สำเร็จ: ${error.message}`);
       return;
     }
 
     submitButton.disabled = true;
-    submitButton.textContent = 'Submitting...';
+    submitButton.textContent = 'กำลังส่งคำขอ...';
 
     try {
       const { data: trackingId, error } = await app.supabase.rpc('submit_public_borrow_request_v2', {
@@ -174,9 +175,9 @@
       app.cart.clear();
       location.href = `success.html?id=${encodeURIComponent(trackingId)}`;
     } catch (error) {
-      showMessage('danger', `Could not submit request: ${error.message}`);
+      showMessage('danger', `ส่งคำขอไม่สำเร็จ: ${error.message}`);
       submitButton.disabled = false;
-      submitButton.textContent = 'Submit borrow request';
+      submitButton.textContent = 'ส่งคำขอยืม';
     }
   }
 

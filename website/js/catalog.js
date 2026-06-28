@@ -75,6 +75,16 @@
     return `พร้อมยืม ${available}`;
   }
 
+  function borrowerAvailabilityText(available) {
+    if (available <= 0) return 'ยังไม่พร้อมให้ยืม';
+    return `พร้อมยืม ${available}`;
+  }
+
+  function borrowerRestrictionText(allocationType) {
+    if (!allocationType || allocationType === 'rotating') return '';
+    return allocationHelp(allocationType);
+  }
+
   async function fetchEquipment() {
     if (!app.supabase) throw new Error('Supabase is not available.');
     const { data, error } = await app.supabase
@@ -103,8 +113,8 @@
       const available = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
       const disabled = available <= 0;
       const readableType = typeLabel(item.type);
-      const availableLabel = availabilityText(item, available);
-      const notice = allocationNotice(item.allocationType);
+      const availableLabel = borrowerAvailabilityText(available);
+      const notice = borrowerRestrictionText(item.allocationType);
       return `
         <div class="col mb-5">
           <div class="card h-100 equipment-card">
@@ -112,22 +122,22 @@
             <img class="card-img-top" src="${item.image}" alt="${esc(item.name)}" loading="lazy">
             <div class="card-body p-4">
               <div class="text-center">
-                <h5 class="fw-bolder">${esc(item.name)}</h5>
+                <h5 class="fw-bolder equipment-card-title">${esc(item.name)}</h5>
                 <div class="equipment-choice-summary mt-3">
-                  <div><strong>${esc(availableLabel)}</strong></div>
-                  ${notice ? `<div class="equipment-choice-note">${esc(notice)}</div>` : ''}
+                  <strong>${esc(availableLabel)}</strong>
+                  ${notice ? `<div class="equipment-choice-note mt-2">${esc(notice)}</div>` : ''}
                 </div>
               </div>
             </div>
             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
               <div class="d-grid gap-2">
                 <a class="btn btn-outline-dark" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียด</a>
-                <button class="btn btn-dark" type="button" data-add-to-cart="${esc(item.id)}" ${disabled ? 'disabled' : ''}>เพิ่มรายการยืม</button>
+                <button class="btn btn-brand" type="button" data-add-to-cart="${esc(item.id)}" ${disabled ? 'disabled' : ''}>เพิ่มรายการยืม</button>
               </div>
             </div>
           </div>
         </div>`;
-    }).join('') || '<div class="col-12"><div class="empty-state">No equipment matched the filters.</div></div>';
+    }).join('') || '<div class="col-12"><div class="empty-state">ไม่พบอุปกรณ์ตามเงื่อนไขที่ค้นหา</div></div>';
   }
 
   function renderDetails() {
@@ -136,7 +146,7 @@
     const id = new URLSearchParams(location.search).get('id');
     const item = equipment.find((entry) => entry.id === id) || equipment[0];
     if (!item) {
-      root.innerHTML = '<div class="empty-state">No equipment was found.</div>';
+      root.innerHTML = '<div class="empty-state">ไม่พบข้อมูลอุปกรณ์</div>';
       return;
     }
     const available = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
@@ -147,7 +157,7 @@
       <div class="row gx-4 gx-lg-5 align-items-start">
         <div class="col-md-6"><img class="card-img-top mb-5 mb-md-0 rounded" src="${item.image}" alt="${esc(item.name)}"></div>
         <div class="col-md-6">
-          <div class="small mb-1 text-muted">รหัสรายการ: ${esc(item.id)}</div>
+          <div class="small mb-2 text-muted">รายละเอียดอุปกรณ์</div>
           <h1 class="display-6 fw-bolder">${esc(item.name)}</h1>
           <div class="equipment-choice-summary my-4">
             <div><strong>${esc(availableLabel)}</strong></div>
@@ -156,7 +166,7 @@
           </div>
           <p class="lead">ตรวจชื่ออุปกรณ์และเงื่อนไขก่อนเพิ่มลงรายการยืม</p>
           <div class="d-flex gap-2">
-            <button class="btn btn-dark flex-shrink-0" type="button" data-add-to-cart="${esc(item.id)}" ${available <= 0 ? 'disabled' : ''}>
+            <button class="btn btn-brand flex-shrink-0" type="button" data-add-to-cart="${esc(item.id)}" ${available <= 0 ? 'disabled' : ''}>
               <i class="bi-cart-fill me-1"></i> เพิ่มรายการยืม
             </button>
             <a class="btn btn-outline-dark" href="index.html">กลับหน้าอุปกรณ์</a>
@@ -178,7 +188,7 @@
       app.updateCartBadge?.();
     } catch (error) {
       const target = $('#equipment-grid') || $('#equipment-detail');
-      if (target) target.innerHTML = `<div class="empty-state text-danger">Could not load equipment from Supabase: ${esc(error.message)}</div>`;
+      if (target) target.innerHTML = `<div class="empty-state text-danger">โหลดข้อมูลอุปกรณ์ไม่สำเร็จ: ${esc(error.message)}</div>`;
     }
   }
 
