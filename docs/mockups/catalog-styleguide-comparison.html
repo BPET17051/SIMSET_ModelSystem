@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SIMSET Catalog UI Comparison</title>
+<style>
+:root{--brand:#0f766e;--brand-dark:#064e3b;--ink:#111827;--muted:#64748b;--line:#dbe3e7;--bg:#eef5f3;--ok:#047857;--ok-bg:#e7f6ef;--blue:#0b72e7;--blue-bg:#eaf3ff;--shadow:0 1px 4px rgba(0,0,0,.06);--hover:0 4px 16px rgba(0,0,0,.10)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:'Noto Sans Thai',system-ui,sans-serif;color:var(--ink)}
+header{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:white;padding:28px 40px}header h1{margin:0;font-size:28px}header p{margin:8px 0 0;color:#d7f3ec}
+main{max-width:1440px;margin:0 auto;padding:28px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.panel{background:white;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;align-items:start}.panel h2{font-size:22px;margin:0}.panel .note{color:var(--muted);font-size:14px;margin-top:4px}.tag{display:inline-flex;border-radius:999px;padding:4px 10px;font-weight:700;font-size:13px;background:#e6f7f3;color:#0b665f}.bad{background:#fee2e2;color:#991b1b}.panel-body{padding:26px}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.card{border:1px solid var(--line);border-radius:10px;background:white;overflow:hidden;box-shadow:var(--shadow)}.card:hover{box-shadow:var(--hover)}.thumb{height:150px;background:repeating-linear-gradient(135deg,#f5f7f8,#f5f7f8 12px,#edf1f3 12px,#edf1f3 24px);display:flex;align-items:center;justify-content:center;color:#9aa7b2;font-size:13px;position:relative}.corner{position:absolute;right:12px;top:12px;background:#111827;color:white;border-radius:8px;padding:4px 9px;font-size:13px;font-weight:800}.body{padding:18px}.title{font-weight:900;font-size:21px;line-height:1.2;margin:0 0 8px}.uuid{color:#64748b;line-height:1.45;margin-bottom:12px}.info{background:#f8fafc;border:1px solid #dfe7ec;border-radius:9px;padding:12px 14px;line-height:1.6;margin-bottom:16px}.info b{color:#067647}.actions{display:grid;gap:10px}.btn{border:1px solid #111827;border-radius:8px;padding:11px 14px;text-align:center;font-weight:800}.btn.primary{background:#1f2328;color:white}.btn.brand{background:var(--brand);border-color:var(--brand);color:white;box-shadow:0 4px 12px rgba(15,118,110,.25)}.mini{font-size:13px;color:var(--muted)}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.chip{font-size:12px;border-radius:999px;padding:4px 9px;font-weight:800}.chip.blue{background:var(--blue-bg);color:var(--blue)}.chip.gray{background:#f1f5f9;color:#475569}.status{font-size:14px;font-weight:900;color:var(--ok);background:var(--ok-bg);border-radius:999px;padding:6px 10px;display:inline-block;margin:2px 0 16px}.principles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}.principle{background:white;border:1px solid var(--line);border-radius:10px;padding:14px}.principle b{color:var(--brand)}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}main{padding:16px}header{padding:24px 18px}.principles{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>SIMSET Borrow Catalog UI - Before vs Style Guide Direction</h1>
+  <p>Mockup สำหรับตัดข้อมูลที่ไม่ช่วยผู้ยืม และปรับให้ตรง PDF style guide โดยยังไม่แก้ production code</p>
+</header>
+<main>
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2>หน้าเดิม / ปัญหาที่ผู้ทดสอบเห็น</h2><div class="note">มี UUID ยาวและข้อมูล meta ที่ผู้ยืมไม่ได้ใช้ตัดสินใจ</div></div>
+        <span class="tag bad">Recall load สูง</span>
+      </div>
+      <div class="panel-body"><div class="cards">
+        <article class="card"><div class="thumb">equipment photo<span class="corner">ทั่วไป</span></div><div class="body"><h3 class="title">กระดานฟลิปชาร์ท</h3><div class="uuid">รหัสรายการ: b5c439db-4b74-4e8e-be8b-b60a305ba3e9</div><div class="info"><b>พร้อมยืม 4 จากทั้งหมด 4</b><br>ประเภทอุปกรณ์: ทั่วไป<br>เงื่อนไข: หมุนเวียน - ยืมได้ตามปกติ</div><div class="actions"><div class="btn">ดูรายละเอียด</div><div class="btn primary">เพิ่มรายการยืม</div></div></div></article>
+        <article class="card"><div class="thumb">equipment photo<span class="corner">ผู้ใหญ่</span></div><div class="body"><h3 class="title">หุ่นฝึกช่วยชีวิตผู้ใหญ่ BLS</h3><div class="uuid">รหัสรายการ: 37a9ad02-ff13-42c7-96f4-b1f2caa10bea</div><div class="info"><b>พร้อมยืม 12 จากทั้งหมด 15</b><br>ประเภทอุปกรณ์: ผู้ใหญ่<br>เงื่อนไข: หมุนเวียน - ยืมได้ตามปกติ</div><div class="actions"><div class="btn">ดูรายละเอียด</div><div class="btn primary">เพิ่มรายการยืม</div></div></div></article>
+      </div></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2>แนวทางตาม PDF / แนะนำ</h2><div class="note">ใช้ข้อมูลที่ช่วยเลือกจริง: ชื่อ, tag, สถานะพร้อมจ่าย, CTA เดียว</div></div>
+        <span class="tag">Recognition first</span>
+      </div>
+      <div class="panel-body"><div class="cards">
+        <article class="card"><div class="thumb">equipment photo<span class="corner">มาตรฐาน</span></div><div class="body"><div class="chips"><span class="chip blue">หมุนเวียน</span><span class="chip gray">ทั่วไป</span></div><h3 class="title">กระดานฟลิปชาร์ท</h3><span class="status">พร้อมจ่าย 4</span><div class="actions"><div class="btn brand">รายละเอียด + ยืม</div></div><div class="mini">รหัสภายในซ่อนไว้ ใช้เฉพาะหน้า staff/admin</div></div></article>
+        <article class="card"><div class="thumb">equipment photo<span class="corner">มาตรฐาน</span></div><div class="body"><div class="chips"><span class="chip blue">หมุนเวียน</span><span class="chip gray">ผู้ใหญ่</span></div><h3 class="title">หุ่นฝึกช่วยชีวิตผู้ใหญ่ BLS</h3><span class="status">พร้อมจ่าย 12</span><div class="actions"><div class="btn brand">รายละเอียด + ยืม</div></div><div class="mini">ไม่แสดง “จากทั้งหมด 15” ใน catalog</div></div></article>
+      </div></div>
+    </section>
+  </div>
+
+  <div class="principles">
+    <div class="principle"><b>ตัด UUID</b><br>ผู้ยืมไม่ต้องจำรหัสระบบ ย้ายไป Details/Admin เท่านั้น</div>
+    <div class="principle"><b>ลดบรรทัด meta</b><br>ไม่แสดง “ประเภทอุปกรณ์/เงื่อนไข” แบบประโยคยาว ใช้ chip แทน</div>
+    <div class="principle"><b>CTA รวม</b><br>ตาม PDF ใช้ “รายละเอียด + ยืม” เพื่อลด decision step ในการ์ด</div>
+  </div>
+</main>
+</body>
+</html>
