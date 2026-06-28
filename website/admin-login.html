@@ -4,15 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>SIMSET Borrow - Admin Login</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link href="css/styles.css" rel="stylesheet">
     <link href="css/simset-borrow.css" rel="stylesheet">
   </head>
   <body class="admin-login-page">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="admin-login.html">SIMSET Borrow Admin</a>
+        <a class="btn btn-outline-dark" href="index.html">หน้าอุปกรณ์</a>
+      </div>
+    </nav>
     <main class="admin-login-shell">
       <section class="admin-login-panel" aria-labelledby="admin-login-title">
         <div class="admin-login-brand">SIMSET Borrow Admin</div>
         <h1 class="h3 mb-2" id="admin-login-title">เข้าสู่ระบบเจ้าหน้าที่</h1>
-        <p class="text-muted mb-4">ใช้บัญชีที่ได้รับสิทธิ์ admin ใน Supabase เท่านั้น</p>
+        <p class="text-muted mb-4">ใช้บัญชีที่ได้รับสิทธิ์ staff, approver หรือ admin ใน Supabase</p>
         <div class="alert alert-danger" id="admin-login-error" role="alert" hidden></div>
         <form id="admin-login-form" novalidate>
           <div class="mb-3">

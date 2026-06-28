@@ -4,7 +4,7 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https://simset-showroom-proxy.simset-admin.workers.dev wss://simset-showroom-proxy.simset-admin.workers.dev; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data: blob: https://api.qrserver.com; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https://simset-showroom-proxy.simset-admin.workers.dev wss://simset-showroom-proxy.simset-admin.workers.dev; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'
 
 /admin
   Cache-Control: no-store

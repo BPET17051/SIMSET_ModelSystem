@@ -14,5 +14,15 @@ compatibility_date = "2025-02-26"
 # pattern = "api.yourdomain.com/*"
 # zone_name = "yourdomain.com"
 
+# Additional secrets for LINE dispatch:
+#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+#   wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
+#   wrangler secret put LINE_DISPATCH_SECRET
+#   wrangler secret put LINE_TARGET_STAFF
+#   wrangler secret put LINE_TARGET_HEAD
+
 [vars]
-SUPABASE_URL = "https://ifogcvymwhcfbfjzhwsl.supabase.co"
+SUPABASE_URL = "https://mcdpfsuyjfxmfeiafkyq.supabase.co"
+
+[triggers]
+crons = ["*/15 * * * *"]

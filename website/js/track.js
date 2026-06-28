@@ -54,10 +54,16 @@
 
   async function search(id) {
     const root = $('#track-result');
+    const btn = $('#track-form [type="submit"]');
+    const prevText = btn?.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = 'กำลังค้นหา...'; }
+    if (root) root.innerHTML = '<div class="empty-state text-muted">กำลังโหลดข้อมูล...</div>';
     try {
       render(await findRequest(id));
     } catch (error) {
       root.innerHTML = `<div class="empty-state text-danger">ค้นหาจาก Supabase ไม่สำเร็จ: ${esc(error.message)}</div>`;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = prevText; }
     }
   }
 
@@ -69,7 +75,8 @@
       event.preventDefault();
       const tracking = document.getElementById('track-id')?.value.trim() || '';
       if (!tracking) {
-        alert('กรุณาใส่รหัสติดตาม');
+        const root = $('#track-result');
+        if (root) root.innerHTML = '<div class="empty-state text-warning">กรุณาใส่รหัสติดตาม</div>';
         return;
       }
       search(tracking);

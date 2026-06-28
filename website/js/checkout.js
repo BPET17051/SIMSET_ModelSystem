@@ -2,128 +2,203 @@
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
   const $ = (selector) => document.querySelector(selector);
   const esc = (value) => (app.esc ? app.esc(value) : String(value ?? ''));
-  let selectedEquipment = null;
-  let selectedQty = 1;
+  let allocationRules = [];
 
-  function getSelectionFromUrl() {
-    const params = new URLSearchParams(location.search);
-    const equipmentId = params.get('equipment_id');
-    const qty = Math.max(1, Number(params.get('qty') || 1));
-    return equipmentId ? { equipmentId, qty } : null;
+  function showMessage(type, text) {
+    const message = $('#checkout-message');
+    if (!message) return;
+    message.className = `alert alert-${type}`;
+    message.textContent = text;
   }
 
-  async function fetchEquipment(id) {
+  function clearMessage() {
+    const message = $('#checkout-message');
+    if (!message) return;
+    message.className = 'alert d-none';
+    message.textContent = '';
+  }
+
+  async function fetchEquipmentMap(items) {
+    const ids = items.map((item) => item.equipment_id);
+    if (!ids.length) return new Map();
     const { data, error } = await app.supabase
       .from('equipments')
-      .select('id,name_th,total_quantity,maintenance_quantity')
-      .eq('id', id)
-      .single();
+      .select('id,name_th,total_quantity,maintenance_quantity,allocation_type')
+      .in('id', ids);
     if (error) throw error;
-    return data;
+    return new Map((data || []).map((row) => [row.id, row]));
+  }
+
+  function allocationLabel(allocationType) {
+    const labels = {
+      rotating: 'Rotating',
+      room_dedicated: 'Room dedicated',
+      advance_course_dedicated: 'Advance course'
+    };
+    return labels[allocationType] || allocationType || 'Rotating';
+  }
+
+  function renderRuleAlerts(rules = allocationRules) {
+    const root = $('#checkout-rule-alerts');
+    if (!root) return;
+    const visibleRules = rules.filter((rule) => rule.warning || rule.blocked);
+    root.innerHTML = visibleRules.map((rule) => {
+      const conflicts = (rule.course_conflicts || []).map((conflict) => esc(conflict.course_name || conflict.course_code)).join(', ');
+      return `
+        <div class="alert ${rule.blocked ? 'alert-danger' : 'alert-warning'} py-2">
+          <strong>${esc(rule.equipment_name || rule.equipment_id)}</strong>
+          <div>${esc(rule.warning || '')}</div>
+          ${conflicts ? `<div class="small mt-1">Course: ${conflicts}</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  async function refreshBorrowRules() {
+    const items = app.cart?.getItems() || [];
+    const startDate = $('#start_date')?.value.trim() || '';
+    const endDate = $('#end_date')?.value.trim() || '';
+    if (!items.length || !startDate || !endDate || endDate < startDate) {
+      allocationRules = [];
+      renderRuleAlerts();
+      return [];
+    }
+    const { data, error } = await app.supabase.rpc('get_equipment_borrow_rules', {
+      p_equipment_ids: items.map((item) => item.equipment_id),
+      p_start_date: startDate,
+      p_end_date: endDate
+    });
+    if (error) throw error;
+    allocationRules = Array.isArray(data) ? data : [];
+    renderRuleAlerts();
+    return allocationRules;
   }
 
   async function renderCheckoutItems() {
     const list = $('#checkout-items');
+    const badge = $('#checkout-count');
+    const emptyState = $('#checkout-empty');
+    const form = $('#checkout-form');
     if (!list) return;
-    const selection = getSelectionFromUrl();
-    if (!selection) {
-      list.innerHTML = '<li class="list-group-item text-danger">ยังไม่มีรายการยืม กรุณาเลือกอุปกรณ์จากหน้าอุปกรณ์</li>';
+
+    const items = app.cart?.getItems() || [];
+    if (badge) badge.textContent = app.cart?.count() || 0;
+
+    if (!items.length) {
+      list.innerHTML = '';
+      if (emptyState) emptyState.classList.remove('d-none');
+      if (form) form.classList.add('d-none');
       return;
     }
 
-    selectedQty = selection.qty;
-    try {
-      selectedEquipment = await fetchEquipment(selection.equipmentId);
-      list.innerHTML = `
+    if (emptyState) emptyState.classList.add('d-none');
+    if (form) form.classList.remove('d-none');
+
+    const equipmentMap = await fetchEquipmentMap(items);
+    list.innerHTML = items.map((item) => {
+      const equipment = equipmentMap.get(item.equipment_id);
+      return `
         <li class="list-group-item d-flex justify-content-between lh-sm">
           <div>
-            <h6 class="my-0">${esc(selectedEquipment.name_th)}</h6>
-            <small class="text-muted">${esc(selectedEquipment.id)}</small>
+            <h6 class="my-0">${esc(equipment?.name_th || 'Unknown equipment')}</h6>
+            <small class="text-muted">${esc(item.equipment_id)}</small>
+            <div class="mt-1"><span class="allocation-badge allocation-${esc(equipment?.allocation_type || 'rotating')}">${esc(allocationLabel(equipment?.allocation_type))}</span></div>
           </div>
-          <span class="text-muted">x${selectedQty}</span>
+          <span class="text-muted">x${item.qty}</span>
         </li>`;
-      const badge = $('#checkout-count');
-      if (badge) badge.textContent = selectedQty;
-    } catch (error) {
-      list.innerHTML = `<li class="list-group-item text-danger">โหลดข้อมูลจาก Supabase ไม่สำเร็จ: ${esc(error.message)}</li>`;
-    }
+    }).join('');
+  }
+
+  function formValue(id) {
+    return $(id)?.value.trim() || '';
   }
 
   async function submitRequest(event) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const message = $('#checkout-message');
-    message.className = 'alert d-none';
-    message.textContent = '';
+    clearMessage();
 
-    const name = document.getElementById('borrower_name')?.value.trim() || '';
-    const department = document.getElementById('department')?.value.trim() || '';
-    const startDate = document.getElementById('start_date')?.value.trim() || '';
-    const endDate = document.getElementById('end_date')?.value.trim() || '';
-    const purpose = document.getElementById('purpose')?.value.trim() || '';
-
-    if (!name) {
-      alert('กรุณากรอกชื่อ');
+    const items = app.cart?.getItems() || [];
+    if (!items.length) {
+      showMessage('warning', 'Your cart is empty. Add equipment before checkout.');
       return;
     }
 
-    if (!department) {
-      alert('กรุณากรอกหน่วยงาน');
+    const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+    const name = formValue('#borrower_name');
+    const position = formValue('#borrower_position');
+    const department = formValue('#department');
+    const phone = formValue('#phone');
+    const borrowPurposeOwner = formValue('#borrow_purpose_owner');
+    const workPurpose = formValue('#work_purpose');
+    const usageLocation = formValue('#usage_location');
+    const startDate = formValue('#start_date');
+    const endDate = formValue('#end_date');
+
+    if (!name || !department || !phone || !borrowPurposeOwner || !workPurpose || !usageLocation || !startDate || !endDate) {
+      showMessage('warning', 'Complete all required fields before submitting.');
       return;
     }
-
-    if (!selectedEquipment) {
-      alert('กรุณาเลือกอุปกรณ์');
-      return;
-    }
-
-    if (!startDate) {
-      alert('กรุณาเลือกวันที่ยืม');
-      return;
-    }
-
-    if (!endDate) {
-      alert('กรุณาเลือกวันที่คืน');
-      return;
-    }
-
     if (endDate < startDate) {
-      alert('วันที่คืนต้องไม่มาก่อนวันที่ยืม');
+      showMessage('warning', 'Return date cannot be before borrow date.');
       return;
     }
-
-    if (!purpose) {
-      alert('กรุณากรอกวัตถุประสงค์');
-      return;
-    }
-
-    const formData = new FormData(form);
-    const submitButton = form.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
-    submitButton.textContent = 'กำลังส่งเข้า Supabase...';
 
     try {
-      const payload = {
+      const rules = await refreshBorrowRules();
+      const blocked = rules.find((rule) => rule.blocked);
+      if (blocked) {
+        showMessage('danger', `${blocked.equipment_name || blocked.equipment_id}: ${blocked.warning}`);
+        return;
+      }
+    } catch (error) {
+      showMessage('danger', `Could not check borrow rules: ${error.message}`);
+      return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting...';
+
+    try {
+      const { data: trackingId, error } = await app.supabase.rpc('submit_public_borrow_request_v2', {
         p_borrower_name: name,
-        p_borrower_email: formData.get('borrower_email'),
-        p_purpose: `${purpose} | หน่วยงาน: ${department} | โทร: ${formData.get('phone') || '-'}`,
+        p_borrower_position: position,
+        p_department: department,
+        p_phone: phone,
+        p_borrow_purpose_owner: borrowPurposeOwner,
+        p_work_purpose: workPurpose,
+        p_usage_location: usageLocation,
         p_start_date: startDate,
         p_end_date: endDate,
-        p_items: [{ equipment_id: selectedEquipment.id, qty: selectedQty }]
-      };
-      const { data: trackingId, error } = await app.supabase.rpc('submit_public_borrow_request', payload);
+        p_items: items.map((item) => ({ equipment_id: item.equipment_id, qty: item.qty }))
+      });
       if (error) throw error;
-      location.href = `track.html?id=${encodeURIComponent(trackingId)}`;
+      app.cart.clear();
+      location.href = `success.html?id=${encodeURIComponent(trackingId)}`;
     } catch (error) {
-      message.className = 'alert alert-danger';
-      message.textContent = `ส่งคำขอเข้า Supabase ไม่สำเร็จ: ${error.message}`;
+      showMessage('danger', `Could not submit request: ${error.message}`);
       submitButton.disabled = false;
-      submitButton.textContent = 'ส่งคำขอยืม';
+      submitButton.textContent = 'Submit borrow request';
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    renderCheckoutItems();
-    $('#checkout-form')?.addEventListener('submit', submitRequest);
+  document.addEventListener('change', (event) => {
+    if (!event.target.matches('#start_date, #end_date')) return;
+    const start = $('#start_date')?.value;
+    const end = $('#end_date')?.value;
+    if (start && end && end < start) {
+      showMessage('warning', 'วันคืนต้องไม่ก่อนวันยืม');
+      return;
+    }
+    clearMessage();
+    refreshBorrowRules().catch((error) => showMessage('danger', error.message));
+  });
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      await renderCheckoutItems();
+      await refreshBorrowRules();
+      $('#checkout-form')?.addEventListener('submit', submitRequest);
+    } catch (error) {
+      showMessage('danger', error.message);
+    }
   });
 }());

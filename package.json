@@ -1,6 +1,8 @@
 {
   "scripts": {
     "verify:current-mvp": "node scripts/verify-current-mvp-contracts.js",
+    "verify:phase1": "node scripts/verify-phase1-domain-state-machine.js",
+    "verify:phase2": "node scripts/verify-phase2-borrower-flow.js",
     "verify:live-worker": "node scripts/verify-live-worker.mjs",
     "smoke:deploy-workflow": "node scripts/smoke-deploy-workflow.js",
     "smoke:main-pages": "node scripts/smoke-main-pages.js",

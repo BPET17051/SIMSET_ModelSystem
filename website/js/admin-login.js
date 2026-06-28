@@ -2,11 +2,18 @@
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
   const supabase = app.supabase;
   const params = new URLSearchParams(window.location.search);
-  const allowedNextUrls = new Set(['admin.html', '/admin', '/admin.html']);
+  const allowedNextUrls = new Set(['admin.html', '/admin', '/admin.html', 'approver.html', '/approver', '/approver.html', 'staff.html', '/staff', '/staff.html']);
   const nextUrl = params.get('next') || 'admin.html';
 
   function getSafeNext() {
     return allowedNextUrls.has(nextUrl) ? nextUrl : 'admin.html';
+  }
+
+  function getAllowedRoles() {
+    const safeNext = getSafeNext();
+    if (safeNext.includes('approver')) return ['admin', 'approver_l1'];
+    if (safeNext.includes('staff')) return ['admin', 'staff', 'approver_l1'];
+    return ['admin'];
   }
 
   function showError(message) {
@@ -26,7 +33,7 @@
   async function redirectIfAlreadyAdmin() {
     const { data } = await supabase.auth.getSession();
     const role = data.session?.user?.app_metadata?.role;
-    if (role === 'admin') window.location.href = getSafeNext();
+    if (getAllowedRoles().includes(role)) window.location.href = getSafeNext();
   }
 
   async function handleLogin(event) {
@@ -53,7 +60,7 @@
       return;
     }
 
-    if (data.user?.app_metadata?.role !== 'admin') {
+    if (!getAllowedRoles().includes(data.user?.app_metadata?.role)) {
       await supabase.auth.signOut();
       setLoading(false);
       showError('บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานหน้า admin');

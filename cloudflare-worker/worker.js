@@ -34,7 +34,9 @@ const ALLOWED_PATHS = new Set([
     '/rest/v1/rpc/get_next_available_date',
     '/rest/v1/rpc/get_borrow_availability',
     '/rest/v1/rpc/get_borrow_request_status',
-    '/rest/v1/rpc/submit_public_borrow_request',
+    '/rest/v1/rpc/get_my_borrow_requests',
+    '/rest/v1/rpc/transition_borrow_request_status',
+    '/rest/v1/rpc/submit_public_borrow_request_v2',
     '/rest/v1/rpc/submit_borrow_request',
     '/rest/v1/rpc/cancel_borrow_request',
     '/rest/v1/rpc/admin_update_borrow_request_status',
@@ -42,19 +44,31 @@ const ALLOWED_PATHS = new Set([
     '/rest/v1/rpc/admin_reject_request',
     '/rest/v1/rpc/admin_receive_return',
     '/rest/v1/rpc/admin_receive_return_detailed',
+    '/rest/v1/rpc/approver_l1_decide_request',
+    '/rest/v1/rpc/get_l1_approval_queue',
+    '/rest/v1/rpc/get_staff_dashboard_orders',
+    '/rest/v1/rpc/confirm_pickup_with_snapshot',
+    '/rest/v1/rpc/confirm_return_with_snapshot',
+    '/rest/v1/rpc/get_kpi_report',
+    '/rest/v1/rpc/get_equipment_borrow_rules',
+    '/rest/v1/rpc/staff_assign_manikin_to_item',
+    '/rest/v1/rpc/staff_assign_inventory_unit_to_item',
+    '/rest/v1/rpc/get_rotation_suggestions',
     '/rest/v1/rpc/sync_manikin_capabilities',
     '/rest/v1/rpc/delete_location_atomic',
 ]);
 
 const ALLOWED_PREFIXES = [
     '/auth/v1/',     // Allow all Supabase SDK Auth native endpoints
-    '/realtime/v1/'  // Realtime websocket and polling endpoints
+    '/realtime/v1/', // Realtime websocket and polling endpoints
+    '/storage/v1/object/' // Condition snapshot image upload/read paths
 ];
 
 const RATE_LIMIT = 60;          // max requests per window per IP
 const RATE_WINDOW_MS = 60_000;  // 1 minute window
 const CACHE_TTL_S = 60;         // cache lifetime in seconds
 const CLIENT_PLACEHOLDER_KEY = 'worker-managed-key';
+const LINE_PUSH_URL = 'https://api.line.me/v2/bot/message/push';
 
 const rateLimitMap = new Map(); // ip → { count, resetAt }
 
@@ -72,27 +86,141 @@ function corsHeaders(origin) {
 
     return {
         'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, apikey, Authorization, x-client-info, Prefer, x-supabase-api-version, content-profile, accept-profile, range, range-unit',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, apikey, Authorization, x-client-info, Prefer, x-supabase-api-version, content-profile, accept-profile, range, range-unit, x-upsert, cache-control',
         'Vary': 'Origin',
     };
 }
 
+function serviceKey(env) {
+    return env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_KEY;
+}
+
+async function patchLineOutbox(env, id, payload) {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/line_notification_outbox?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+            apikey: serviceKey(env),
+            Authorization: `Bearer ${serviceKey(env)}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal',
+        },
+        body: JSON.stringify(payload),
+    });
+}
+
+function lineTargetsFor(row, env) {
+    const targets = [];
+    if (row.recipient_group === 'staff' || row.recipient_group === 'staff_and_head') {
+        targets.push(...String(env.LINE_TARGET_STAFF || '').split(','));
+    }
+    if (row.recipient_group === 'staff_and_head') {
+        targets.push(...String(env.LINE_TARGET_HEAD || '').split(','));
+    }
+    return targets.map(target => target.trim()).filter(Boolean);
+}
+
+async function dispatchLineNotifications(env) {
+    if (!env.LINE_CHANNEL_ACCESS_TOKEN) {
+        return { processed: 0, skipped: 0, error: 'LINE_CHANNEL_ACCESS_TOKEN is not configured' };
+    }
+
+    const outboxUrl = `${env.SUPABASE_URL}/rest/v1/line_notification_outbox?send_status=eq.pending&select=id,event_type,recipient_group,message&order=created_at.asc&limit=10`;
+    const response = await fetch(outboxUrl, {
+        headers: {
+            apikey: serviceKey(env),
+            Authorization: `Bearer ${serviceKey(env)}`,
+        },
+    });
+
+    if (!response.ok) {
+        return { processed: 0, skipped: 0, error: `Outbox query failed: ${response.status}` };
+    }
+
+    const rows = await response.json();
+    let processed = 0;
+    let skipped = 0;
+
+    for (const row of rows) {
+        if (!['order_created', 'l1_approved', 'overdue', 'room_dedicated_review'].includes(row.event_type)) {
+            skipped++;
+            await patchLineOutbox(env, row.id, {
+                send_status: 'skipped',
+                error_message: 'Unsupported event type',
+            });
+            continue;
+        }
+
+        const targets = lineTargetsFor(row, env);
+        if (targets.length === 0) {
+            skipped++;
+            await patchLineOutbox(env, row.id, {
+                send_status: 'skipped',
+                error_message: `No LINE target configured for ${row.recipient_group}`,
+            });
+            continue;
+        }
+
+        const failures = [];
+        for (const target of targets) {
+            const lineResponse = await fetch(LINE_PUSH_URL, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    to: target,
+                    messages: [{ type: 'text', text: row.message }],
+                }),
+            });
+            if (!lineResponse.ok) failures.push(`${target}: ${lineResponse.status}`);
+        }
+
+        if (failures.length) {
+            await patchLineOutbox(env, row.id, {
+                send_status: 'failed',
+                error_message: failures.join('; '),
+            });
+        } else {
+            processed++;
+            await patchLineOutbox(env, row.id, {
+                send_status: 'sent',
+                error_message: null,
+                sent_at: new Date().toISOString(),
+            });
+        }
+    }
+
+    return { processed, skipped };
+}
+
 export default {
+    async scheduled(event, env, ctx) {
+        ctx.waitUntil(dispatchLineNotifications(env));
+    },
+
     async fetch(request, env, ctx) {
         const origin = request.headers.get('Origin') || '';
         const cors = corsHeaders(origin);
+        const url = new URL(request.url);
+        let path = url.pathname;
 
         if (request.method === 'OPTIONS') {
             return new Response(null, { status: 204, headers: cors });
         }
 
-        if (request.method !== 'GET' && request.method !== 'POST') {
-            return new Response('Method Not Allowed', { status: 405, headers: cors });
+        if (path === '/internal/dispatch-line-notifications') {
+            if (request.headers.get('x-simset-worker-secret') !== env.LINE_DISPATCH_SECRET) {
+                return new Response('Forbidden Access', { status: 403, headers: cors });
+            }
+            const result = await dispatchLineNotifications(env);
+            return Response.json(result, { headers: cors });
         }
 
-        const url = new URL(request.url);
-        let path = url.pathname;
+        if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+            return new Response('Method Not Allowed', { status: 405, headers: cors });
+        }
 
         // Legacy strip /api prefix
         if (path.startsWith('/api/')) {
@@ -140,7 +268,7 @@ export default {
         // ── Proxy to Supabase ─────────────────────────────────────────────────────
         // If path is a legacy showroom path (doesn't start with /rest/ or /auth/), prepend /rest/v1
         let upstreamPath = path;
-        if (!upstreamPath.startsWith('/rest/') && !upstreamPath.startsWith('/auth/')) {
+        if (!upstreamPath.startsWith('/rest/') && !upstreamPath.startsWith('/auth/') && !upstreamPath.startsWith('/storage/')) {
             upstreamPath = '/rest/v1' + upstreamPath;
         }
 
@@ -168,7 +296,7 @@ export default {
             upstream = await fetch(supabaseTarget, {
                 method: request.method,
                 headers: fetchHeaders,
-                body: request.method === 'POST' ? await request.arrayBuffer() : undefined,
+                body: request.method !== 'GET' ? await request.arrayBuffer() : undefined,
                 redirect: 'manual'
             });
         } catch {

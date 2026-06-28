@@ -4,9 +4,9 @@ This repository currently stores SQL as phase-based scripts, not as timestamped 
 
 ## Current MVP Release Script
 
-For the active MVP, use `supabase/current_mvp_release.sql` as the consolidated release script for the browser-facing borrow, tracking, and admin status RPCs.
+For the active MVP, use `supabase/current_mvp_release.sql` as the consolidated release script for the browser-facing borrow, tracking, borrower history, admin status RPCs, exact manikin assignment, status audit, automatic `manikins.status` sync, Wave 2 staff/report workflow, and Wave 3 allocation rules for rotating, room-dedicated, and advance-course-dedicated manikins.
 
-The older phase scripts below are retained as historical source material until the project is converted into timestamped Supabase migrations.
+The older phase scripts below are retained as historical source material until the project is converted into timestamped Supabase migrations. Do not apply them after `current_mvp_release.sql` unless you are intentionally comparing or rebuilding old behavior.
 
 ## Historical Phase Order
 
@@ -20,7 +20,7 @@ The older phase scripts below are retained as historical source material until t
    - Adds atomic RPC contracts used by the browser and admin UI, including `admin_update_borrow_request_status`.
 
 4. `supabase/lock_data_supabase_only.sql`
-   - Adds the public borrow submission contract used by the current MVP checkout flow.
+   - Historical no-login borrow submission contract. The current checkout uses authenticated `submit_borrow_request`.
 
 5. `supabase/security_hardening_raw_read_and_views.sql`
    - Replaces direct public raw reads with safer RPC/view contracts where available.
@@ -39,10 +39,10 @@ The older phase scripts below are retained as historical source material until t
 
 ## Release Rule
 
-Run these in order against a preview Supabase project first. Do not apply only a later hardening script to production unless every earlier dependency has already been confirmed in that environment.
+For the current release, run `supabase/current_mvp_release.sql` against a preview Supabase project first. Use the historical phase order only when rebuilding an older environment for comparison.
 
 ## Known Cleanup
 
 - `security_hardening_raw_read_and_views.sql` contains repeated definitions for some public borrow RPCs. Keep the last definition if manually consolidating.
-- `lock_data_supabase_only.sql` and `security_hardening_raw_read_and_views.sql` both define `submit_public_borrow_request`; verify the intended final version before converting these scripts into timestamped migrations.
+- `submit_public_borrow_request` is deprecated in the consolidated release script. The active frontend must use authenticated `submit_borrow_request`.
 - Generated or temporary files under `supabase/.temp/` are not part of the release order.
