@@ -1,0 +1,81 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Encoding guard
+        run: python .agent/scripts/encoding_guard.py website
+
+      - name: JavaScript syntax checks
+        run: |
+          find website scripts cloudflare-worker \
+            -type f \( -name '*.js' -o -name '*.mjs' \) \
+            -not -path '*/node_modules/*' \
+            -not -path '*/.wrangler/*' \
+            -not -path '*/dist/*' \
+            -print0 | xargs -0 -n1 node --check
+
+      - name: Current MVP contract checks
+        run: npm run verify:current-mvp
+
+      - name: Frontend smoke tests
+        run: npm run smoke:main-pages
+
+      - name: Deploy workflow smoke
+        run: npm run smoke:deploy-workflow
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: preflight
+    timeout-minutes: 15
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy website --project-name simset-showroom

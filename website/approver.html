@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SIMSET Borrow - L1 Approval</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/simset-borrow.css" rel="stylesheet">
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="approver.html">SIMSET L1 Approval</a>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-dark" href="report.html">Report</a>
+          <a class="btn btn-outline-dark" href="staff.html">Staff</a>
+          <button class="btn btn-outline-secondary" type="button" id="approver-logout" hidden>ออกจากระบบ</button>
+        </div>
+      </div>
+    </nav>
+    <main class="py-5">
+      <div class="container px-4 px-lg-5">
+        <div class="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">
+          <div>
+            <h1 class="h2 mb-1">L1 Approval Queue</h1>
+            <p class="text-muted mb-0">หัวหน้าศูนย์/รองคณบดีอนุมัติหรือปฏิเสธ Order ชั้นเดียวในระบบ</p>
+          </div>
+          <span class="admin-auth-state" id="approver-auth-state">กำลังตรวจสอบสิทธิ์...</span>
+        </div>
+        <div id="approver-message" class="alert d-none"></div>
+        <section class="attention-summary mb-4" aria-label="Approval focus summary">
+          <article class="attention-card attention-card-primary">
+            <span>รอการตัดสินใจ</span>
+            <strong id="approval-focus-count">0</strong>
+            <small>อนุมัติ หรือปฏิเสธพร้อมเหตุผล</small>
+          </article>
+        </section>
+        <p class="work-fragmentation-note mb-4">ถ้าต้องพักงาน ให้กลับมาดูรายการรอการตัดสินใจด้านล่าง ไม่ต้องเปิดหลายหน้า</p>
+        <div id="approval-queue" class="approval-list"></div>
+      </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/approver.js"></script>
+  </body>
+</html>

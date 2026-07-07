@@ -1,16 +1,30 @@
-# Cloudflare Pages Custom Headers
-# https://developers.cloudflare.com/pages/configuration/headers/
-
-/admin/*
-  # Security Headers for Admin Panel
-  Content-Security-Policy: default-src 'self'; script-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self';
-  X-Frame-Options: DENY
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
+# Cloudflare Pages headers for the static SIMSET Borrow MVP.
 
 /*
-  # Basic Security Headers for Public Site
-  X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data: blob: https://api.qrserver.com; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https://simset-showroom-proxy.simset-admin.workers.dev wss://simset-showroom-proxy.simset-admin.workers.dev; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'
+
+/admin
+  Cache-Control: no-store
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin
+
+/admin/*
+  Cache-Control: no-store
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin
+
+/admin-login
+  Cache-Control: no-store
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin
+
+/admin-login/*
+  Cache-Control: no-store
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin
+
+/*.html
+  Cache-Control: no-store

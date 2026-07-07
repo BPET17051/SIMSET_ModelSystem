@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SIMSET Borrow - Submit Request</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/simset-borrow.css" rel="stylesheet">
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="index.html">SIMSET Borrow</a>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-dark" href="index.html">อุปกรณ์</a>
+          <a class="btn btn-outline-dark" href="track.html">ติดตามสถานะ</a>
+          <a class="btn btn-brand" href="cart.html">รายการยืม <span class="badge btn-brand-badge ms-1 rounded-pill" data-cart-count>0</span></a>
+        </div>
+      </div>
+    </nav>
+    <div class="container py-5">
+      <main>
+        <div class="py-4 text-center">
+          <h1 class="h2">ส่งคำขอยืม</h1>
+          <p class="lead">กรอกข้อมูลผู้ยืมและช่วงวันที่ใช้งาน โดยไม่ต้องเข้าสู่ระบบผู้ยืม</p>
+          <p class="recognition-hint mx-auto">ข้อมูลที่กรอกจะถูกนำไปใช้ในใบยืมและหน้าติดตามสถานะ โปรดกรอกตามข้อมูลจริงที่เจ้าหน้าที่ใช้ติดต่อกลับได้</p>
+        </div>
+        <div class="row g-5">
+          <div class="col-md-5 col-lg-4 order-md-last">
+            <h4 class="d-flex justify-content-between align-items-center mb-3">
+              <span>รายการยืม</span>
+              <span id="checkout-count" class="badge bg-dark rounded-pill">0</span>
+            </h4>
+            <ul id="checkout-items" class="list-group mb-3"></ul>
+            <div id="checkout-rule-alerts" class="rule-alert-list"></div>
+          </div>
+          <div class="col-md-7 col-lg-8">
+            <form id="checkout-form" class="needs-validation" novalidate>
+              <div id="checkout-message" class="alert d-none"></div>
+              <div id="checkout-empty" class="alert alert-warning d-none">
+                ยังไม่มีรายการยืม <a href="index.html" class="alert-link">กลับไปเลือกอุปกรณ์</a>
+              </div>
+              <h2 class="form-section-title">1. ข้อมูลผู้ยืม</h2>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label class="form-label" for="borrower_name">ชื่อผู้ยืม *</label>
+                  <input id="borrower_name" name="borrower_name" class="form-control" placeholder="เช่น อ.สมชาย ใจดี" required>
+                  <div class="form-helper">ชื่อผู้รับผิดชอบการยืมที่เจ้าหน้าที่ติดต่อได้</div>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="borrower_position">ตำแหน่ง</label>
+                  <input id="borrower_position" name="borrower_position" class="form-control" placeholder="เช่น อาจารย์ / เจ้าหน้าที่ / นักศึกษา">
+                  <div class="form-helper">ถ้าไม่แน่ใจสามารถเว้นว่างได้</div>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="department">ภาควิชา / หน่วยงาน *</label>
+                  <input id="department" name="department" class="form-control" placeholder="เช่น ภาควิชา / หน่วยงาน / ศูนย์ SIMSET" required>
+                  <div class="form-helper">หน่วยงานที่ขอยืมอุปกรณ์</div>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="phone">เบอร์โทร *</label>
+                  <input id="phone" name="phone" class="form-control" placeholder="เช่น 0812345678" required>
+                  <div class="form-helper">เบอร์สำหรับประสานงานรับ-คืนอุปกรณ์</div>
+                </div>
+              </div>
+              <h2 class="form-section-title mt-4">2. ช่วงวันที่ใช้งาน</h2>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label class="form-label" for="start_date">วันที่ยืม *</label>
+                  <input id="start_date" name="start_date" type="date" class="form-control" required>
+                  <div class="form-helper">วันที่ต้องการรับหรือเริ่มใช้อุปกรณ์</div>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="end_date">วันที่คืน *</label>
+                  <input id="end_date" name="end_date" type="date" class="form-control" required>
+                  <div class="form-helper">วันที่คาดว่าจะคืนอุปกรณ์ให้ครบ</div>
+                </div>
+              </div>
+              <h2 class="form-section-title mt-4">3. วัตถุประสงค์ตามใบยืม</h2>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label" for="borrow_purpose_owner">ยืมพัสดุของ *</label>
+                  <input id="borrow_purpose_owner" name="borrow_purpose_owner" class="form-control" placeholder="เช่น ศูนย์ SIMSET / ภาควิชา / หน่วยงานเจ้าของงาน" required>
+                  <div class="form-helper">ตรงกับช่อง “มีความประสงค์ขอยืมพัสดุของ” ในใบยืม</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="work_purpose">เพื่อใช้ในงาน *</label>
+                  <textarea id="work_purpose" name="work_purpose" class="form-control" rows="3" placeholder="เช่น ใช้สอนปฏิบัติการ / อบรม / สอบ OSCE" required></textarea>
+                  <div class="form-helper">บอกงานหรือกิจกรรมที่นำอุปกรณ์ไปใช้</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="usage_location">สถานที่ใช้งาน *</label>
+                  <input id="usage_location" name="usage_location" class="form-control" placeholder="เช่น ห้อง 301 อาคาร... / ศูนย์ SIMSET" required>
+                  <div class="form-helper">สถานที่ใช้งานจริง เพื่อช่วยเจ้าหน้าที่ประสานและติดตามคืน</div>
+                </div>
+              </div>
+              <hr class="my-4">
+              <button class="w-100 btn btn-brand btn-lg" type="submit">ส่งคำขอยืม</button>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/checkout.js"></script>
+  </body>
+</html>

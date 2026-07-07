@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SIMSET Borrow - Admin Login</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/simset-borrow.css" rel="stylesheet">
+  </head>
+  <body class="admin-login-page">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="admin-login.html">SIMSET Borrow Admin</a>
+        <a class="btn btn-outline-dark" href="index.html">หน้าอุปกรณ์</a>
+      </div>
+    </nav>
+    <main class="admin-login-shell">
+      <section class="admin-login-panel" aria-labelledby="admin-login-title">
+        <div class="admin-login-brand">SIMSET Borrow Admin</div>
+        <h1 class="h3 mb-2" id="admin-login-title">เข้าสู่ระบบเจ้าหน้าที่</h1>
+        <p class="text-muted mb-4">ใช้บัญชีที่ได้รับสิทธิ์ staff, approver หรือ admin ใน Supabase</p>
+        <div class="alert alert-danger" id="admin-login-error" role="alert" hidden></div>
+        <form id="admin-login-form" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="admin-email">อีเมล</label>
+            <input class="form-control form-control-lg" id="admin-email" name="email" type="email" autocomplete="username" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label" for="admin-password">รหัสผ่าน</label>
+            <input class="form-control form-control-lg" id="admin-password" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="btn btn-dark btn-lg w-100" type="submit" id="admin-login-submit">เข้าสู่ระบบ</button>
+        </form>
+        <a class="admin-login-back" href="index.html">กลับหน้าอุปกรณ์</a>
+      </section>
+    </main>
+    <script src="vendor/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/admin-login.js"></script>
+  </body>
+</html>

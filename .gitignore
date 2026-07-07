@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Cloudflare local/build output
+.wrangler/
+cloudflare-worker/.wrangler/
+cloudflare-worker/dist/
+cloudflare-worker/check_url.txt
+cloudflare-worker/SUPABASE_URL.txt
+
+# Supabase local temp
+supabase/.temp/
+
+# Local test/debug output
+test_out.txt
+check-output.txt
+tmp_*.txt
+tmp_*.png
+
+# Release/backup artifacts kept off-repo
+.backups/
+
+# Local AI/tool scratch output
+.claude/
+delete-all-deployments/
+delete-all-deployments.zip
+encoding_scan_report.txt
+pages_list.txt
+patch_style_css.py
+remove_loader.py
+
+# Python cache
+__pycache__/
+*.pyc
