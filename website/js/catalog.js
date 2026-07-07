@@ -96,11 +96,15 @@
     return data.map(normalize);
   }
 
+  function activeType() {
+    return document.querySelector('#catalog-filter .sb-pill.active')?.dataset.type || 'all';
+  }
+
   function renderCatalog() {
     const grid = $('#equipment-grid');
     if (!grid) return;
     const query = ($('#catalog-search')?.value || '').trim().toLowerCase();
-    const type = $('#catalog-type')?.value || 'all';
+    const type = activeType();
     const filtered = equipment
       .filter((item) => type === 'all' || item.type === type || typeLabel(item.type) === type)
       .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query))
@@ -193,7 +197,15 @@
   }
 
   document.addEventListener('input', (event) => {
-    if (event.target.matches('#catalog-search, #catalog-type')) renderCatalog();
+    if (event.target.matches('#catalog-search')) renderCatalog();
+  });
+
+  document.addEventListener('click', (event) => {
+    const pill = event.target.closest('#catalog-filter .sb-pill');
+    if (!pill) return;
+    document.querySelectorAll('#catalog-filter .sb-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    renderCatalog();
   });
 
   app.esc = esc;

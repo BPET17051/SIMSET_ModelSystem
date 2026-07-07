@@ -16,6 +16,8 @@ body {
 
 .hero-borrow {
   background: linear-gradient(135deg, #0f766e 0%, #064e3b 100%);
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
 .equipment-card .card-img-top {
@@ -87,14 +89,100 @@ body {
 }
 
 /* Navbar brand */
-.navbar-brand {
-  color: var(--sb-brand) !important;
+.sb-logo-mark {
+  align-items: center;
+  background: var(--sb-brand);
+  border-radius: 6px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 900;
+  height: 1.75rem;
+  justify-content: center;
+  width: 1.75rem;
+}
+
+.sb-brand-text {
+  color: #111;
   font-weight: 800;
   letter-spacing: 0.01em;
 }
 
-.navbar-brand:hover {
-  color: var(--sb-brand-dark) !important;
+a.navbar-brand:hover .sb-brand-text {
+  color: var(--sb-brand);
+}
+
+/* Cart icon button */
+.sb-cart-btn {
+  align-items: center;
+  color: var(--sb-brand);
+  display: inline-flex;
+  font-size: 1.25rem;
+  gap: 0.25rem;
+  position: relative;
+  text-decoration: none;
+}
+
+.sb-cart-btn:hover { color: var(--sb-brand-dark); }
+
+.sb-cart-badge {
+  background: var(--sb-brand);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 1.2rem;
+  padding: 0.2rem 0.35rem;
+}
+
+/* Hero search bar */
+.sb-hero-search {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 36rem;
+}
+
+.sb-hero-search .form-control {
+  background: rgba(255,255,255,.95);
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.sb-hero-search .btn-brand {
+  flex-shrink: 0;
+  font-size: 1rem;
+  padding: 0.5rem 1.25rem;
+}
+
+/* Filter pills */
+.sb-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.sb-pill {
+  background: #fff;
+  border: 1.5px solid #dee2e6;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.85rem;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+
+.sb-pill:hover {
+  border-color: var(--sb-brand);
+  color: var(--sb-brand);
+}
+
+.sb-pill.active {
+  background: var(--sb-brand);
+  border-color: var(--sb-brand);
+  color: #fff;
 }
 
 /* Primary brand button */

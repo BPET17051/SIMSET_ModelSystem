@@ -3,55 +3,61 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SIMSET Borrow - อุปกรณ์</title>
+    <title>SIMSET Borrow - รายการอุปกรณ์</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet">
     <link href="css/simset-borrow.css" rel="stylesheet">
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom">
       <div class="container px-4 px-lg-5">
-        <a class="navbar-brand" href="index.html">SIMSET Borrow</a>
+        <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+          <span class="sb-logo-mark">S</span>
+          <span class="sb-brand-text">SIMSET Borrow</span>
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-            <li class="nav-item"><a class="nav-link active" href="index.html">อุปกรณ์</a></li>
-            <li class="nav-item"><a class="nav-link" href="track.html">ติดตามสถานะ</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.html">หน้าหลัก</a></li>
+            <li class="nav-item"><a class="nav-link active" href="index.html">รายการอุปกรณ์</a></li>
+            <li class="nav-item"><a class="nav-link" href="track.html">ติดตามคำขอ</a></li>
+            <li class="nav-item"><a class="nav-link" href="history.html">ประวัติ</a></li>
           </ul>
-          <a class="btn btn-brand" href="cart.html">
-            <i class="bi-cart-fill me-1"></i>
-            รายการยืม
-            <span class="badge btn-brand-badge ms-1 rounded-pill" data-cart-count>0</span>
+          <a class="sb-cart-btn" href="cart.html">
+            <i class="bi-cart-fill"></i>
+            <span class="sb-cart-badge" data-cart-count>0</span>
           </a>
         </div>
       </div>
     </nav>
-    <header class="hero-borrow py-5">
-      <div class="container px-4 px-lg-5 my-5">
-        <div class="text-center text-white">
-          <h1 class="display-4 fw-bolder">ระบบยืมอุปกรณ์</h1>
-          <p class="lead fw-normal text-white-50 mb-0">เลือกอุปกรณ์ เพิ่มรายการยืม แล้วส่งคำขอให้เจ้าหน้าที่อนุมัติ</p>
+    <header class="hero-borrow">
+      <div class="container px-4 px-lg-5 py-5">
+        <h1 class="display-5 fw-bolder text-white mb-2">ระบบยืม-คืนอุปกรณ์การแพทย์จำลอง</h1>
+        <p class="text-white-50 mb-4">คณะพยาบาลศาสตร์ มหาวิทยาลัยมหิดล</p>
+        <div class="sb-hero-search">
+          <input id="catalog-search" class="form-control" type="search" placeholder="ค้นหาอุปกรณ์ เช่น หุ่น, CPR, สายสวน...">
+          <button class="btn btn-brand" type="button" id="hero-search-btn">ค้นหา</button>
         </div>
       </div>
     </header>
-    <section class="py-4 border-bottom">
+    <section class="py-3 border-bottom">
       <div class="container px-4 px-lg-5">
-        <div class="d-flex flex-column flex-md-row borrow-toolbar">
-          <input id="catalog-search" class="form-control" type="search" placeholder="ค้นหาชื่อหรือรหัสอุปกรณ์">
-          <select id="catalog-type" class="form-select" style="max-width: 220px">
-            <option value="all">ทุกประเภท</option>
-            <option value="ผู้ใหญ่">ผู้ใหญ่</option>
-            <option value="เด็ก">เด็ก</option>
-            <option value="ทารก">ทารก</option>
-            <option value="ทั่วไป">ทั่วไป</option>
-          </select>
-          <span id="catalog-count" class="text-muted align-self-center text-nowrap">0 รายการ</span>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="text-muted small fw-semibold">ประเภท:</span>
+          <div class="sb-filter-pills" id="catalog-filter">
+            <button class="sb-pill active" data-type="all">ทั้งหมด</button>
+            <button class="sb-pill" data-type="ผู้ใหญ่">ผู้ใหญ่</button>
+            <button class="sb-pill" data-type="เด็ก">เด็ก</button>
+            <button class="sb-pill" data-type="ทารก">ทารก</button>
+            <button class="sb-pill" data-type="ทั่วไป">ทั่วไป</button>
+          </div>
+          <span id="catalog-count" class="text-muted small ms-auto text-nowrap"></span>
         </div>
         <p class="recognition-hint catalog-recognition-hint mt-3 mb-0">
-          ดูชื่ออุปกรณ์และจำนวนพร้อมยืมได้ทันที ถ้าต้องดูข้อมูลเพิ่มเติมให้กด “ดูรายละเอียด” ก่อนเพิ่มรายการยืม
+          ดูชื่ออุปกรณ์และจำนวนพร้อมยืมได้ทันที ถ้าต้องดูข้อมูลเพิ่มเติมให้กด "ดูรายละเอียด" ก่อนเพิ่มรายการยืม
         </p>
       </div>
     </section>
