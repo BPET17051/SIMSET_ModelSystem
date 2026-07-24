@@ -32,3 +32,8 @@ remove_loader.py
 # Python cache
 __pycache__/
 *.pyc
+
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
