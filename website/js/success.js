@@ -1,18 +1,10 @@
 (function () {
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
+  const esc = app.esc;
+  const STATUS_LABELS = app.STATUS_LABELS;
 
   function showMessage(type, text) {
-    const message = document.getElementById('success-message');
-    if (!message) return;
-    message.className = `alert alert-${type}`;
-    message.textContent = text;
+    app.showMessage('success-message', type, text);
   }
 
   function firstItemDate(request, field) {
@@ -73,6 +65,7 @@
     const workPurpose = request.work_purpose || purposePart(request, 'work');
     const usageLocation = request.usage_location || purposePart(request, 'location');
     document.getElementById('track-link').href = `track.html?id=${encodeURIComponent(trackingId)}`;
+    document.getElementById('claim-link').href = `history.html?claim=${encodeURIComponent(trackingId)}`;
     document.getElementById('tracking-url').textContent = trackUrl;
     document.getElementById('tracking-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(trackUrl)}`;
 
@@ -80,7 +73,7 @@
       <section class="borrow-form-print">
         <div class="borrow-form-meta">
           <span>Tracking ID: <strong>${esc(trackingId)}</strong></span>
-          <span>Status: ${esc(request.status)}</span>
+          <span>Status: ${esc(STATUS_LABELS[request.status] || request.status)}</span>
         </div>
         <div class="borrow-form-date">วันที่ ${esc(createdDate.day)} เดือน ${esc(createdDate.month)} พ.ศ. ${esc(createdDate.year)}</div>
         <h2>ส่วนที่ 1 สำหรับผู้ยืม</h2>

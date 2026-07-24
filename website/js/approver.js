@@ -2,19 +2,10 @@
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
   const supabase = app.supabase;
 
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
+  const esc = app.esc;
 
   function showMessage(type, text) {
-    const message = document.getElementById('approver-message');
-    if (!message) return;
-    message.className = `alert alert-${type}`;
-    message.textContent = text;
+    app.showMessage('approver-message', type, text);
   }
 
   function setAuthState(text, tone = 'muted') {
@@ -33,17 +24,18 @@
   }
 
   async function requireApprover() {
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) {
-      setLoginLink();
+    let session;
+    try {
+      ({ session } = await app.auth.requireRole(['approver_l1', 'admin']));
+    } catch (error) {
+      if (error.code === 'FORBIDDEN') {
+        setAuthState('บัญชีนี้ไม่มีสิทธิ์อนุมัติ L1', 'danger');
+      } else {
+        setLoginLink();
+      }
       return false;
     }
-    const role = data.session.user?.app_metadata?.role;
-    if (!['approver_l1', 'admin'].includes(role)) {
-      setAuthState('บัญชีนี้ไม่มีสิทธิ์อนุมัติ L1', 'danger');
-      return false;
-    }
-    setAuthState(`Signed in: ${data.session.user.email}`, 'success');
+    setAuthState(`Signed in: ${session.user.email}`, 'success');
     const logoutButton = document.getElementById('approver-logout');
     if (logoutButton) logoutButton.hidden = false;
     return true;
@@ -120,12 +112,12 @@
     decide(action, requestId).catch((error) => showMessage('danger', error.message));
   });
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      document.getElementById('approver-logout')?.addEventListener('click', logout);
-      if (!(await requireApprover())) return;
-      await loadQueue();
-    } catch (error) {
+  app.boot(async () => {
+    document.getElementById('approver-logout')?.addEventListener('click', logout);
+    if (!(await requireApprover())) return;
+    await loadQueue();
+  }, {
+    onError(error) {
       showMessage('danger', error.message);
     }
   });

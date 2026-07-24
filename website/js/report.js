@@ -2,19 +2,10 @@
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
   const supabase = app.supabase;
 
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
+  const esc = app.esc;
 
   function showMessage(type, text) {
-    const message = document.getElementById('report-message');
-    if (!message) return;
-    message.className = `alert alert-${type}`;
-    message.textContent = text;
+    app.showMessage('report-message', type, text);
   }
 
   function setState(text, tone = 'muted') {
@@ -26,17 +17,14 @@
   }
 
   async function requireReportRole() {
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) {
-      setState('ต้องเข้าสู่ระบบ', 'danger');
+    let session;
+    try {
+      ({ session } = await app.auth.requireRole(['admin', 'approver_l1']));
+    } catch (error) {
+      setState(error.code === 'FORBIDDEN' ? 'บัญชีนี้ไม่มีสิทธิ์ดู Report' : 'ต้องเข้าสู่ระบบ', 'danger');
       return false;
     }
-    const role = data.session.user?.app_metadata?.role;
-    if (!['admin', 'approver_l1'].includes(role)) {
-      setState('บัญชีนี้ไม่มีสิทธิ์ดู Report', 'danger');
-      return false;
-    }
-    setState(`Signed in: ${data.session.user.email}`, 'success');
+    setState(`Signed in: ${session.user.email}`, 'success');
     return true;
   }
 
@@ -87,11 +75,11 @@
     renderTopDepartments(data?.top_departments);
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      if (!(await requireReportRole())) return;
-      await loadReport();
-    } catch (error) {
+  app.boot(async () => {
+    if (!(await requireReportRole())) return;
+    await loadReport();
+  }, {
+    onError(error) {
       showMessage('danger', error.message);
     }
   });

@@ -1,33 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const ROOT = path.resolve(__dirname, '..');
-
-function read(relativePath) {
-  return fs.readFileSync(path.join(ROOT, relativePath), 'utf8');
-}
-
-function assert(condition, message) {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertExists(relativePath) {
-  assert(fs.existsSync(path.join(ROOT, relativePath)), `Expected file to exist: ${relativePath}`);
-}
-
-function assertMissing(relativePath) {
-  assert(!fs.existsSync(path.join(ROOT, relativePath)), `Expected generated/secret-like file to be absent: ${relativePath}`);
-}
-
-function assertNotContains(text, pattern, label) {
-  assert(!pattern.test(text), `${label} still contains ${pattern}`);
-}
-
-function assertContains(text, pattern, label) {
-  assert(pattern.test(text), `${label} is missing ${pattern}`);
-}
+const { read, assert, assertExists, assertMissing, assertNotContains, assertContains } = require('./verify-lib');
 
 const currentPages = [
   'website/index.html',
@@ -72,6 +43,7 @@ const simsetBorrowCss = read('website/css/simset-borrow.css');
 const catalogJs = read('website/js/catalog.js');
 const historyJs = read('website/js/history.js');
 const successJs = read('website/js/success.js');
+const trackJs = read('website/js/track.js');
 
 for (const [label, text] of [
   ['deploy workflow', deployWorkflow],
@@ -102,6 +74,7 @@ assertNotContains(supabaseClient, /ifogcvymwhcfbfjzhwsl\.supabase\.co|sb_publish
 assertContains(workerJs, /\/rest\/v1\/rpc\/submit_public_borrow_request_v2/, 'cloudflare-worker/worker.js public borrower submit RPC');
 assertContains(workerJs, /\/rest\/v1\/rpc\/submit_borrow_request/, 'cloudflare-worker/worker.js authenticated fallback submit RPC');
 assertContains(workerJs, /\/rest\/v1\/rpc\/get_my_borrow_requests/, 'cloudflare-worker/worker.js');
+assertContains(workerJs, /\/rest\/v1\/rpc\/claim_borrow_request_identity/, 'cloudflare-worker/worker.js');
 assertContains(workerJs, /\/rest\/v1\/rpc\/transition_borrow_request_status/, 'cloudflare-worker/worker.js');
 assertNotContains(workerJs, /\/rest\/v1\/rpc\/submit_public_borrow_request['"]/, 'cloudflare-worker/worker.js deprecated public submit RPC');
 assertContains(workerJs, /\/rest\/v1\/rpc\/admin_update_borrow_request_status/, 'cloudflare-worker/worker.js');
@@ -121,6 +94,8 @@ assertContains(workerJs, /dispatchLineNotifications/, 'cloudflare-worker/worker.
 assertContains(workerJs, /async scheduled\(/, 'cloudflare-worker/worker.js scheduled LINE dispatch');
 assertContains(workerJs, /ALLOWED_ORIGINS\.has\(origin\)/, 'cloudflare-worker/worker.js');
 assertNotContains(wranglerToml, /SUPABASE_KEY\s*=/, 'cloudflare-worker/wrangler.toml');
+assertNotContains(wranglerToml, /ifogcvymwhcfbfjzhwsl\.supabase\.co/, 'cloudflare-worker/wrangler.toml stale Supabase project');
+assertContains(wranglerToml, /SUPABASE_URL = "https:\/\/mcdpfsuyjfxmfeiafkyq\.supabase\.co"/, 'cloudflare-worker/wrangler.toml active Supabase project');
 assertContains(wranglerToml, /crons\s*=\s*\["\*\/15 \* \* \* \*"\]/, 'cloudflare-worker/wrangler.toml LINE dispatch cron');
 assertExists('supabase/current_mvp_release.sql');
 assertExists('supabase/fix_borrow_receipt_form_rpc.sql');
@@ -132,10 +107,12 @@ assertContains(headers, /connect-src 'self' https:\/\/simset-showroom-proxy\.[^ 
 assertNotContains(headers, /connect-src[^;\n]*https:\/\/ifogcvymwhcfbfjzhwsl\.supabase\.co/, 'website/_headers');
 
 assertContains(checkoutJs, /\.rpc\(['"]submit_public_borrow_request_v2['"]/, 'website/js/checkout.js public borrower submit RPC');
+assertContains(checkoutJs, /p_borrower_email:\s*email\s*\|\|\s*null/, 'website/js/checkout.js optional borrower email submit');
 assertNotContains(checkoutJs, /sendMagicLink|magic_email|getSession\(\)/, 'website/js/checkout.js borrower auth removal');
 assertContains(checkoutJs, /\.rpc\(['"]get_equipment_borrow_rules['"]/, 'website/js/checkout.js allocation rules');
 assertContains(checkoutJs, /room_dedicated|advance_course_dedicated/, 'website/js/checkout.js allocation warnings');
 assertContains(checkoutHtml, /recognition-hint[\s\S]*form-section-title[\s\S]*form-helper/, 'website/checkout.html recognition over recall helpers');
+assertContains(checkoutHtml, /id="borrower_email"[\s\S]*type="email"/, 'website/checkout.html optional borrower email field');
 assertContains(indexHtml, /recognition-hint[\s\S]*ดูชื่ออุปกรณ์[\s\S]*ดูรายละเอียด/, 'website/index.html catalog recognition helper');
 assertContains(indexHtml, /btn btn-brand[\s\S]*btn-brand-badge/, 'website/index.html style guide cart CTA');
 assertContains(simsetBorrowCss, /--sb-brand:\s*#0f766e[\s\S]*--sb-brand-dark:\s*#064e3b[\s\S]*--sb-shadow-btn:\s*0 4px 12px rgba\(15,118,110,.35\)/, 'website/css/simset-borrow.css style guide tokens');
@@ -146,10 +123,15 @@ assertContains(catalogJs, /function typeLabel[\s\S]*function borrowerAvailabilit
 assertContains(catalogJs, /<h5 class="fw-bolder equipment-card-title">\$\{esc\(item\.name\)\}<\/h5>\s*<div class="equipment-choice-summary mt-3">/, 'website/js/catalog.js catalog card hides internal UUID');
 assertContains(catalogJs, /return `พร้อมยืม \$\{available\}`;/, 'website/js/catalog.js catalog card hides total stock from borrowers');
 assertContains(historyJs, /\.rpc\(['"]get_my_borrow_requests['"]/, 'website/js/history.js');
+assertContains(historyJs, /\.rpc\(['"]claim_borrow_request_identity['"]/, 'website/js/history.js claim request RPC');
+assertContains(historyJs, /sendMagicLink\(email,\s*location\.href\)/, 'website/js/history.js keeps claim URL through login');
+assertContains(historyJs, /try\s*{[\s\S]*await claimRequestIfPresent\(\);[\s\S]*}\s*catch \(error\)\s*{[\s\S]*claimErrorMessage\(error\)[\s\S]*}\s*await loadHistory\(\);/, 'website/js/history.js claim failure does not block existing history load');
 assertContains(historyJs, /\.rpc\(['"]transition_borrow_request_status['"]/, 'website/js/history.js');
 assertContains(successJs, /borrow-form-print/, 'website/js/success.js printable borrow form');
+assertContains(successJs, /history\.html\?claim=/, 'website/js/success.js claim link');
 assertContains(successJs, /borrower_name/, 'website/js/success.js borrower field');
 assertContains(successJs, /asset_code|manikin_sap_id|unit_code/, 'website/js/success.js item code field');
+assertContains(trackJs, /history\.html\?claim=/, 'website/js/track.js claim link');
 assertContains(staffJs, /\.channel\(['"]staff-borrow-requests['"]\)/, 'website/js/staff.js realtime channel');
 assertContains(staffJs, /\.rpc\(['"]get_staff_dashboard_orders['"]/, 'website/js/staff.js staff queue');
 assertContains(staffJs, /confirm_pickup_with_snapshot/, 'website/js/staff.js pickup');
@@ -170,8 +152,11 @@ assertContains(reportHtml, /kpi-card is-primary[\s\S]*report-panel-primary/, 'we
 
 for (const [pattern, label] of [
   [/CREATE TABLE IF NOT EXISTS public\.borrow_request_status_audit/i, 'borrow status audit table'],
+  [/CREATE TABLE IF NOT EXISTS public\.identity_claim/i, 'identity claim table'],
   [/CREATE OR REPLACE FUNCTION public\.transition_borrow_request_status/i, 'central transition RPC'],
   [/CREATE OR REPLACE FUNCTION public\.submit_public_borrow_request_v2/i, 'public borrower submit RPC'],
+  [/CREATE OR REPLACE FUNCTION public\.claim_borrow_request_identity/i, 'borrow request identity claim RPC'],
+  [/p_borrower_email text DEFAULT NULL/i, 'optional borrower email argument'],
   [/borrower_position/i, 'borrower position field'],
   [/usage_location/i, 'usage location field'],
   [/borrow_purpose_owner/i, 'borrow purpose owner field'],
@@ -196,7 +181,11 @@ for (const [pattern, label] of [
   [/CREATE OR REPLACE FUNCTION public\.get_l1_approval_queue/i, 'L1 approval queue RPC'],
   [/CREATE OR REPLACE FUNCTION public\.confirm_pickup_with_snapshot/i, 'snapshot pickup RPC'],
   [/CREATE OR REPLACE FUNCTION public\.confirm_return_with_snapshot/i, 'snapshot return RPC'],
+  [/returned'[\s\S]*'inspection'[\s\S]*v_final_status/i, 'post-return inspection lifecycle'],
+  [/p_condition_status = 'normal' THEN 'completed'[\s\S]*p_condition_status IN \('damaged', 'maintenance'\) THEN 'damaged'[\s\S]*p_condition_status = 'missing' THEN 'lost'/i, 'return condition to terminal status mapping'],
   [/CREATE OR REPLACE FUNCTION public\.mark_overdue_borrow_requests/i, 'overdue cron RPC'],
+  [/CREATE OR REPLACE FUNCTION public\.expire_pending_borrow_requests/i, 'pending expiration cron RPC'],
+  [/simset-expire-pending-borrow-requests/i, 'pending expiration cron schedule'],
   [/CREATE OR REPLACE FUNCTION public\.get_staff_dashboard_orders/i, 'staff dashboard RPC'],
   [/CREATE OR REPLACE FUNCTION public\.get_kpi_report/i, 'KPI report RPC'],
   [/ADD COLUMN IF NOT EXISTS allocation_type text/i, 'equipment allocation type column'],
@@ -217,7 +206,8 @@ for (const [pattern, label] of [
   [/CREATE OR REPLACE FUNCTION public\.get_rotation_suggestions/i, 'rotation suggestions RPC'],
   [/room_dedicated_review/i, 'room dedicated special review alert'],
   [/ALTER PUBLICATION supabase_realtime ADD TABLE public\.borrow_requests/i, 'borrow requests realtime publication'],
-  [/CHECK \(status IN \('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'cancelled', 'expired', 'overdue'\)\)/i, 'overdue status check'],
+  [/CHECK \(actor_type IN \('admin', 'staff', 'approver_l1', 'borrower', 'system'\)\)/i, 'staff actor type audit check'],
+  [/CHECK \(status IN \('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'inspection', 'completed', 'damaged', 'lost', 'cancelled', 'expired', 'overdue'\)\)/i, 'borrow request lifecycle status check'],
 ]) {
   assertContains(currentMvpSql, pattern, `supabase/current_mvp_release.sql ${label}`);
 }

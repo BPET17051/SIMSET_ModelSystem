@@ -21,6 +21,22 @@
     return session?.user?.email || '';
   }
 
+  async function requireRole(allowedRoles) {
+    const session = await getSession();
+    if (!session) {
+      const error = new Error('Authentication required.');
+      error.code = 'UNAUTHENTICATED';
+      throw error;
+    }
+    const role = session.user?.app_metadata?.role;
+    if (!allowedRoles.includes(role)) {
+      const error = new Error('Insufficient role.');
+      error.code = 'FORBIDDEN';
+      throw error;
+    }
+    return { session, role };
+  }
+
   async function sendMagicLink(email, redirectTo) {
     const normalized = normalizeEmail(email);
     if (!isAllowedBorrowerEmail(normalized)) {
@@ -45,6 +61,7 @@
     isAllowedBorrowerEmail,
     getSession,
     getUserEmail,
+    requireRole,
     sendMagicLink,
     signOut
   };

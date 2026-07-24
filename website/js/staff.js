@@ -3,19 +3,26 @@
   const supabase = app.supabase;
   let currentSession = null;
 
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
+  const esc = app.esc;
+
+  const STATUS_LABELS = {
+    pending: 'รออนุมัติ',
+    approved: 'อนุมัติแล้ว',
+    ready: 'พร้อมจ่าย',
+    borrowed: 'จ่ายออกไปแล้ว',
+    returned: 'คืนแล้ว',
+    inspection: 'รอตรวจรับ',
+    completed: 'เสร็จสิ้น',
+    damaged: 'พบชำรุด',
+    lost: 'สูญหาย',
+    rejected: 'ปฏิเสธ',
+    cancelled: 'ยกเลิกแล้ว',
+    expired: 'หมดอายุ',
+    overdue: 'เกินกำหนดคืน'
+  };
 
   function showMessage(type, text) {
-    const message = document.getElementById('staff-message');
-    if (!message) return;
-    message.className = `alert alert-${type}`;
-    message.textContent = text;
+    app.showMessage('staff-message', type, text);
   }
 
   function setAuthState(text, tone = 'muted') {
@@ -27,17 +34,18 @@
   }
 
   async function requireStaff() {
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) {
-      setAuthState('ต้องเข้าสู่ระบบ Staff', 'danger');
+    let session;
+    try {
+      ({ session } = await app.auth.requireRole(['admin', 'staff', 'approver_l1']));
+    } catch (error) {
+      if (error.code === 'FORBIDDEN') {
+        setAuthState('บัญชีนี้ไม่มีสิทธิ์ Staff Dashboard', 'danger');
+      } else {
+        setAuthState('ต้องเข้าสู่ระบบ Staff', 'danger');
+      }
       return false;
     }
-    currentSession = data.session;
-    const role = currentSession.user?.app_metadata?.role;
-    if (!['admin', 'staff', 'approver_l1'].includes(role)) {
-      setAuthState('บัญชีนี้ไม่มีสิทธิ์ Staff Dashboard', 'danger');
-      return false;
-    }
+    currentSession = session;
     setAuthState(`Signed in: ${currentSession.user.email}`, 'success');
     const logoutButton = document.getElementById('staff-logout');
     if (logoutButton) logoutButton.hidden = false;
@@ -105,7 +113,7 @@
             <h3>${esc(request.tracking_id)}</h3>
             <div class="text-muted small">${esc(request.department || '-')}</div>
           </div>
-          <span class="status-pill status-${esc(request.status)}">${esc(request.status)}</span>
+          <span class="status-pill status-${esc(request.status)}">${esc(STATUS_LABELS[request.status] || request.status)}</span>
         </div>
         <p class="mb-2 mt-3"><strong>ผู้ยืม:</strong> ${esc(request.borrower_name || '-')}</p>
         <p class="mb-2"><strong>กำหนด:</strong> ${esc(due)}</p>
@@ -255,17 +263,17 @@
     assignInventoryUnit(assignUnit.getAttribute('data-assign-unit')).catch((error) => showMessage('danger', error.message));
   });
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      document.getElementById('staff-logout')?.addEventListener('click', logout);
-      if (!(await requireStaff())) return;
-      ['staff-to-prepare', 'staff-checked-out', 'staff-returned-today'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = '<div class="empty-state text-muted">กำลังโหลด...</div>';
-      });
-      await loadBoard();
-      subscribeRealtime();
-    } catch (error) {
+  app.boot(async () => {
+    document.getElementById('staff-logout')?.addEventListener('click', logout);
+    if (!(await requireStaff())) return;
+    ['staff-to-prepare', 'staff-checked-out', 'staff-returned-today'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="empty-state text-muted">กำลังโหลด...</div>';
+    });
+    await loadBoard();
+    subscribeRealtime();
+  }, {
+    onError(error) {
       showMessage('danger', error.message);
     }
   });

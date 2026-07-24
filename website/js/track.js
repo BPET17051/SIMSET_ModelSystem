@@ -1,16 +1,9 @@
 (function () {
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
-  const STATUS_LABELS = {
-    pending: 'รออนุมัติ',
-    approved: 'อนุมัติแล้ว',
-    ready: 'พร้อมรับอุปกรณ์',
-    borrowed: 'กำลังยืม',
-    returned: 'คืนแล้ว',
-    rejected: 'ไม่อนุมัติ'
-  };
+  const STATUS_LABELS = app.STATUS_LABELS;
 
   const $ = (selector) => document.querySelector(selector);
-  const esc = (value) => (app.esc ? app.esc(value) : String(value ?? ''));
+  const esc = app.esc;
 
   function render(request) {
     const root = $('#track-result');
@@ -41,6 +34,7 @@
               </div>
             `).join('')}
           </div>
+          <a class="btn btn-outline-dark mt-3" href="history.html?claim=${encodeURIComponent(request.tracking_id)}">Save to my history</a>
         </div>
       </div>`;
   }

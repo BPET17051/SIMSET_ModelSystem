@@ -127,7 +127,7 @@ ALTER TABLE public.borrow_requests
 
 ALTER TABLE public.borrow_requests
     ADD CONSTRAINT borrow_requests_status_check
-    CHECK (status IN ('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'cancelled', 'expired', 'overdue'));
+    CHECK (status IN ('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'inspection', 'completed', 'damaged', 'lost', 'cancelled', 'expired', 'overdue'));
 
 CREATE TABLE IF NOT EXISTS public.borrow_request_items (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -483,7 +483,7 @@ CREATE TABLE IF NOT EXISTS public.borrow_request_status_audit (
     from_status text NOT NULL,
     to_status text NOT NULL,
     actor_user_id uuid NOT NULL,
-    actor_type text NOT NULL CHECK (actor_type IN ('admin', 'approver_l1', 'borrower', 'system')),
+    actor_type text NOT NULL CHECK (actor_type IN ('admin', 'staff', 'approver_l1', 'borrower', 'system')),
     reason text,
     created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
@@ -493,7 +493,7 @@ ALTER TABLE public.borrow_request_status_audit
 
 ALTER TABLE public.borrow_request_status_audit
     ADD CONSTRAINT borrow_request_status_audit_actor_type_check
-    CHECK (actor_type IN ('admin', 'approver_l1', 'borrower', 'system'));
+    CHECK (actor_type IN ('admin', 'staff', 'approver_l1', 'borrower', 'system'));
 
 CREATE INDEX IF NOT EXISTS idx_borrow_request_status_audit_request_id_created_at
 ON public.borrow_request_status_audit (request_id, created_at DESC);
@@ -509,6 +509,35 @@ USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 REVOKE ALL ON TABLE public.borrow_request_status_audit FROM PUBLIC;
 REVOKE ALL ON TABLE public.borrow_request_status_audit FROM anon;
 GRANT SELECT ON TABLE public.borrow_request_status_audit TO authenticated;
+
+CREATE TABLE IF NOT EXISTS public.identity_claim (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id uuid NOT NULL REFERENCES public.borrow_requests(id) ON DELETE CASCADE,
+    claimant_user_id uuid NOT NULL,
+    claimant_email text NOT NULL,
+    claim_method text NOT NULL DEFAULT 'email_match',
+    created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+    CONSTRAINT identity_claim_method_check CHECK (claim_method IN ('email_match')),
+    UNIQUE (request_id, claimant_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_identity_claim_user_created_at
+ON public.identity_claim (claimant_user_id, created_at DESC);
+
+ALTER TABLE public.identity_claim ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "claimant_select_identity_claim" ON public.identity_claim;
+CREATE POLICY "claimant_select_identity_claim"
+ON public.identity_claim FOR SELECT
+TO authenticated
+USING (
+    claimant_user_id = auth.uid()
+    OR (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'staff', 'approver_l1')
+);
+
+REVOKE ALL ON TABLE public.identity_claim FROM PUBLIC;
+REVOKE ALL ON TABLE public.identity_claim FROM anon;
+GRANT SELECT ON TABLE public.identity_claim TO authenticated;
 
 -- ----------------------------------------------------------------
 -- 3. Shared helpers
@@ -545,7 +574,9 @@ AS $$
         OR (p_current_status = 'approved' AND p_next_status IN ('ready', 'borrowed'))
         OR (p_current_status = 'ready' AND p_next_status = 'borrowed')
         OR (p_current_status = 'borrowed' AND p_next_status IN ('returned', 'overdue'))
-        OR (p_current_status = 'overdue' AND p_next_status = 'returned');
+        OR (p_current_status = 'overdue' AND p_next_status = 'returned')
+        OR (p_current_status = 'returned' AND p_next_status = 'inspection')
+        OR (p_current_status = 'inspection' AND p_next_status IN ('completed', 'damaged', 'lost'));
 $$;
 
 CREATE OR REPLACE FUNCTION simset_private.enforce_borrow_status_transition()
@@ -556,7 +587,7 @@ SET search_path = public, simset_private, pg_temp
 AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
-        IF NEW.status NOT IN ('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'cancelled', 'expired', 'overdue') THEN
+        IF NEW.status NOT IN ('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'inspection', 'completed', 'damaged', 'lost', 'cancelled', 'expired', 'overdue') THEN
             RAISE EXCEPTION 'Invalid borrow status: %', NEW.status;
         END IF;
         RETURN NEW;
@@ -650,7 +681,7 @@ BEGIN
         WHERE bri.request_id = NEW.id
           AND bri.equipment_unit_id = eu.id
           AND eu.status = 'ready';
-    ELSIF NEW.status IN ('returned', 'cancelled', 'rejected', 'expired') THEN
+    ELSIF NEW.status IN ('completed', 'cancelled', 'rejected', 'expired') THEN
         UPDATE public.manikins m
         SET status = 'ready'
         FROM public.borrow_request_items bri
@@ -666,6 +697,20 @@ BEGIN
           AND bri.equipment_unit_id = eu.id
           AND eu.status IN ('in_use', 'ready')
           AND NOT simset_private.unit_has_other_active_assignment(eu.id, NEW.id);
+    ELSIF NEW.status = 'damaged' THEN
+        UPDATE public.manikins m
+        SET status = 'maintenance'
+        FROM public.borrow_request_items bri
+        WHERE bri.request_id = NEW.id
+          AND bri.manikin_sap_id = m.sap_id
+          AND m.status IN ('in_use', 'ready');
+
+        UPDATE public.equipment_units eu
+        SET status = 'maintenance'
+        FROM public.borrow_request_items bri
+        WHERE bri.request_id = NEW.id
+          AND bri.equipment_unit_id = eu.id
+          AND eu.status IN ('in_use', 'ready');
     END IF;
 
     RETURN NEW;
@@ -836,11 +881,11 @@ BEGIN
         RAISE EXCEPTION 'actor_user_id is required';
     END IF;
 
-    IF p_actor_type NOT IN ('admin', 'approver_l1', 'borrower', 'system') THEN
+    IF p_actor_type NOT IN ('admin', 'staff', 'approver_l1', 'borrower', 'system') THEN
         RAISE EXCEPTION 'Invalid actor_type: %', p_actor_type;
     END IF;
 
-    IF p_next_status NOT IN ('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'cancelled', 'expired', 'overdue') THEN
+    IF p_next_status NOT IN ('pending', 'approved', 'rejected', 'ready', 'borrowed', 'returned', 'inspection', 'completed', 'damaged', 'lost', 'cancelled', 'expired', 'overdue') THEN
         RAISE EXCEPTION 'Invalid next status: %', p_next_status;
     END IF;
 
@@ -880,7 +925,7 @@ BEGIN
         status_changed_by = p_actor_user_id,
         reject_reason = CASE WHEN p_next_status = 'rejected' THEN v_reason ELSE reject_reason END,
         cancel_reason = CASE WHEN p_next_status = 'cancelled' THEN v_reason ELSE cancel_reason END,
-        return_note = CASE WHEN p_next_status = 'returned' THEN v_reason ELSE return_note END,
+        return_note = CASE WHEN p_next_status IN ('returned', 'completed', 'damaged', 'lost') THEN v_reason ELSE return_note END,
         rejected_at = CASE WHEN p_next_status = 'rejected' THEN v_now ELSE rejected_at END,
         cancelled_at = CASE WHEN p_next_status = 'cancelled' THEN v_now ELSE cancelled_at END,
         expired_at = CASE WHEN p_next_status = 'expired' THEN v_now ELSE expired_at END,
@@ -950,6 +995,10 @@ BEGIN
     IF p_actor_type = 'admin' THEN
         IF (auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin' THEN
             RAISE EXCEPTION 'unauthorized: admin role required';
+        END IF;
+    ELSIF p_actor_type = 'staff' THEN
+        IF (auth.jwt() -> 'app_metadata' ->> 'role') NOT IN ('admin', 'staff') THEN
+            RAISE EXCEPTION 'unauthorized: staff role required';
         END IF;
     ELSIF p_actor_type = 'approver_l1' THEN
         IF (auth.jwt() -> 'app_metadata' ->> 'role') NOT IN ('approver_l1', 'admin') THEN
@@ -1304,6 +1353,8 @@ REVOKE ALL ON FUNCTION public.submit_borrow_request(text, text, text, date, date
 REVOKE ALL ON FUNCTION public.submit_borrow_request(text, text, text, date, date, jsonb) FROM anon;
 GRANT EXECUTE ON FUNCTION public.submit_borrow_request(text, text, text, date, date, jsonb) TO authenticated;
 
+DROP FUNCTION IF EXISTS public.submit_public_borrow_request_v2(text, text, text, text, text, text, text, date, date, jsonb);
+
 CREATE OR REPLACE FUNCTION public.submit_public_borrow_request_v2(
     p_borrower_name text,
     p_borrower_position text,
@@ -1314,7 +1365,8 @@ CREATE OR REPLACE FUNCTION public.submit_public_borrow_request_v2(
     p_usage_location text,
     p_start_date date,
     p_end_date date,
-    p_items jsonb
+    p_items jsonb,
+    p_borrower_email text DEFAULT NULL
 )
 RETURNS text
 LANGUAGE plpgsql
@@ -1335,6 +1387,7 @@ DECLARE
     v_inventory_mode text;
     course_conflicts jsonb;
     normalized_phone text := regexp_replace(COALESCE(p_phone, ''), '[^0-9+]', '', 'g');
+    normalized_email text := lower(NULLIF(trim(COALESCE(p_borrower_email, '')), ''));
     normalized_purpose text;
     i integer;
 BEGIN
@@ -1396,7 +1449,7 @@ BEGIN
         new_tracking_id,
         NULL,
         trim(p_borrower_name),
-        NULL,
+        normalized_email,
         NULLIF(trim(COALESCE(p_borrower_position, '')), ''),
         normalized_phone,
         trim(p_department),
@@ -1619,8 +1672,8 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.submit_public_borrow_request_v2(text, text, text, text, text, text, text, date, date, jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.submit_public_borrow_request_v2(text, text, text, text, text, text, text, date, date, jsonb) TO anon, authenticated;
+REVOKE ALL ON FUNCTION public.submit_public_borrow_request_v2(text, text, text, text, text, text, text, date, date, jsonb, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.submit_public_borrow_request_v2(text, text, text, text, text, text, text, date, date, jsonb, text) TO anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.get_my_borrow_requests()
 RETURNS jsonb
@@ -1672,6 +1725,70 @@ $$;
 REVOKE ALL ON FUNCTION public.get_my_borrow_requests() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_my_borrow_requests() FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_my_borrow_requests() TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.claim_borrow_request_identity(p_tracking_id text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_request public.borrow_requests%ROWTYPE;
+    v_email text := lower(NULLIF(trim(COALESCE(auth.jwt() ->> 'email', '')), ''));
+BEGIN
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Authentication required';
+    END IF;
+
+    IF v_email IS NULL THEN
+        RAISE EXCEPTION 'authenticated email is required';
+    END IF;
+
+    SELECT *
+    INTO v_request
+    FROM public.borrow_requests
+    WHERE tracking_id = trim(p_tracking_id)
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RETURN NULL;
+    END IF;
+
+    IF lower(COALESCE(v_request.borrower_email, '')) IS DISTINCT FROM v_email THEN
+        RAISE EXCEPTION 'Forbidden: borrower email does not match authenticated user';
+    END IF;
+
+    INSERT INTO public.identity_claim (
+        request_id,
+        claimant_user_id,
+        claimant_email,
+        claim_method
+    ) VALUES (
+        v_request.id,
+        auth.uid(),
+        v_email,
+        'email_match'
+    )
+    ON CONFLICT (request_id, claimant_user_id) DO NOTHING;
+
+    UPDATE public.borrow_requests
+    SET
+        borrower_id = COALESCE(borrower_id, auth.uid()),
+        updated_at = timezone('utc', now())
+    WHERE id = v_request.id
+      AND borrower_id IS NULL;
+
+    RETURN jsonb_build_object(
+        'request_id', v_request.id,
+        'tracking_id', v_request.tracking_id,
+        'claimed', true
+    );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.claim_borrow_request_identity(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.claim_borrow_request_identity(text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.claim_borrow_request_identity(text) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.get_borrow_request_status(p_tracking_id text)
 RETURNS jsonb
@@ -2336,7 +2453,7 @@ BEGIN
                 )
             )
         ) FILTER (
-            WHERE br.status = 'returned'
+            WHERE br.status IN ('returned', 'inspection', 'completed', 'damaged', 'lost')
               AND br.returned_at >= timezone('utc', now()) - interval '24 hours'
         ), '[]'::jsonb),
         'alerts', (
@@ -2352,7 +2469,7 @@ BEGIN
     )
     INTO result
     FROM public.borrow_requests br
-    WHERE br.status IN ('approved', 'borrowed', 'overdue', 'returned');
+    WHERE br.status IN ('approved', 'borrowed', 'overdue', 'returned', 'inspection', 'completed', 'damaged', 'lost');
 
     RETURN result;
 END;
@@ -2419,6 +2536,7 @@ SET search_path = public, simset_private, pg_temp
 AS $$
 DECLARE
     v_result jsonb;
+    v_actor_type text;
 BEGIN
     IF auth.uid() IS NULL THEN
         RAISE EXCEPTION 'Authentication required';
@@ -2427,6 +2545,11 @@ BEGIN
     IF (auth.jwt() -> 'app_metadata' ->> 'role') NOT IN ('admin', 'staff') THEN
         RAISE EXCEPTION 'unauthorized: staff role required';
     END IF;
+
+    v_actor_type := CASE
+        WHEN (auth.jwt() -> 'app_metadata' ->> 'role') = 'staff' THEN 'staff'
+        ELSE 'admin'
+    END;
 
     PERFORM simset_private.insert_condition_snapshot(
         p_request_id,
@@ -2441,7 +2564,7 @@ BEGIN
         'approved',
         'borrowed',
         auth.uid(),
-        'admin',
+        v_actor_type,
         'Confirmed pickup with pre-checkout condition snapshot'
     );
 
@@ -2473,6 +2596,8 @@ DECLARE
     v_result jsonb;
     v_tracking_id text;
     v_snapshot_id uuid;
+    v_actor_type text;
+    v_final_status text;
 BEGIN
     IF auth.uid() IS NULL THEN
         RAISE EXCEPTION 'Authentication required';
@@ -2481,6 +2606,18 @@ BEGIN
     IF (auth.jwt() -> 'app_metadata' ->> 'role') NOT IN ('admin', 'staff') THEN
         RAISE EXCEPTION 'unauthorized: staff role required';
     END IF;
+
+    v_actor_type := CASE
+        WHEN (auth.jwt() -> 'app_metadata' ->> 'role') = 'staff' THEN 'staff'
+        ELSE 'admin'
+    END;
+
+    v_final_status := CASE
+        WHEN p_condition_status = 'normal' THEN 'completed'
+        WHEN p_condition_status IN ('damaged', 'maintenance') THEN 'damaged'
+        WHEN p_condition_status = 'missing' THEN 'lost'
+        ELSE 'damaged'
+    END;
 
     v_snapshot_id := simset_private.insert_condition_snapshot(
         p_request_id,
@@ -2499,8 +2636,30 @@ BEGIN
         NULL,
         'returned',
         auth.uid(),
-        'admin',
+        v_actor_type,
         'Confirmed return with post-return condition snapshot'
+    );
+
+    IF v_result IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    PERFORM simset_private.apply_borrow_request_status_transition(
+        p_request_id,
+        'returned',
+        'inspection',
+        auth.uid(),
+        v_actor_type,
+        'Return moved to inspection'
+    );
+
+    v_result := simset_private.apply_borrow_request_status_transition(
+        p_request_id,
+        'inspection',
+        v_final_status,
+        auth.uid(),
+        v_actor_type,
+        trim(p_note)
     );
 
     IF p_condition_status <> 'normal' THEN
@@ -2544,6 +2703,61 @@ $$;
 REVOKE ALL ON FUNCTION public.confirm_return_with_snapshot(uuid, text, text, text[]) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.confirm_return_with_snapshot(uuid, text, text, text[]) FROM anon;
 GRANT EXECUTE ON FUNCTION public.confirm_return_with_snapshot(uuid, text, text, text[]) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.expire_pending_borrow_requests(
+    p_system_actor_id uuid
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, simset_private, pg_temp
+AS $$
+DECLARE
+    v_request record;
+    v_expired_count integer := 0;
+BEGIN
+    IF p_system_actor_id IS NULL THEN
+        RAISE EXCEPTION 'system_actor_id is required';
+    END IF;
+
+    FOR v_request IN
+        SELECT id
+        FROM public.borrow_requests
+        WHERE status = 'pending'
+          AND expires_at IS NOT NULL
+          AND expires_at <= timezone('utc', now())
+        ORDER BY expires_at ASC
+        FOR UPDATE SKIP LOCKED
+    LOOP
+        PERFORM simset_private.apply_borrow_request_status_transition(
+            v_request.id,
+            'pending',
+            'expired',
+            p_system_actor_id,
+            'system',
+            'Pending request expired by scheduled job'
+        );
+
+        v_expired_count := v_expired_count + 1;
+    END LOOP;
+
+    RETURN v_expired_count;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.expire_pending_borrow_requests(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.expire_pending_borrow_requests(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.expire_pending_borrow_requests(uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.expire_pending_borrow_requests(uuid) TO postgres, service_role;
+
+SELECT cron.schedule(
+    'simset-expire-pending-borrow-requests',
+    '*/5 * * * *',
+    $$SELECT public.expire_pending_borrow_requests('00000000-0000-0000-0000-000000000001'::uuid);$$
+)
+WHERE NOT EXISTS (
+    SELECT 1 FROM cron.job WHERE jobname = 'simset-expire-pending-borrow-requests'
+);
 
 CREATE OR REPLACE FUNCTION public.mark_overdue_borrow_requests()
 RETURNS integer
@@ -2642,7 +2856,7 @@ BEGIN
                 FROM public.borrow_request_items
                 GROUP BY request_id
             ) due_dates ON due_dates.request_id = br.id
-            WHERE br.status = 'returned'
+            WHERE br.status IN ('returned', 'completed', 'damaged', 'lost')
         ),
         'ready_manikin_count', (
             SELECT count(*)

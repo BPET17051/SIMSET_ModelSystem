@@ -19,19 +19,20 @@
 
   async function requireAdmin() {
     setAuthState('กำลังตรวจสอบสิทธิ์ผู้ดูแลระบบ...');
-    const { data, error } = await supabase.auth.getSession();
-
-    if (error || !data.session) {
-      window.location.href = buildLoginUrl();
+    let session;
+    try {
+      ({ session } = await app.auth.requireRole(['admin']));
+    } catch (error) {
+      if (error.code === 'FORBIDDEN') {
+        await supabase.auth.signOut();
+        window.location.href = buildLoginUrl('unauthorized');
+      } else {
+        window.location.href = buildLoginUrl();
+      }
       return false;
     }
 
-    currentUser = data.session.user;
-    if (currentUser.app_metadata?.role !== 'admin') {
-      await supabase.auth.signOut();
-      window.location.href = buildLoginUrl('unauthorized');
-      return false;
-    }
+    currentUser = session.user;
 
     const emailEl = document.querySelector('#admin-user-email');
     if (emailEl) emailEl.textContent = currentUser.email || 'Admin';
@@ -48,8 +49,12 @@
     window.location.href = 'admin-login.html';
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  app.boot(async () => {
     document.querySelector('#admin-logout')?.addEventListener('click', logout);
     await requireAdmin();
+  }, {
+    onError(error) {
+      setAuthState(error.message, 'danger');
+    }
   });
 }());

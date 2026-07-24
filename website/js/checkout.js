@@ -1,14 +1,11 @@
 (function () {
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
   const $ = (selector) => document.querySelector(selector);
-  const esc = (value) => (app.esc ? app.esc(value) : String(value ?? ''));
+  const esc = app.esc;
   let allocationRules = [];
 
   function showMessage(type, text) {
-    const message = $('#checkout-message');
-    if (!message) return;
-    message.className = `alert alert-${type}`;
-    message.textContent = text;
+    app.showMessage('checkout-message', type, text);
   }
 
   function clearMessage() {
@@ -128,6 +125,7 @@
     const position = formValue('#borrower_position');
     const department = formValue('#department');
     const phone = formValue('#phone');
+    const email = formValue('#borrower_email');
     const borrowPurposeOwner = formValue('#borrow_purpose_owner');
     const workPurpose = formValue('#work_purpose');
     const usageLocation = formValue('#usage_location');
@@ -169,6 +167,7 @@
         p_usage_location: usageLocation,
         p_start_date: startDate,
         p_end_date: endDate,
+        p_borrower_email: email || null,
         p_items: items.map((item) => ({ equipment_id: item.equipment_id, qty: item.qty }))
       });
       if (error) throw error;
@@ -193,12 +192,12 @@
     refreshBorrowRules().catch((error) => showMessage('danger', error.message));
   });
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      await renderCheckoutItems();
-      await refreshBorrowRules();
-      $('#checkout-form')?.addEventListener('submit', submitRequest);
-    } catch (error) {
+  app.boot(async () => {
+    await renderCheckoutItems();
+    await refreshBorrowRules();
+    $('#checkout-form')?.addEventListener('submit', submitRequest);
+  }, {
+    onError(error) {
       showMessage('danger', error.message);
     }
   });

@@ -1,18 +1,17 @@
 (function () {
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
-  const esc = (value) => (app.esc ? app.esc(value) : String(value ?? ''));
+  const esc = app.esc;
+  const STATUS_LABELS = app.STATUS_LABELS;
   let currentSession = null;
+  const claimTrackingId = new URLSearchParams(location.search).get('claim') || '';
 
   function showMessage(type, text) {
-    const message = document.getElementById('history-message');
-    if (!message) return;
-    message.className = `alert alert-${type}`;
-    message.textContent = text;
+    app.showMessage('history-message', type, text);
   }
 
   async function sendHistoryMagicLink() {
     const email = document.getElementById('history-email')?.value || '';
-    await app.auth.sendMagicLink(email, `${location.origin}/history.html`);
+    await app.auth.sendMagicLink(email, location.href);
     showMessage('info', 'ส่งลิงก์เข้าสู่ระบบแล้ว กรุณาเปิดจากเบราว์เซอร์นี้เพื่อดูประวัติการยืม');
   }
 
@@ -50,7 +49,7 @@
             <h2 class="h5 mb-1">${esc(request.tracking_id)}</h2>
             <div class="text-muted small">${esc(request.created_at || '-')}</div>
           </div>
-          <span class="status-pill status-${esc(request.status)}">${esc(request.status)}</span>
+          <span class="status-pill status-${esc(request.status)}">${esc(STATUS_LABELS[request.status] || request.status)}</span>
         </div>
         <p class="mt-3 mb-2">${esc(request.purpose || '-')}</p>
         <ul class="mb-3">
@@ -67,6 +66,22 @@
     const { data, error } = await app.supabase.rpc('get_my_borrow_requests');
     if (error) throw error;
     renderHistory(Array.isArray(data) ? data : []);
+  }
+
+  async function claimRequestIfPresent() {
+    if (!claimTrackingId) return;
+    const { error } = await app.supabase.rpc('claim_borrow_request_identity', { p_tracking_id: claimTrackingId });
+    if (error) throw error;
+    showMessage('success', 'Claimed this request into your history.');
+    history.replaceState(null, '', 'history.html');
+  }
+
+  function claimErrorMessage(error) {
+    const text = error?.message || '';
+    if (/Forbidden|Authentication required/i.test(text)) {
+      return 'Could not save this request to My History. Use the same email that was entered when the borrow request was submitted.';
+    }
+    return text || 'Could not save this request to My History.';
   }
 
   async function cancelRequest(requestId) {
@@ -97,11 +112,18 @@
     }
   });
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const signedIn = await renderAuth();
-      if (signedIn) await loadHistory();
-    } catch (error) {
+  app.boot(async () => {
+    const signedIn = await renderAuth();
+    if (signedIn) {
+      try {
+        await claimRequestIfPresent();
+      } catch (error) {
+        showMessage('warning', claimErrorMessage(error));
+      }
+      await loadHistory();
+    }
+  }, {
+    onError(error) {
       showMessage('danger', error.message);
     }
   });

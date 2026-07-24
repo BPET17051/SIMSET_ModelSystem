@@ -35,6 +35,7 @@ const ALLOWED_PATHS = new Set([
     '/rest/v1/rpc/get_borrow_availability',
     '/rest/v1/rpc/get_borrow_request_status',
     '/rest/v1/rpc/get_my_borrow_requests',
+    '/rest/v1/rpc/claim_borrow_request_identity',
     '/rest/v1/rpc/transition_borrow_request_status',
     '/rest/v1/rpc/submit_public_borrow_request_v2',
     '/rest/v1/rpc/submit_borrow_request',

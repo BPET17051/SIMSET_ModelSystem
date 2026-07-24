@@ -2,13 +2,7 @@
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
   const CART_KEY = 'simset.borrow.cart.v2';
   const $ = (selector) => document.querySelector(selector);
-  const esc = (value) => (app.esc ? app.esc(value) : String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char])));
+  const esc = app.esc;
 
   function readCart() {
     try {

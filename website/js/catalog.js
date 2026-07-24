@@ -3,13 +3,7 @@
   let equipment = [];
 
   const $ = (selector) => document.querySelector(selector);
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
+  const esc = app.esc;
 
   function detectType(item) {
     const text = `${item.name_th || ''} ${item.name_en || ''} ${item.type || ''}`.toLowerCase();
@@ -208,6 +202,5 @@
     renderCatalog();
   });
 
-  app.esc = esc;
   document.addEventListener('DOMContentLoaded', initCatalog);
 }());

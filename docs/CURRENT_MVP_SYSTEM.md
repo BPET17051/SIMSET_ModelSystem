@@ -33,9 +33,11 @@ The Worker also dispatches pending `line_notification_outbox` rows to LINE Messa
 
 ## Current Database Contract
 
-Use `supabase/current_mvp_release.sql` as the active release SQL. It consolidates the Phase 1 status state machine, Phase 2 authenticated borrower RPCs, borrower history RPC, exact `borrow_request_items.manikin_sap_id` linkage, automatic `manikins.status` sync when orders move to `borrowed` or `returned`, and Wave 3 allocation rules.
+Use `supabase/current_mvp_release.sql` as the active release SQL. It consolidates the Phase 1 status state machine, Phase 2 public borrower RPCs, optional borrower email, borrower history and identity claim RPCs, exact `borrow_request_items.manikin_sap_id` linkage, automatic manikin/equipment-unit status sync, and Wave 3 allocation rules.
 
-Borrower submission is a public form based on the paper borrow form. Borrowers provide name, position, department/unit, phone, purpose, usage location, borrow dates, and requested items, then receive a tracking ID. Staff, approver_l1, and admin continue to require Supabase Auth roles.
+Borrower submission is a public form based on the paper borrow form. Borrowers provide name, position, department/unit, phone, purpose, usage location, borrow dates, requested items, and optionally an email, then receive a tracking ID. If they later sign in from `history.html?claim=<tracking_id>` with the same email, the frontend calls `claim_borrow_request_identity` so the request appears in My History. Staff, approver_l1, and admin continue to require Supabase Auth roles.
+
+The current release intentionally does not add `draft`, `submitted`, or `reserved` states. Guest checkout creates `pending` directly because there is no saved-cart or resumable draft feature yet. The public submit action is the submitted event. L1 approval plus staff preparation currently cover the business value of reservation without adding another state. Add these states only when the product needs resumable borrower drafts, an explicit pre-approval submitted queue, or hard inventory holds before staff preparation.
 
 Current product direction keeps borrower selection simple: borrowers choose catalog items and quantities, while staff/backend assignment chooses exact manikins or inventory units. The target inventory model is documented as four operational modes: `manikin`, `tracked_unit`, `kit`, and `quantity_only`. Kits use the container as the return-critical unit; missing refillable contents should create staff notes/refill work rather than blocking the order return.
 
@@ -54,6 +56,7 @@ The active frontend calls:
 - `submit_public_borrow_request_v2` from checkout, with no borrower login required
 - `submit_borrow_request` remains as an authenticated fallback RPC during rollout
 - `get_my_borrow_requests` from history
+- `claim_borrow_request_identity` from history claim links
 - `transition_borrow_request_status` for borrower cancellation
 - `admin_update_borrow_request_status` for admin status progression
 - `get_borrow_request_status` for tracking/success
@@ -64,7 +67,10 @@ The active frontend calls:
 - `get_rotation_suggestions` and `staff_assign_manikin_to_item` for staff assignment guidance
 - `staff_assign_inventory_unit_to_item` for exact tracked-unit or kit-container assignment
 - `mark_overdue_borrow_requests` for the daily overdue job
+- `expire_pending_borrow_requests` for the pending-request expiry job
 - `get_kpi_report` for KPI reporting
+
+Status audit is captured in `borrow_request_status_audit` through the central transition function. There is no operator-facing audit viewer in this release; treat it as backlog unless staff need to review status history inside the browser instead of querying Supabase directly.
 
 ## Current Verification Commands
 
