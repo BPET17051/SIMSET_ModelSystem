@@ -94,6 +94,7 @@
       totalQuantity: Number(item.total_quantity || 0),
       maintenanceQuantity: Number(item.maintenance_quantity || 0),
       allocationType: item.allocation_type || 'rotating',
+      inventoryMode: item.inventory_mode || 'quantity_only',
       fallbackImage: imageUrl(item, typeLabel(type)),
       image: safeImageUrl(item.image_url) || imageUrl(item, typeLabel(type))
     };
@@ -131,8 +132,8 @@
   async function fetchEquipment() {
     if (!app.supabase) throw new Error('Supabase is not available.');
     const columns = app.features?.equipmentImageUrl
-      ? 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type,image_url'
-      : 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type';
+      ? 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type,inventory_mode,image_url'
+      : 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type,inventory_mode';
     const { data, error } = await app.supabase
       .from('equipments')
       .select(columns)
@@ -140,6 +141,20 @@
       .limit(100);
     if (error) throw error;
     return data.map(normalize);
+  }
+
+  async function fetchPublicManikinNames(equipmentId) {
+    if (!equipmentId || !app.supabase || !app.features?.publicEquipmentManikinNames) return [];
+    const { data, error } = await app.supabase.rpc('get_public_equipment_manikins', {
+      p_equipment_id: equipmentId
+    });
+    if (error || !Array.isArray(data)) return [];
+    return data
+      .map((entry) => ({
+        name: String(entry?.display_name || '').trim(),
+        count: Number(entry?.count || 0)
+      }))
+      .filter((entry) => entry.name);
   }
 
   function activeType() {
@@ -190,7 +205,7 @@
     }).join('') || '<div class="col-12"><div class="empty-state">ไม่พบอุปกรณ์ตามเงื่อนไขที่ค้นหา</div></div>';
   }
 
-  function renderDetails() {
+  async function renderDetails() {
     const root = $('#equipment-detail');
     if (!root) return;
     const id = new URLSearchParams(location.search).get('id');
@@ -203,16 +218,33 @@
     const readableType = typeLabel(item.type);
     const availableLabel = availabilityText(item, available);
     const notice = allocationNotice(item.allocationType);
+    const manikinNames = item.inventoryMode === 'manikin'
+      ? await fetchPublicManikinNames(item.id)
+      : [];
+    const primaryDisplayName = manikinNames.length === 1 ? manikinNames[0].name : item.name;
+    const nameList = manikinNames.length
+      ? `<div class="equipment-db-names mt-3">
+          <div class="small text-muted mb-2">ชื่อหุ่นในฐานข้อมูล</div>
+          ${manikinNames.map((entry) => `
+            <div class="equipment-db-name-row">
+              <span>${esc(entry.name)}</span>
+              ${entry.count > 1 ? `<span class="text-muted">มี ${entry.count} ตัว</span>` : ''}
+            </div>
+          `).join('')}
+        </div>`
+      : '';
     root.innerHTML = `
       <div class="row gx-4 gx-lg-5 align-items-start">
         <div class="col-md-6"><img class="card-img-top mb-5 mb-md-0 rounded" src="${item.image}" alt="${esc(item.name)}" data-fallback-src="${item.fallbackImage}"></div>
         <div class="col-md-6">
           <div class="small mb-2 text-muted">รายละเอียดอุปกรณ์</div>
-          <h1 class="display-6 fw-bolder">${esc(item.name)}</h1>
+          <h1 class="display-6 fw-bolder">${esc(primaryDisplayName)}</h1>
+          ${manikinNames.length === 1 && primaryDisplayName !== item.name ? `<div class="text-muted mt-2">รายการยืม: ${esc(item.name)}</div>` : ''}
           <div class="equipment-choice-summary my-4">
             <div><strong>${esc(availableLabel)}</strong></div>
             <div>ประเภท: ${esc(readableType)}</div>
             ${notice ? `<div class="equipment-choice-note">${esc(notice)}</div>` : ''}
+            ${nameList}
           </div>
           <p class="lead">ตรวจชื่ออุปกรณ์และเงื่อนไขก่อนเพิ่มลงรายการยืม</p>
           <div class="d-flex gap-2">
@@ -234,7 +266,7 @@
       equipment = await fetchEquipment();
       app.equipment = equipment;
       renderCatalog();
-      renderDetails();
+      await renderDetails();
       app.updateCartBadge?.();
     } catch (error) {
       const target = $('#equipment-grid') || $('#equipment-detail');

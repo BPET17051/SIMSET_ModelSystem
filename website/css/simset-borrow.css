@@ -60,6 +60,17 @@ body {
   font-size: 0.95rem;
 }
 
+.equipment-db-names {
+  border-top: 1px solid rgba(15, 118, 110, 0.12);
+  padding-top: 0.75rem;
+}
+
+.equipment-db-name-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
 .status-pill {
   border-radius: 999px;
   display: inline-flex;
