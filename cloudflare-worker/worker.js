@@ -52,6 +52,7 @@ const ALLOWED_PATHS = new Set([
     '/rest/v1/rpc/confirm_return_with_snapshot',
     '/rest/v1/rpc/get_kpi_report',
     '/rest/v1/rpc/get_equipment_borrow_rules',
+    '/rest/v1/rpc/get_public_equipment_manikins',
     '/rest/v1/rpc/staff_assign_manikin_to_item',
     '/rest/v1/rpc/staff_assign_inventory_unit_to_item',
     '/rest/v1/rpc/get_rotation_suggestions',

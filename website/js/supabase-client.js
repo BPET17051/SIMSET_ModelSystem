@@ -6,7 +6,7 @@ window.SimsetBorrow = window.SimsetBorrow || {};
 window.SimsetBorrow.supabase = null;
 window.SimsetBorrow.features = {
   equipmentImageUrl: true,
-  publicEquipmentManikinNames: false
+  publicEquipmentManikinNames: true
 };
 
 if (!window.supabase?.createClient) {
