@@ -4,6 +4,9 @@ const SIMSET_SUPABASE_ANON = 'worker-managed-key';
 
 window.SimsetBorrow = window.SimsetBorrow || {};
 window.SimsetBorrow.supabase = null;
+window.SimsetBorrow.features = {
+  equipmentImageUrl: false
+};
 
 if (!window.supabase?.createClient) {
   throw new Error('Supabase client library is required.');

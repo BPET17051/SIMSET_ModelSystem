@@ -41,7 +41,8 @@ ALTER TABLE public.equipments
     ADD COLUMN IF NOT EXISTS total_quantity integer NOT NULL DEFAULT 1,
     ADD COLUMN IF NOT EXISTS maintenance_quantity integer NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS allocation_type text NOT NULL DEFAULT 'rotating',
-    ADD COLUMN IF NOT EXISTS borrow_enabled boolean NOT NULL DEFAULT true;
+    ADD COLUMN IF NOT EXISTS borrow_enabled boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS image_url text;
 
 ALTER TABLE public.equipments
     DROP CONSTRAINT IF EXISTS equipments_allocation_type_check,

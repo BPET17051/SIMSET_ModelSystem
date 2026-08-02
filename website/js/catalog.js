@@ -62,6 +62,16 @@
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
 
+  function safeImageUrl(value) {
+    if (!value) return '';
+    try {
+      const url = new URL(String(value), location.origin);
+      return url.protocol === 'https:' ? url.href : '';
+    } catch {
+      return '';
+    }
+  }
+
   function typeLabel(type) {
     const normalized = String(type || '').toLowerCase();
     const labels = {
@@ -84,7 +94,8 @@
       totalQuantity: Number(item.total_quantity || 0),
       maintenanceQuantity: Number(item.maintenance_quantity || 0),
       allocationType: item.allocation_type || 'rotating',
-      image: imageUrl(item, typeLabel(type))
+      fallbackImage: imageUrl(item, typeLabel(type)),
+      image: safeImageUrl(item.image_url) || imageUrl(item, typeLabel(type))
     };
   }
 
@@ -119,9 +130,12 @@
 
   async function fetchEquipment() {
     if (!app.supabase) throw new Error('Supabase is not available.');
+    const columns = app.features?.equipmentImageUrl
+      ? 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type,image_url'
+      : 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type';
     const { data, error } = await app.supabase
       .from('equipments')
-      .select('id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type')
+      .select(columns)
       .order('name_th', { ascending: true })
       .limit(100);
     if (error) throw error;
@@ -155,7 +169,7 @@
         <div class="col mb-5">
           <div class="card h-100 equipment-card">
             <span class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem">${esc(readableType)}</span>
-            <img class="card-img-top" src="${item.image}" alt="${esc(item.name)}" loading="lazy">
+            <img class="card-img-top" src="${item.image}" alt="${esc(item.name)}" loading="lazy" data-fallback-src="${item.fallbackImage}">
             <div class="card-body p-4">
               <div class="text-center">
                 <h5 class="fw-bolder equipment-card-title">${esc(item.name)}</h5>
@@ -191,7 +205,7 @@
     const notice = allocationNotice(item.allocationType);
     root.innerHTML = `
       <div class="row gx-4 gx-lg-5 align-items-start">
-        <div class="col-md-6"><img class="card-img-top mb-5 mb-md-0 rounded" src="${item.image}" alt="${esc(item.name)}"></div>
+        <div class="col-md-6"><img class="card-img-top mb-5 mb-md-0 rounded" src="${item.image}" alt="${esc(item.name)}" data-fallback-src="${item.fallbackImage}"></div>
         <div class="col-md-6">
           <div class="small mb-2 text-muted">รายละเอียดอุปกรณ์</div>
           <h1 class="display-6 fw-bolder">${esc(item.name)}</h1>
@@ -239,6 +253,13 @@
     pill.classList.add('active');
     renderCatalog();
   });
+
+  document.addEventListener('error', (event) => {
+    const image = event.target.closest?.('img[data-fallback-src]');
+    if (!image || image.dataset.fallbackApplied) return;
+    image.dataset.fallbackApplied = 'true';
+    image.src = image.dataset.fallbackSrc;
+  }, true);
 
   document.addEventListener('DOMContentLoaded', initCatalog);
 }());
