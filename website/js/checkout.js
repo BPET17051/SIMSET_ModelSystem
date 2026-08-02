@@ -193,9 +193,9 @@
   });
 
   app.boot(async () => {
+    $('#checkout-form')?.addEventListener('submit', submitRequest);
     await renderCheckoutItems();
     await refreshBorrowRules();
-    $('#checkout-form')?.addEventListener('submit', submitRequest);
   }, {
     onError(error) {
       showMessage('danger', error.message);
