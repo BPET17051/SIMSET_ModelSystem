@@ -13,13 +13,51 @@
     return 'General';
   }
 
-  function imageUrl(type) {
+  function visualKind(item) {
+    const text = `${item.name_th || ''} ${item.name_en || ''} ${item.type || ''}`.toLowerCase();
+    if (text.includes('airway')) return 'airway';
+    if (text.includes('flip') || text.includes('chart') || text.includes('board') || text.includes('กระดาน')) return 'board';
+    if (text.includes('manikin') || text.includes('bls') || text.includes('cpr') || text.includes('หุ่น')) return 'manikin';
+    if (text.includes('kit') || text.includes('box') || text.includes('กล่อง')) return 'kit';
+    return 'equipment';
+  }
+
+  function visualIcon(kind) {
+    const icons = {
+      airway: `
+        <rect x="128" y="104" width="194" height="128" rx="22" fill="#ffffff" stroke="#0f766e" stroke-width="10"/>
+        <path d="M176 104v-18c0-13 10-23 23-23h52c13 0 23 10 23 23v18" fill="none" stroke="#0f766e" stroke-width="10" stroke-linecap="round"/>
+        <path d="M194 168h62m-31-31v62" stroke="#14b8a6" stroke-width="14" stroke-linecap="round"/>
+        <path d="M275 166c28-11 45 8 31 31-10 16-31 19-47 9" fill="none" stroke="#99f6e4" stroke-width="10" stroke-linecap="round"/>`,
+      board: `
+        <rect x="138" y="64" width="174" height="128" rx="14" fill="#ffffff" stroke="#0f766e" stroke-width="10"/>
+        <path d="M166 103h118M166 134h92M166 165h70" stroke="#99f6e4" stroke-width="10" stroke-linecap="round"/>
+        <path d="M225 192v40M177 244l48-52 48 52" stroke="#0f766e" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
+      manikin: `
+        <circle cx="225" cy="86" r="35" fill="#ffffff" stroke="#0f766e" stroke-width="10"/>
+        <path d="M159 231c5-57 31-87 66-87s61 30 66 87" fill="#ffffff" stroke="#0f766e" stroke-width="10" stroke-linecap="round"/>
+        <path d="M184 193h29l14-27 21 52 14-25h28" fill="none" stroke="#14b8a6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
+      kit: `
+        <rect x="119" y="103" width="212" height="122" rx="24" fill="#ffffff" stroke="#0f766e" stroke-width="10"/>
+        <path d="M180 103V84c0-13 10-23 23-23h44c13 0 23 10 23 23v19" fill="none" stroke="#0f766e" stroke-width="10" stroke-linecap="round"/>
+        <path d="M196 164h58m-29-29v58" stroke="#14b8a6" stroke-width="14" stroke-linecap="round"/>`,
+      equipment: `
+        <rect x="145" y="67" width="160" height="180" rx="22" fill="#ffffff" stroke="#0f766e" stroke-width="10"/>
+        <path d="M181 116h88M181 151h88M181 186h62" stroke="#99f6e4" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="270" cy="211" r="17" fill="#14b8a6"/>`
+    };
+    return icons[kind] || icons.equipment;
+  }
+
+  function imageUrl(item, type) {
+    const kind = visualKind(item);
     const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="450" height="300" viewBox="0 0 450 300">
-        <rect width="450" height="300" fill="#f1f3f5"/>
-        <circle cx="225" cy="120" r="42" fill="#dee2e6"/>
-        <rect x="145" y="182" width="160" height="18" rx="9" fill="#ced4da"/>
-        <text x="225" y="232" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#495057">${type}</text>
+      <svg xmlns="http://www.w3.org/2000/svg" width="450" height="300" viewBox="0 0 450 300" role="img" aria-label="${type}">
+        <rect width="450" height="300" fill="#ecfdf5"/>
+        <circle cx="68" cy="52" r="82" fill="#ccfbf1" opacity="0.75"/>
+        <circle cx="396" cy="262" r="112" fill="#d1fae5" opacity="0.72"/>
+        <rect x="36" y="36" width="378" height="228" rx="28" fill="none" stroke="#99f6e4" stroke-width="2"/>
+        ${visualIcon(kind)}
       </svg>`;
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
@@ -46,7 +84,7 @@
       totalQuantity: Number(item.total_quantity || 0),
       maintenanceQuantity: Number(item.maintenance_quantity || 0),
       allocationType: item.allocation_type || 'rotating',
-      image: imageUrl(typeLabel(type))
+      image: imageUrl(item, typeLabel(type))
     };
   }
 

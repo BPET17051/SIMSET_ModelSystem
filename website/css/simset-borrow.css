@@ -22,6 +22,8 @@ body {
 
 .equipment-card .card-img-top {
   aspect-ratio: 3 / 2;
+  background: #ecfdf5;
+  border-bottom: 1px solid rgba(15, 118, 110, 0.12);
   object-fit: cover;
 }
 
