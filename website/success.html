@@ -8,12 +8,26 @@
     <link href="css/simset-borrow.css" rel="stylesheet">
   </head>
   <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom">
       <div class="container px-4 px-lg-5">
-        <a class="navbar-brand" href="index.html">SIMSET Borrow</a>
-        <div class="d-flex gap-2">
-          <a class="btn btn-outline-dark" href="history.html">My history</a>
-          <a class="btn btn-outline-dark" href="index.html">Catalog</a>
+        <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+          <span class="sb-logo-mark">S</span>
+          <span class="sb-brand-text">SIMSET Borrow</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+            <li class="nav-item"><a class="nav-link" href="index.html">หน้าหลัก</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.html">รายการอุปกรณ์</a></li>
+            <li class="nav-item"><a class="nav-link" href="track.html">ติดตามคำขอ</a></li>
+            <li class="nav-item"><a class="nav-link" href="history.html">ประวัติ</a></li>
+          </ul>
+          <a class="btn btn-brand btn-sm active" href="cart.html">
+            <i class="bi-cart-fill me-1"></i>รายการยืม
+            <span class="btn-brand-badge ms-1" data-cart-count>0</span>
+          </a>
         </div>
       </div>
     </nav>
