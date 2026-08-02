@@ -65,8 +65,9 @@ async function main() {
   await page.waitForSelector('#checkout-form:not(.d-none)', { timeout: 20000 });
 
   const now = new Date();
-  const startDate = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10);
-  const endDate = new Date(now.getTime() + 8 * 86400000).toISOString().slice(0, 10);
+  // ponytail: use far-future dates to avoid colliding with real reservations
+  const startDate = new Date(now.getTime() + 90 * 86400000).toISOString().slice(0, 10);
+  const endDate = new Date(now.getTime() + 91 * 86400000).toISOString().slice(0, 10);
 
   await page.fill('#borrower_name', 'E2E Codex Test');
   await page.fill('#borrower_position', 'QA');
