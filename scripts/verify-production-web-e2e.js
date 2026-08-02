@@ -6,6 +6,7 @@ const result = {
   baseUrl,
   trackingId: null,
   checks: [],
+  debug: {},
   consoleErrors: [],
   failedResponses: [],
 };
@@ -26,10 +27,20 @@ async function main() {
     if (msg.type() === 'error') result.consoleErrors.push(msg.text());
   });
 
-  page.on('response', (response) => {
+  page.on('response', async (response) => {
     if (response.status() < 400) return;
     if (response.url().includes('bootstrap.bundle.min.js.map')) return;
-    result.failedResponses.push({ status: response.status(), url: response.url() });
+    let body = '';
+    try {
+      body = await response.text();
+    } catch (error) {
+      body = `Could not read response body: ${error.message}`;
+    }
+    result.failedResponses.push({
+      status: response.status(),
+      url: response.url(),
+      body: body.slice(0, 2000),
+    });
   });
 
   await page.goto(`${baseUrl}/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
@@ -67,6 +78,13 @@ async function main() {
   await page.fill('#borrow_purpose_owner', 'SIMSET E2E');
   await page.fill('#work_purpose', 'Production smoke test by Codex');
   await page.fill('#usage_location', 'SIMSET test location');
+
+  result.debug.cartBeforeSubmit = await page.evaluate(() => ({
+    localStorageCart: localStorage.getItem('simset.borrow.cart.v2'),
+    normalizedItems: window.SimsetBorrow?.cart?.getItems?.() || null,
+    cartCount: window.SimsetBorrow?.cart?.count?.() || 0,
+    checkoutItemsText: document.querySelector('#checkout-items')?.innerText || '',
+  }));
 
   await Promise.all([
     page.waitForURL(/\/success(?:\.html)?\?id=SIM-/, { timeout: 60000 }),
