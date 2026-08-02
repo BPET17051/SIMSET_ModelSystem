@@ -5,7 +5,7 @@ const SIMSET_SUPABASE_ANON = 'worker-managed-key';
 window.SimsetBorrow = window.SimsetBorrow || {};
 window.SimsetBorrow.supabase = null;
 window.SimsetBorrow.features = {
-  equipmentImageUrl: false
+  equipmentImageUrl: true
 };
 
 if (!window.supabase?.createClient) {
