@@ -194,6 +194,11 @@
 
   app.boot(async () => {
     $('#checkout-form')?.addEventListener('submit', submitRequest);
+    try {
+      const dates = JSON.parse(localStorage.getItem('simset.borrow.dates.v1') || '{}');
+      if ($('#start_date') && dates.start && !$('#start_date').value) $('#start_date').value = dates.start;
+      if ($('#end_date') && dates.end && !$('#end_date').value) $('#end_date').value = dates.end;
+    } catch {}
     await renderCheckoutItems();
     await refreshBorrowRules();
   }, {

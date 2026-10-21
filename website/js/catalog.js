@@ -1,16 +1,18 @@
 (function () {
   const app = window.SimsetBorrow = window.SimsetBorrow || {};
   let equipment = [];
+  let sortKey = 'name';
+  let viewMode = 'grid';
+  const PAGE_SIZE = 24;
+  let visibleCount = PAGE_SIZE;
+  const compareIds = new Set();
 
   const $ = (selector) => document.querySelector(selector);
   const esc = app.esc;
 
   function detectType(item) {
-    const text = `${item.name_th || ''} ${item.name_en || ''} ${item.type || ''}`.toLowerCase();
-    if (text.includes('infant') || text.includes('baby') || text.includes('neonatal')) return 'Infant';
-    if (text.includes('child') || text.includes('junior') || text.includes('pediatric')) return 'Pediatric';
-    if (text.includes('adult') || text.includes('anne')) return 'Adult';
-    return 'General';
+    // T17: category/type must come from the source field; never infer it from a name.
+    return String(item.model_type || item.category || item.type || '').trim();
   }
 
   function visualKind(item) {
@@ -82,22 +84,49 @@
       baby: 'ทารก',
       general: 'ทั่วไป'
     };
-    return labels[normalized] || type || 'ทั่วไป';
+    return labels[normalized] || type || '';
   }
 
   function normalize(item) {
     const type = detectType(item);
     return {
       id: item.id,
+      sourceTeamCode: item.source_team_code || '',
       name: item.name_th || item.name_en || 'Unnamed equipment',
       type,
+      modelType: String(item.model_type || '').trim(),
+      category: String(item.category || '').trim(),
+      modelId: String(item.model_id || '').trim(),
+      hasRealImage: Boolean(safeImageUrl(item.image_url)),
       totalQuantity: Number(item.total_quantity || 0),
       maintenanceQuantity: Number(item.maintenance_quantity || 0),
       allocationType: item.allocation_type || 'rotating',
       inventoryMode: item.inventory_mode || 'quantity_only',
       fallbackImage: imageUrl(item, typeLabel(type)),
-      image: safeImageUrl(item.image_url) || imageUrl(item, typeLabel(type))
+      image: safeImageUrl(item.image_url) || imageUrl(item, typeLabel(type)),
+      availableQuantity: null,
+      hasLinkedManikin: null
     };
+  }
+
+  function requestedDates() {
+    const today = new Date().toISOString().slice(0, 10);
+    const start = $('#catalog-start-date')?.value || today;
+    const end = $('#catalog-end-date')?.value || start;
+    const dates = { start, end };
+    localStorage.setItem('simset.borrow.dates.v1', JSON.stringify(dates));
+    return dates;
+  }
+
+  async function fetchAvailability(items) {
+    const { start, end } = requestedDates();
+    if (end < start) throw new Error('วันที่คืนต้องไม่ก่อนวันที่รับ');
+    const { data, error } = await app.supabase.rpc('get_borrow_availability', {
+      p_start_date: start, p_end_date: end, p_equipment_ids: items.map((item) => item.id)
+    });
+    if (error) throw error;
+    const byId = new Map((data || []).map((row) => [String(row.equipment_id), Number(row.available_qty || 0)]));
+    items.forEach((item) => { item.availableQuantity = Math.max(0, byId.get(String(item.id)) ?? 0); });
   }
 
   function allocationHelp(allocationType) {
@@ -132,8 +161,8 @@
   async function fetchEquipment() {
     if (!app.supabase) throw new Error('Supabase is not available.');
     const columns = app.features?.equipmentImageUrl
-      ? 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type,inventory_mode,image_url'
-      : 'id,name_th,name_en,type,total_quantity,maintenance_quantity,allocation_type,inventory_mode';
+      ? 'id,name_th,name_en,type,source_team_code,total_quantity,maintenance_quantity,allocation_type,inventory_mode,image_url'
+      : 'id,name_th,name_en,type,source_team_code,total_quantity,maintenance_quantity,allocation_type,inventory_mode';
     const { data, error } = await app.supabase
       .from('equipments')
       .select(columns)
@@ -161,38 +190,72 @@
     return document.querySelector('#catalog-filter .sb-pill.active')?.dataset.type || 'all';
   }
 
+  function renderCategoryNavigation() {
+    const root = $('#catalog-filter');
+    if (!root) return;
+    const categories = [...new Set(equipment.map((item) => typeLabel(item.type)).filter(Boolean))];
+    root.innerHTML = ['ทั้งหมด', ...categories].map((label, index) => `<button class="sb-pill ${index === 0 ? 'active' : ''}" data-type="${esc(index === 0 ? 'all' : label)}" type="button">${esc(label)}</button>`).join('');
+  }
+
+  function availableOf(item) {
+    return item.availableQuantity == null
+      ? Math.max(0, item.totalQuantity - item.maintenanceQuantity)
+      : item.availableQuantity;
+  }
+
+  function sortItems(items) {
+    // ponytail: sort and paging run in memory over the full list; fine for a few hundred rows. Move both into the RPC beyond that.
+    const byName = (a, b) => a.name.localeCompare(b.name, 'th');
+    if (sortKey === 'available') return items.sort((a, b) => availableOf(b) - availableOf(a) || byName(a, b));
+    if (sortKey === 'type') return items.sort((a, b) => typeLabel(a.type).localeCompare(typeLabel(b.type), 'th') || byName(a, b));
+    return items.sort(byName);
+  }
+
+  function setViewButtons() {
+    document.querySelectorAll('[data-view]').forEach((button) => {
+      const on = button.dataset.view === viewMode;
+      button.classList.toggle('active', on);
+      button.setAttribute('aria-pressed', String(on));
+    });
+  }
+
   function renderCatalog() {
     const grid = $('#equipment-grid');
     if (!grid) return;
     const query = ($('#catalog-search')?.value || '').trim().toLowerCase();
     const type = activeType();
-    const filtered = equipment
+    const filtered = sortItems(equipment
+      .filter((item) => !(item.sourceTeamCode === 'BLS_ADULT_QCPR' && item.hasLinkedManikin === false))
       .filter((item) => type === 'all' || item.type === type || typeLabel(item.type) === type)
-      .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query))
-      .slice(0, 24);
+      .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query)));
+    const visible = filtered.slice(0, visibleCount);
 
     const count = $('#catalog-count');
     if (count) count.textContent = `${filtered.length} รายการ`;
+    grid.classList.toggle('is-list', viewMode === 'list');
+    setViewButtons();
 
-    grid.innerHTML = filtered.map((item) => {
-      const available = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
+    grid.innerHTML = visible.map((item) => {
+      const available = availableOf(item);
       const disabled = available <= 0;
       const readableType = typeLabel(item.type);
       const availableLabel = borrowerAvailabilityText(available);
       const notice = borrowerRestrictionText(item.allocationType);
       return `
         <div class="col mb-5">
-          <div class="card h-100 equipment-card">
-            <span class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem">${esc(readableType)}</span>
-            <img class="card-img-top" src="${item.image}" alt="${esc(item.name)}" loading="lazy" data-fallback-src="${item.fallbackImage}">
+          <div class="card h-100 equipment-card${disabled ? ' is-unavailable' : ''}">
+            <div class="equipment-card-media">
+              <img class="card-img-top" src="${item.image}" alt="${esc(item.name)}" loading="lazy" data-fallback-src="${item.fallbackImage}">
+              <span class="stock-pill ${disabled ? 'is-out' : 'is-ready'}">${esc(availableLabel)}</span>
+              ${readableType ? `<span class="type-chip">${esc(readableType)}</span>` : ''}
+            </div>
             <div class="card-body p-4">
-              <div class="text-center">
+              <div class="equipment-card-info">
                 <h5 class="fw-bolder equipment-card-title">${esc(item.name)}</h5>
-                <div class="equipment-choice-summary mt-3">
-                  <strong>${esc(availableLabel)}</strong>
-                  ${notice ? `<div class="equipment-choice-note mt-2">${esc(notice)}</div>` : ''}
-                </div>
+                ${item.modelId ? `<div class="small text-muted">Model ID: ${esc(item.modelId)}</div>` : ''}
+                ${notice ? `<div class="equipment-choice-note">${esc(notice)}</div>` : ''}
               </div>
+              <label class="small text-muted mt-auto"><input type="checkbox" class="form-check-input me-1" data-compare-id="${esc(item.id)}" ${compareIds.has(item.id) ? 'checked' : ''}> เปรียบเทียบรุ่นนี้</label>
             </div>
             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
               <div class="d-grid gap-2">
@@ -203,6 +266,21 @@
           </div>
         </div>`;
     }).join('') || '<div class="col-12"><div class="empty-state">ไม่พบอุปกรณ์ตามเงื่อนไขที่ค้นหา</div></div>';
+    if (filtered.length > visible.length) {
+      grid.insertAdjacentHTML('beforeend', `<div class="col-12 text-center mb-5"><button class="btn btn-outline-dark" type="button" id="catalog-load-more">แสดงเพิ่ม (${filtered.length - visible.length} รายการ)</button></div>`);
+    }
+  }
+
+  function renderCompare() {
+    const open = $('#compare-open');
+    const count = $('#compare-count');
+    const drawer = $('#compare-drawer');
+    if (count) count.textContent = String(compareIds.size);
+    if (open) open.disabled = compareIds.size < 2;
+    if (!drawer || compareIds.size < 2) { if (drawer) drawer.hidden = true; return; }
+    const rows = [...compareIds].map((id) => equipment.find((item) => item.id === id)).filter(Boolean).slice(0, 3);
+    drawer.hidden = false;
+    drawer.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-2"><strong>เปรียบเทียบอุปกรณ์</strong><button type="button" class="btn-close" data-compare-close aria-label="ปิด"></button></div><div class="compare-grid">${rows.map((item) => { const available = item.availableQuantity ?? Math.max(0, item.totalQuantity - item.maintenanceQuantity); return `<div class="compare-item"><strong>${esc(item.name)}</strong><span class="small text-muted">${esc(typeLabel(item.type))}</span><div class="mt-2"><span class="status-pill ${available > 0 ? 'status-ready' : 'status-pending'}">${esc(borrowerAvailabilityText(available))}</span></div><a class="btn btn-outline-dark btn-sm mt-3" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียด</a></div>`; }).join('')}</div>`;
   }
 
   async function renderDetails() {
@@ -214,7 +292,9 @@
       root.innerHTML = '<div class="empty-state">ไม่พบข้อมูลอุปกรณ์</div>';
       return;
     }
-    const available = Math.max(0, item.totalQuantity - item.maintenanceQuantity);
+    const available = item.availableQuantity == null
+      ? Math.max(0, item.totalQuantity - item.maintenanceQuantity)
+      : item.availableQuantity;
     const readableType = typeLabel(item.type);
     const availableLabel = availabilityText(item, available);
     const notice = allocationNotice(item.allocationType);
@@ -234,15 +314,16 @@
         </div>`
       : '';
     root.innerHTML = `
-      <div class="row gx-4 gx-lg-5 align-items-start">
-        <div class="col-md-6"><img class="card-img-top mb-5 mb-md-0 rounded" src="${item.image}" alt="${esc(item.name)}" data-fallback-src="${item.fallbackImage}"></div>
-        <div class="col-md-6">
+      <div class="row gx-4 gx-lg-5 align-items-start product-detail-layout">
+        <div class="col-lg-7"><div class="product-gallery"><img class="card-img-top mb-4 rounded" src="${item.image}" alt="${esc(item.name)}" data-fallback-src="${item.fallbackImage}">${item.hasRealImage ? '<div class="small text-muted">ภาพจาก URL ที่ระบุในข้อมูลอุปกรณ์</div>' : ''}</div></div>
+        <div class="col-lg-5"><div class="product-booking-panel">
           <div class="small mb-2 text-muted">รายละเอียดอุปกรณ์</div>
           <h1 class="display-6 fw-bolder">${esc(primaryDisplayName)}</h1>
           ${manikinNames.length === 1 && primaryDisplayName !== item.name ? `<div class="text-muted mt-2">รายการยืม: ${esc(item.name)}</div>` : ''}
+          ${item.modelId ? `<div class="small text-muted mt-2">Model ID: ${esc(item.modelId)}</div>` : ''}
           <div class="equipment-choice-summary my-4">
             <div><strong>${esc(availableLabel)}</strong></div>
-            <div>ประเภท: ${esc(readableType)}</div>
+            ${readableType ? `<div>ประเภท: ${esc(readableType)}</div>` : ''}
             ${notice ? `<div class="equipment-choice-note">${esc(notice)}</div>` : ''}
             ${nameList}
           </div>
@@ -253,7 +334,7 @@
             </button>
             <a class="btn btn-outline-dark" href="index.html">กลับหน้าอุปกรณ์</a>
           </div>
-        </div>
+        </div></div>
       </div>`;
   }
 
@@ -264,18 +345,55 @@
     if (count) count.textContent = '';
     try {
       equipment = await fetchEquipment();
+      await fetchAvailability(equipment);
+      renderCategoryNavigation();
+      if (app.features?.publicEquipmentManikinNames) {
+        await Promise.all(equipment
+          .filter((item) => item.sourceTeamCode === 'BLS_ADULT_QCPR')
+          .map(async (item) => { item.hasLinkedManikin = (await fetchPublicManikinNames(item.id)).length > 0; }));
+      }
       app.equipment = equipment;
       renderCatalog();
+      renderCompare();
       await renderDetails();
       app.updateCartBadge?.();
     } catch (error) {
       const target = $('#equipment-grid') || $('#equipment-detail');
-      if (target) target.innerHTML = `<div class="empty-state text-danger">โหลดข้อมูลอุปกรณ์ไม่สำเร็จ: ${esc(error.message)}</div>`;
+      if (target) target.innerHTML = `<div class="empty-state text-danger" role="alert">โหลดข้อมูลอุปกรณ์ไม่สำเร็จ: ${esc(error.message)}<button class="btn btn-sm btn-outline-dark mt-3" type="button" id="catalog-retry">ลองใหม่</button></div>`;
     }
   }
 
   document.addEventListener('input', (event) => {
-    if (event.target.matches('#catalog-search')) renderCatalog();
+    if (event.target.matches('#catalog-search')) { visibleCount = PAGE_SIZE; renderCatalog(); }
+    if (event.target.matches('#catalog-start-date, #catalog-end-date')) refreshAvailability();
+  });
+
+  document.addEventListener('change', (event) => {
+    const checkbox = event.target.closest('[data-compare-id]');
+    if (!checkbox) return;
+    const id = checkbox.dataset.compareId;
+    if (checkbox.checked && compareIds.size >= 3) { checkbox.checked = false; return; }
+    checkbox.checked ? compareIds.add(id) : compareIds.delete(id);
+    renderCompare();
+  });
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('#compare-open')) renderCompare();
+    if (event.target.closest('[data-compare-close]')) { const drawer = $('#compare-drawer'); if (drawer) drawer.hidden = true; }
+  });
+
+  async function refreshAvailability() {
+    try {
+      await fetchAvailability(equipment);
+      renderCatalog();
+      await renderDetails();
+    } catch (error) {
+      const target = $('#equipment-grid') || $('#equipment-detail');
+      if (target) target.innerHTML = `<div class="empty-state text-danger" role="alert">${esc(error.message)}</div>`;
+    }
+  }
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('#catalog-retry')) initCatalog();
   });
 
   document.addEventListener('click', (event) => {
@@ -283,6 +401,28 @@
     if (!pill) return;
     document.querySelectorAll('#catalog-filter .sb-pill').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
+    visibleCount = PAGE_SIZE;
+    renderCatalog();
+  });
+
+  document.addEventListener('change', (event) => {
+    if (!event.target.matches('#catalog-sort')) return;
+    sortKey = event.target.value;
+    visibleCount = PAGE_SIZE;
+    renderCatalog();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('#catalog-load-more')) return;
+    visibleCount += PAGE_SIZE;
+    renderCatalog();
+  });
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-view]');
+    if (!button) return;
+    viewMode = button.dataset.view === 'list' ? 'list' : 'grid';
+    try { localStorage.setItem('simset.catalog.view.v1', viewMode); } catch { /* private mode: keep the in-memory choice */ }
     renderCatalog();
   });
 
@@ -293,5 +433,12 @@
     image.src = image.dataset.fallbackSrc;
   }, true);
 
-  document.addEventListener('DOMContentLoaded', initCatalog);
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const end = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    if ($('#catalog-start-date')) $('#catalog-start-date').value = today;
+    if ($('#catalog-end-date')) $('#catalog-end-date').value = end;
+    try { viewMode = localStorage.getItem('simset.catalog.view.v1') === 'list' ? 'list' : 'grid'; } catch { /* default grid */ }
+    initCatalog();
+  });
 }());

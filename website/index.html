@@ -35,6 +35,7 @@
     </nav>
     <header class="hero-borrow">
       <div class="container px-4 px-lg-5 py-5">
+        <p class="hero-eyebrow mb-2">SIMSET · Equipment Catalog</p>
         <h1 class="display-5 fw-bolder text-white mb-2">ระบบยืม-คืนอุปกรณ์การแพทย์จำลอง</h1>
         <p class="text-white-50 mb-4">คณะพยาบาลศาสตร์ มหาวิทยาลัยมหิดล</p>
         <div class="sb-hero-search">
@@ -43,10 +44,10 @@
         </div>
       </div>
     </header>
-    <section class="py-3 border-bottom">
+    <section class="py-3 border-bottom catalog-toolbar">
       <div class="container px-4 px-lg-5">
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <span class="text-muted small fw-semibold">ประเภท:</span>
+          <span class="text-muted small fw-semibold catalog-type-label">ประเภท:</span>
           <div class="sb-filter-pills" id="catalog-filter">
             <button class="sb-pill active" data-type="all">ทั้งหมด</button>
             <button class="sb-pill" data-type="ผู้ใหญ่">ผู้ใหญ่</button>
@@ -55,12 +56,28 @@
             <button class="sb-pill" data-type="ทั่วไป">ทั่วไป</button>
           </div>
           <span id="catalog-count" class="text-muted small ms-auto text-nowrap"></span>
+          <label class="visually-hidden" for="catalog-sort">เรียงตาม</label>
+          <select id="catalog-sort" class="form-select form-select-sm catalog-sort">
+            <option value="name">เรียงตามชื่อ</option>
+            <option value="available">พร้อมยืมมากที่สุด</option>
+            <option value="type">เรียงตามประเภท</option>
+          </select>
+          <div class="btn-group btn-group-sm catalog-view-toggle" role="group" aria-label="มุมมองรายการ">
+            <button class="btn btn-outline-dark active" type="button" data-view="grid" aria-pressed="true" aria-label="มุมมองการ์ด"><i class="bi-grid-3x3-gap"></i></button>
+            <button class="btn btn-outline-dark" type="button" data-view="list" aria-pressed="false" aria-label="มุมมองรายการ"><i class="bi-list-ul"></i></button>
+          </div>
+          <button class="btn btn-outline-dark btn-sm" type="button" id="compare-open" disabled><i class="bi-columns-gap me-1"></i>เปรียบเทียบ <span id="compare-count">0</span></button>
+        </div>
+        <div class="row g-2 mt-3" aria-label="ช่วงวันที่ต้องการยืม">
+          <div class="col-6 col-sm-5 col-md-3"><label class="form-label small mb-1" for="catalog-start-date">รับอุปกรณ์</label><input id="catalog-start-date" class="form-control form-control-sm" type="date"></div>
+          <div class="col-6 col-sm-5 col-md-3"><label class="form-label small mb-1" for="catalog-end-date">คืนอุปกรณ์</label><input id="catalog-end-date" class="form-control form-control-sm" type="date"></div>
         </div>
         <p class="recognition-hint catalog-recognition-hint mt-3 mb-0">
           ดูชื่ออุปกรณ์และจำนวนพร้อมยืมได้ทันที ถ้าต้องดูข้อมูลเพิ่มเติมให้กด "ดูรายละเอียด" ก่อนเพิ่มรายการยืม
         </p>
       </div>
     </section>
+    <aside id="compare-drawer" class="compare-drawer" hidden aria-label="เปรียบเทียบอุปกรณ์"></aside>
     <section class="py-5">
       <div class="container px-4 px-lg-5 mt-4">
         <div id="equipment-grid" class="row gx-4 gx-lg-5 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 justify-content-center"></div>
