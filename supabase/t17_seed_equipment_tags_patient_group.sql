@@ -1,13 +1,14 @@
--- T17 DRAFT seed: patient_group from Models_Data.category.
--- Do not run without approval.
--- Excludes 9 retired rows (ปลดระวาง, โอนย้าย).
--- Explicitly excludes 7 SAP IDs unmatched in manikins (Production precheck): C5 198000089399, C6 198000089400, C9 131000020971, C15 131000012083, C16 131000020919, C17 131000020794, C18 131000035967 (all ซ่อมบำรุง). Not added, not status-changed.
--- Neonatal is not a category value; NA and GAUMARD rows stay Infant.
--- Skills are NOT seeded (not confirmed).
+-- T17 patient-group seed (strict). Run only after supabase/t17_equipment_tags.sql is applied.
+-- Inserts 133 SAP rows into equipment_tags(patient_group) via manikins.sap_id -> manikins.team_code -> equipments.source_team_code.
+-- Explicitly excluded (unmatched in production): C5 198000089399, C6 198000089400, C9 131000020971, C15 131000012083,
+-- C16 131000020919, C17 131000020794, C18 131000035967.
+-- Every check raises an exception. An exception aborts the transaction, so nothing is written.
+-- Seeds only equipment_tags. Does not change manikins, equipments, statuses, or availability.
 
 BEGIN;
 
-WITH sheet(sap_id, category) AS (VALUES
+CREATE TEMP TABLE t17_sheet (sap_id text PRIMARY KEY, category text NOT NULL) ON COMMIT DROP;
+INSERT INTO t17_sheet (sap_id, category) VALUES
   ('131200000516', 'Adult'),
   ('131200000517', 'Adult'),
   ('131200000518', 'Adult'),
@@ -140,24 +141,45 @@ WITH sheet(sap_id, category) AS (VALUES
   ('131200000596', 'Adult'),
   ('131200000597', 'Adult'),
   ('131200000598', 'Adult'),
-  ('131200000599', 'Adult')
-)
-INSERT INTO public.equipment_tags (equipment_id, tag_group, tag_value, evidence)
-SELECT DISTINCT e.id, 'patient_group', s.category, 'sheet_category'
-FROM sheet s
-JOIN public.manikins m ON m.sap_id = s.sap_id
-JOIN public.equipments e ON e.source_team_code = m.team_code
-ON CONFLICT DO NOTHING;
+  ('131200000599', 'Adult');
 
 DO $$
-DECLARE v_unmatched int; v_multi int;
+DECLARE v_rows int; v_matched int; v_equipments int; v_multi_map int; v_conflict int;
 BEGIN
-  SELECT count(*) INTO v_unmatched FROM (VALUES ('131200000516'), ('131200000517'), ('131200000518'), ('131200000519'), ('131200000520'), ('131200000521'), ('131200000522'), ('131200000523'), ('131200000524'), ('131200000525'), ('131200000554'), ('131200000555'), ('131200000556'), ('131200000557'), ('131200000558'), ('131200000496'), ('131200000497'), ('131200000498'), ('131200000499'), ('131200000500'), ('131200000490'), ('131200000491'), ('131200000492'), ('131200000493'), ('131200000494'), ('131200000495'), ('131200000377'), ('131200000378'), ('131200000527'), ('131200000526'), ('131000016343'), ('131200000424'), ('131200000480'), ('131200000481'), ('131200000419'), ('131200000420'), ('131200000421'), ('131200000487'), ('131200000489'), ('131200000559'), ('131200000584'), ('131200000585'), ('131200000003'), ('131200000004'), ('131200000390'), ('131200000391'), ('131000012496'), ('131200000425'), ('131200000379'), ('131200000380'), ('131200000482'), ('131200000483'), ('131200000484'), ('131200000485'), ('131200000486'), ('131000015191'), ('131000016342'), ('131200000387'), ('131200000409'), ('131200000410'), ('131200000513'), ('131200000514'), ('131200000411'), ('131000048258'), ('131200000577'), ('131200000578'), ('131200000581'), ('131000015192'), ('131000015193'), ('131200000412'), ('131200000515'), ('131000016339'), ('131000016340'), ('131000016341'), ('131200000415'), ('131200000416'), ('131200000417'), ('131200000383'), ('131200000384'), ('131000016336'), ('131000016337'), ('131000016338'), ('131000019014'), ('131000019015'), ('131000019016'), ('131200000381'), ('131200000382'), ('131200000418'), ('131000012500'), ('131000012501'), ('131200000236'), ('131200000237'), ('131200000386'), ('131200000385'), ('131000012494'), ('131000016737'), ('131000016738'), ('131000016739'), ('131000016740'), ('131000016741'), ('131200000244'), ('131200000245'), ('131200000246'), ('131200000234'), ('131200000235'), ('198000001243'), ('198000063815'), ('198000089401'), ('131200000247'), ('131000032818'), ('131000032819'), ('131000018200'), ('131200000502'), ('198000001116'), ('131000012505'), ('131200000388'), ('131200000426'), ('131200000561'), ('131200000562'), ('131200000563'), ('131200000564'), ('131200000565'), ('131200000414'), ('131200000413'), ('131000040345'), ('131200000609'), ('131200000610'), ('131200000594'), ('131200000595'), ('131200000596'), ('131200000597'), ('131200000598'), ('131200000599')) v(sap_id)
-    WHERE NOT EXISTS (SELECT 1 FROM public.manikins m WHERE m.sap_id = v.sap_id);
-  SELECT count(*) INTO v_multi FROM (
-    SELECT equipment_id FROM public.equipment_tags WHERE tag_group = 'patient_group' GROUP BY equipment_id HAVING count(*) > 1
-  ) x;
-  RAISE NOTICE 'unmatched sap_id: %, equipments with multiple patient groups: %', v_unmatched, v_multi;
+  SELECT count(*) INTO v_rows FROM t17_sheet;
+  IF v_rows <> 133 THEN RAISE EXCEPTION 'T17 abort: expected 133 sheet rows, got %', v_rows; END IF;
+
+  SELECT count(*) INTO v_matched FROM t17_sheet s WHERE EXISTS (SELECT 1 FROM public.manikins m WHERE m.sap_id = s.sap_id);
+  IF v_matched <> 133 THEN RAISE EXCEPTION 'T17 abort: matched % of 133 sheet rows in manikins', v_matched; END IF;
+
+  SELECT count(*) INTO v_multi_map FROM (
+    SELECT s.sap_id FROM t17_sheet s JOIN public.manikins m ON m.sap_id = s.sap_id
+    JOIN public.equipments e ON e.source_team_code = m.team_code
+    GROUP BY s.sap_id HAVING count(DISTINCT e.id) > 1) x;
+  IF v_multi_map > 0 THEN RAISE EXCEPTION 'T17 abort: % sap_id map to more than one equipment', v_multi_map; END IF;
+
+  SELECT count(DISTINCT e.id) INTO v_equipments FROM t17_sheet s JOIN public.manikins m ON m.sap_id = s.sap_id
+    JOIN public.equipments e ON e.source_team_code = m.team_code;
+  IF v_equipments <> 66 THEN RAISE EXCEPTION 'T17 abort: expected 66 equipments, got %', v_equipments; END IF;
+
+  SELECT count(*) INTO v_conflict FROM (
+    SELECT s.category, e.id FROM t17_sheet s JOIN public.manikins m ON m.sap_id = s.sap_id
+    JOIN public.equipments e ON e.source_team_code = m.team_code
+    GROUP BY e.id HAVING count(DISTINCT s.category) > 1) x;
+  IF v_conflict > 0 THEN RAISE EXCEPTION 'T17 abort: % equipments have conflicting patient groups', v_conflict; END IF;
+END $$;
+
+INSERT INTO public.equipment_tags (equipment_id, tag_group, tag_value, evidence)
+SELECT DISTINCT e.id, 'patient_group', s.category, 'sheet_category'
+FROM t17_sheet s
+JOIN public.manikins m ON m.sap_id = s.sap_id
+JOIN public.equipments e ON e.source_team_code = m.team_code;
+
+DO $$
+DECLARE v_tags int;
+BEGIN
+  SELECT count(*) INTO v_tags FROM public.equipment_tags WHERE tag_group = 'patient_group' AND evidence = 'sheet_category';
+  IF v_tags <> 66 THEN RAISE EXCEPTION 'T17 abort: expected 66 patient_group tags, got %', v_tags; END IF;
 END $$;
 
 COMMIT;
