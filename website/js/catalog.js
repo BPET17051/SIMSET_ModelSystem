@@ -5,6 +5,7 @@
   let viewMode = 'grid';
   let onlyAvailable = false;
   let assetKind = 'all';
+  const patientGroups = new Set();
   const PAGE_SIZE = 24;
   let visibleCount = PAGE_SIZE;
   const compareIds = new Set();
@@ -295,6 +296,7 @@
     const filtered = sortItems(equipment
       .filter((item) => !(item.sourceTeamCode === 'BLS_ADULT_QCPR' && item.hasLinkedManikin === false))
       .filter((item) => assetKind === 'all' || item.inventoryMode === assetKind)
+      .filter((item) => patientGroups.size === 0 || [...patientGroups].some((g) => item.patientGroups?.has(g)))
       .filter((item) => type === 'all' || item.type === type || typeLabel(item.type) === type)
       .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query))
       .filter((item) => !onlyAvailable || availableOf(item) > 0));
@@ -433,6 +435,28 @@
       </div>`;
   }
 
+  // T17: patient-group tags come from the public RPC only when the feature flag is on.
+  // Off by default, so no request is made until the migration and Worker path are approved.
+  async function fetchEquipmentTags() {
+    if (!app.features?.equipmentTags || !app.supabase) return;
+    const { data, error } = await app.supabase.rpc('get_public_equipment_tags');
+    if (error) return;
+    equipment.forEach((item) => { item.patientGroups = new Set(); });
+    (data || []).forEach((row) => {
+      const item = equipment.find((entry) => String(entry.id) === String(row.equipment_id));
+      if (item && row.tag_group === 'patient_group') item.patientGroups.add(row.tag_value);
+    });
+    renderPatientChips();
+  }
+
+  function renderPatientChips() {
+    const root = $('#catalog-patient');
+    if (!root) return;
+    const present = ['Adult', 'Pediatric', 'Infant', 'Obstetric'].filter((g) => equipment.some((item) => item.patientGroups?.has(g)));
+    root.hidden = present.length === 0;
+    root.innerHTML = present.map((g) => `<button class="sb-pill${patientGroups.has(g) ? ' active' : ''}" type="button" data-patient="${g}" aria-pressed="${patientGroups.has(g)}">${g}</button>`).join('');
+  }
+
   async function initCatalog() {
     const grid = $('#equipment-grid');
     if (grid) grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">กำลังโหลดอุปกรณ์...</div>';
@@ -440,6 +464,7 @@
     if (count) count.textContent = '';
     try {
       equipment = await fetchEquipment();
+      await fetchEquipmentTags();
       await fetchAvailability(equipment);
       renderCategoryNavigation();
       if (app.features?.publicEquipmentManikinNames) {
@@ -512,6 +537,16 @@
     if (!nextButton) return;
     const item = equipment.find((entry) => String(entry.id) === nextButton.dataset.nextDate);
     if (item) findNextAvailable(item);
+  });
+
+  document.addEventListener('click', (event) => {
+    const patientPill = event.target.closest('#catalog-patient .sb-pill');
+    if (!patientPill) return;
+    const group = patientPill.dataset.patient;
+    if (patientGroups.has(group)) patientGroups.delete(group); else patientGroups.add(group);
+    visibleCount = PAGE_SIZE;
+    renderPatientChips();
+    renderCatalog();
   });
 
   document.addEventListener('click', (event) => {
