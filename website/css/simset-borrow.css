@@ -965,3 +965,6 @@ a.navbar-brand:hover .sb-brand-text {
 @media (max-width: 575.98px) {
   .quick-view-grid { grid-template-columns: 1fr; gap: 1rem; }
 }
+
+/* cart fly */
+.cart-fly-image { border-radius: .75rem; object-fit: cover; pointer-events: none; position: fixed; z-index: 1000; box-shadow: 0 .75rem 2rem rgba(15,23,42,.24); transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .55s ease; }

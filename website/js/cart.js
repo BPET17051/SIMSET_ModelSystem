@@ -64,6 +64,34 @@
     });
   }
 
+  function announce(message) {
+    let node = document.querySelector('[data-cart-feedback]');
+    if (!node) {
+      node = document.createElement('div');
+      node.dataset.cartFeedback = 'true';
+      node.className = 'visually-hidden';
+      node.setAttribute('aria-live', 'polite');
+      document.body.appendChild(node);
+    }
+    node.textContent = message;
+  }
+
+  function flyToCart(source) {
+    const target = document.querySelector('.sb-cart-btn, [data-cart-count]')?.closest('a,button') || document.querySelector('[data-cart-count]');
+    if (!source || !target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const image = source.closest('.equipment-card, .quick-view-panel, .product-gallery')?.querySelector('img');
+    if (!image) return;
+    const from = image.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    const clone = image.cloneNode(true);
+    clone.className = 'cart-fly-image';
+    Object.assign(clone.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${Math.min(from.width, 120)}px`, height: `${Math.min(from.height, 90)}px` });
+    document.body.appendChild(clone);
+    requestAnimationFrame(() => { clone.style.transform = `translate(${to.left - from.left + to.width / 2 - from.width / 4}px, ${to.top - from.top + to.height / 2 - from.height / 4}px) scale(.18)`; clone.style.opacity = '0.2'; });
+    clone.addEventListener('transitionend', () => clone.remove(), { once: true });
+    setTimeout(() => clone.remove(), 700);
+  }
+
   async function fetchEquipmentMap(items) {
     const ids = items.map((item) => item.equipment_id);
     if (!ids.length) return new Map();
@@ -124,9 +152,13 @@
   document.addEventListener('click', (event) => {
     const addButton = event.target.closest('[data-add-to-cart]');
     if (addButton) {
+      flyToCart(addButton);
       addItem(addButton.getAttribute('data-add-to-cart'), 1);
-      addButton.textContent = 'เพิ่มแล้ว';
-      setTimeout(() => { addButton.textContent = 'เพิ่มรายการยืม'; }, 1200);
+      const original = addButton.innerHTML;
+      addButton.innerHTML = '<i class="bi-check2 me-1"></i>เพิ่มแล้ว';
+      addButton.disabled = true;
+      announce('เพิ่มอุปกรณ์ลงรายการยืมแล้ว');
+      setTimeout(() => { addButton.innerHTML = original; addButton.disabled = false; }, 1200);
     }
 
     const removeButton = event.target.closest('[data-remove-cart]');
