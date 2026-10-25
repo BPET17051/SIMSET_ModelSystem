@@ -4,6 +4,7 @@
   let sortKey = 'name';
   let viewMode = 'grid';
   let onlyAvailable = false;
+  let assetKind = 'all';
   const PAGE_SIZE = 24;
   let visibleCount = PAGE_SIZE;
   const compareIds = new Set();
@@ -293,6 +294,7 @@
     const type = activeType();
     const filtered = sortItems(equipment
       .filter((item) => !(item.sourceTeamCode === 'BLS_ADULT_QCPR' && item.hasLinkedManikin === false))
+      .filter((item) => assetKind === 'all' || item.inventoryMode === assetKind)
       .filter((item) => type === 'all' || item.type === type || typeLabel(item.type) === type)
       .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query))
       .filter((item) => !onlyAvailable || availableOf(item) > 0));
@@ -510,6 +512,15 @@
     if (!nextButton) return;
     const item = equipment.find((entry) => String(entry.id) === nextButton.dataset.nextDate);
     if (item) findNextAvailable(item);
+  });
+
+  document.addEventListener('click', (event) => {
+    const kindPill = event.target.closest('#catalog-kind .sb-pill');
+    if (!kindPill) return;
+    document.querySelectorAll('#catalog-kind .sb-pill').forEach((pill) => pill.classList.toggle('active', pill === kindPill));
+    assetKind = kindPill.dataset.kind;
+    visibleCount = PAGE_SIZE;
+    renderCatalog();
   });
 
   document.addEventListener('click', (event) => {
