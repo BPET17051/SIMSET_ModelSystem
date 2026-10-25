@@ -282,6 +282,10 @@
     });
   }
 
+  function contactHtml() {
+    return `<div class="small mt-2">ติดต่อเจ้าหน้าที่ SIMSET: <a href="tel:+6624141005">02-414-1005</a>, <a href="tel:+6624141006">02-414-1006</a>, <a href="tel:+6624199002">02-419-9002</a> · <a href="mailto:simset@mahidol.ac.th">simset@mahidol.ac.th</a></div>`;
+  }
+
   function renderCatalog() {
     const grid = $('#equipment-grid');
     if (!grid) return;
@@ -323,6 +327,7 @@
                 ${item.modelId ? `<div class="small text-muted">Model ID: ${esc(item.modelId)}</div>` : ''}
                 ${notice ? `<div class="equipment-choice-note">${esc(notice)}</div>` : ''}
                 ${nextButton}
+                ${disabled ? contactHtml() : ''}
               </div>
               <label class="small text-muted mt-auto"><input type="checkbox" class="form-check-input me-1" data-compare-id="${esc(item.id)}" ${compareIds.has(item.id) ? 'checked' : ''}> เปรียบเทียบรุ่นนี้</label>
             </div>
@@ -358,7 +363,7 @@
     const item = equipment.find((entry) => entry.id === id);
     if (!modal || !item) return;
     const available = availableOf(item);
-    modal.innerHTML = `<div class="quick-view-backdrop" data-quick-view-close></div><section class="quick-view-panel" role="dialog" aria-modal="true" aria-labelledby="quick-view-title"><button class="btn-close quick-view-close" type="button" data-quick-view-close aria-label="ปิด"></button><div class="quick-view-grid"><img src="${item.image}" alt="${esc(item.name)}" data-fallback-src="${item.fallbackImage}"><div><div class="small text-muted mb-2">ตัวอย่างรายละเอียด</div><h2 id="quick-view-title" class="h3">${esc(item.name)}</h2>${item.modelId ? `<div class="small text-muted mt-2">Model ID: ${esc(item.modelId)}</div>` : ''}${item.category ? `<div class="small text-muted mt-1">หมวด: ${esc(item.category)}</div>` : ''}<p class="mt-3 mb-3">${esc(borrowerAvailabilityText(available))}</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-brand" type="button" data-add-to-cart="${esc(item.id)}" ${available <= 0 ? 'disabled' : ''}>เพิ่มรายการยืม</button><a class="btn btn-outline-dark" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียดเต็ม</a></div></div></div></section>`;
+    modal.innerHTML = `<div class="quick-view-backdrop" data-quick-view-close></div><section class="quick-view-panel" role="dialog" aria-modal="true" aria-labelledby="quick-view-title"><button class="btn-close quick-view-close" type="button" data-quick-view-close aria-label="ปิด"></button><div class="quick-view-grid"><img src="${item.image}" alt="${esc(item.name)}" data-fallback-src="${item.fallbackImage}"><div><div class="small text-muted mb-2">ตัวอย่างรายละเอียด</div><h2 id="quick-view-title" class="h3">${esc(item.name)}</h2>${item.modelId ? `<div class="small text-muted mt-2">Model ID: ${esc(item.modelId)}</div>` : ''}${item.category ? `<div class="small text-muted mt-1">หมวด: ${esc(item.category)}</div>` : ''}<p class="mt-3 mb-3">${esc(borrowerAvailabilityText(available))}</p>${available <= 0 ? contactHtml() : ''}<div class="d-flex gap-2 flex-wrap"><button class="btn btn-brand" type="button" data-add-to-cart="${esc(item.id)}" ${available <= 0 ? 'disabled' : ''}>เพิ่มรายการยืม</button><a class="btn btn-outline-dark" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียดเต็ม</a></div></div></div></section>`;
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
     modal.querySelector('[data-quick-view-close]')?.focus();
