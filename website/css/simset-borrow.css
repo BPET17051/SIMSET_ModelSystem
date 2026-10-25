@@ -968,3 +968,35 @@ a.navbar-brand:hover .sb-brand-text {
 
 /* cart fly */
 .cart-fly-image { border-radius: .75rem; object-fit: cover; pointer-events: none; position: fixed; z-index: 1000; box-shadow: 0 .75rem 2rem rgba(15,23,42,.24); transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .55s ease; }
+
+/* T18 catalog cleanup: compact hero, grouped filters, calmer cards */
+.hero-eyebrow { display: none; }
+.hero-borrow { overflow: hidden; padding-bottom: 0; padding-top: .5rem; }
+.hero-borrow .container { padding-bottom: 1.25rem !important; padding-top: 1.25rem !important; }
+.hero-borrow h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: .1rem !important; }
+.hero-borrow p.text-white-50 { font-size: .9rem; margin-bottom: .75rem !important; }
+.hero-borrow .container::after { height: 10rem; top: -3rem; width: 10rem; }
+.catalog-toolbar { padding-bottom: .75rem; position: static; }
+.filter-groups { display: grid; gap: .5rem; grid-template-columns: minmax(0, 1fr); }
+.filter-group { align-items: center; display: flex; gap: .75rem; min-width: 0; }
+.filter-group .sb-filter-pills { min-width: 0; }
+.filter-group[hidden] { display: none; }
+.filter-label { color: var(--sb-muted); flex: 0 0 6.5rem; font-size: .8rem; font-weight: 700; }
+.catalog-tools { align-items: center; display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
+.catalog-toolbar .row.g-2 { margin-top: .5rem !important; }
+.catalog-recognition-hint { font-size: .85rem; margin-top: .5rem !important; padding: .4rem .75rem; }
+.equipment-card .card-body { gap: .4rem; }
+.equipment-card .card-footer { min-height: 0; }
+.card-links { display: flex; justify-content: space-between; margin-top: .5rem; }
+.card-links .btn-link { color: var(--sb-brand); font-weight: 600; text-decoration: none; }
+.card-links .btn-link:hover { color: var(--sb-brand-dark); text-decoration: underline; }
+@media (max-width: 767.98px) {
+  .filter-group { align-items: flex-start; flex-direction: column; gap: .25rem; }
+  .filter-label { flex: none; }
+  .filter-group .sb-filter-pills { width: 100%; }
+  .catalog-tools .catalog-sort { flex: 1 1 8rem; }
+}
+@media (min-width: 768px) {
+  .hero-borrow { padding-top: 2rem; }
+  .hero-borrow .container { padding-bottom: 2rem !important; padding-top: 2rem !important; }
+}

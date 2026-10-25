@@ -46,23 +46,33 @@
     </header>
     <section class="py-3 border-bottom catalog-toolbar">
       <div class="container px-4 px-lg-5">
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <div class="sb-filter-pills" id="catalog-kind">
-            <button class="sb-pill active" type="button" data-kind="all">ทุกประเภท</button>
-            <button class="sb-pill" type="button" data-kind="manikin">หุ่นฝึก</button>
-            <button class="sb-pill" type="button" data-kind="kit">กล่องอุปกรณ์</button>
-            <button class="sb-pill" type="button" data-kind="tracked_unit">อุปกรณ์อื่นๆ</button>
+        <div class="filter-groups">
+          <div class="filter-group">
+            <span class="filter-label">ประเภทอุปกรณ์</span>
+            <div class="sb-filter-pills" id="catalog-kind" role="group" aria-label="ประเภทอุปกรณ์">
+              <button class="sb-pill active" type="button" data-kind="all">ทั้งหมด</button>
+              <button class="sb-pill" type="button" data-kind="manikin">หุ่นฝึก</button>
+              <button class="sb-pill" type="button" data-kind="kit">กล่องอุปกรณ์</button>
+              <button class="sb-pill" type="button" data-kind="tracked_unit">อุปกรณ์อื่น</button>
+            </div>
           </div>
-          <div class="sb-filter-pills" id="catalog-patient" aria-label="กลุ่มผู้ป่วย" hidden></div>
-          <span class="text-muted small fw-semibold catalog-type-label">ประเภท:</span>
-          <div class="sb-filter-pills" id="catalog-filter">
-            <button class="sb-pill active" data-type="all">ทั้งหมด</button>
-            <button class="sb-pill" data-type="ผู้ใหญ่">ผู้ใหญ่</button>
-            <button class="sb-pill" data-type="เด็ก">เด็ก</button>
-            <button class="sb-pill" data-type="ทารก">ทารก</button>
-            <button class="sb-pill" data-type="ทั่วไป">ทั่วไป</button>
+          <div class="filter-group" id="catalog-patient-group" hidden>
+            <span class="filter-label">กลุ่มผู้ป่วย</span>
+            <div class="sb-filter-pills" id="catalog-patient" role="group" aria-label="กลุ่มผู้ป่วย"></div>
           </div>
-          <span id="catalog-count" class="text-muted small ms-auto text-nowrap"></span>
+          <div class="filter-group">
+            <span class="filter-label">หมวดหมู่</span>
+            <div class="sb-filter-pills" id="catalog-filter" role="group" aria-label="หมวดหมู่อุปกรณ์">
+              <button class="sb-pill active" data-type="all">ทั้งหมด</button>
+              <button class="sb-pill" data-type="ผู้ใหญ่">ผู้ใหญ่</button>
+              <button class="sb-pill" data-type="เด็ก">เด็ก</button>
+              <button class="sb-pill" data-type="ทารก">ทารก</button>
+              <button class="sb-pill" data-type="ทั่วไป">ทั่วไป</button>
+            </div>
+          </div>
+        </div>
+        <div class="catalog-tools">
+          <span id="catalog-count" class="text-muted small text-nowrap me-auto"></span>
           <button class="sb-pill" type="button" id="catalog-only-available" aria-pressed="false">พร้อมยืมเท่านั้น</button>
           <label class="visually-hidden" for="catalog-sort">เรียงตาม</label>
           <select id="catalog-sort" class="form-select form-select-sm catalog-sort">

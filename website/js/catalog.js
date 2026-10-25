@@ -6,6 +6,9 @@
   let onlyAvailable = false;
   let assetKind = 'all';
   const patientGroups = new Set();
+  // Display only: generic stored type values are shown by Thai asset-kind label instead.
+  const GENERIC_TYPES = new Set(['manikin', 'kit', 'equipment']);
+  const KIND_LABEL = { manikin: 'หุ่นฝึก', kit: 'กล่องอุปกรณ์', tracked_unit: 'อุปกรณ์อื่น' };
   const PAGE_SIZE = 24;
   let visibleCount = PAGE_SIZE;
   const compareIds = new Set();
@@ -258,7 +261,8 @@
   function renderCategoryNavigation() {
     const root = $('#catalog-filter');
     if (!root) return;
-    const categories = [...new Set(equipment.map((item) => typeLabel(item.type)).filter(Boolean))];
+    // Generic stored values already covered by the asset-kind filter are hidden from this row only; filtering still matches them under "ทั้งหมด".
+    const categories = [...new Set(equipment.map((item) => typeLabel(item.type)).filter((label) => label && !GENERIC_TYPES.has(String(label).toLowerCase())))];
     root.innerHTML = ['ทั้งหมด', ...categories].map((label, index) => `<button class="sb-pill ${index === 0 ? 'active' : ''}" data-type="${esc(index === 0 ? 'all' : label)}" type="button">${esc(label)}</button>`).join('');
   }
 
@@ -317,15 +321,16 @@
         ? `<button class="btn btn-link btn-sm px-0 text-start" type="button" data-next-date="${esc(item.id)}">ตรวจวันว่างถัดไป</button>`
         : '';
       const notice = borrowerRestrictionText(item.allocationType);
+      const chipLabel = readableType && !GENERIC_TYPES.has(String(readableType).toLowerCase()) ? readableType : (KIND_LABEL[item.inventoryMode] || '');
       return `
         <div class="col mb-5">
           <div class="card h-100 equipment-card${disabled ? ' is-unavailable' : ''}">
             <div class="equipment-card-media">
               <img class="card-img-top" src="${item.image}" alt="${esc(item.name)}" loading="lazy" data-fallback-src="${item.fallbackImage}">
               <span class="stock-pill ${disabled ? 'is-out' : 'is-ready'}">${esc(availableLabel)}</span>
-              ${readableType ? `<span class="type-chip">${esc(readableType)}</span>` : ''}
+              ${chipLabel ? `<span class="type-chip">${esc(chipLabel)}</span>` : ''}
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-3">
               <div class="equipment-card-info">
                 <h5 class="fw-bolder equipment-card-title">${esc(item.name)}</h5>
                 ${item.modelId ? `<div class="small text-muted">Model ID: ${esc(item.modelId)}</div>` : ''}
@@ -335,11 +340,11 @@
               </div>
               <label class="small text-muted mt-auto"><input type="checkbox" class="form-check-input me-1" data-compare-id="${esc(item.id)}" ${compareIds.has(item.id) ? 'checked' : ''}> เปรียบเทียบรุ่นนี้</label>
             </div>
-            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-              <div class="d-grid gap-2">
-                <button class="btn btn-outline-dark" type="button" data-quick-view="${esc(item.id)}">ดูตัวอย่าง</button>
-                <a class="btn btn-outline-dark" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียด</a>
-                <button class="btn btn-brand" type="button" data-add-to-cart="${esc(item.id)}" ${disabled ? 'disabled' : ''}>เพิ่มรายการยืม</button>
+            <div class="card-footer px-3 pb-3 pt-0 border-top-0 bg-transparent">
+              <button class="btn btn-brand w-100" type="button" data-add-to-cart="${esc(item.id)}" ${disabled ? 'disabled' : ''}>เพิ่มรายการยืม</button>
+              <div class="card-links">
+                <button class="btn btn-link btn-sm p-0" type="button" data-quick-view="${esc(item.id)}">ดูตัวอย่าง</button>
+                <a class="btn btn-link btn-sm p-0" href="product-details.html?id=${encodeURIComponent(item.id)}">รายละเอียด</a>
               </div>
             </div>
           </div>
@@ -454,7 +459,10 @@
     if (!root) return;
     const present = ['Adult', 'Pediatric', 'Infant', 'Obstetric'].filter((g) => equipment.some((item) => item.patientGroups?.has(g)));
     root.hidden = present.length === 0;
-    root.innerHTML = present.map((g) => `<button class="sb-pill${patientGroups.has(g) ? ' active' : ''}" type="button" data-patient="${g}" aria-pressed="${patientGroups.has(g)}">${g}</button>`).join('');
+    const wrap = $('#catalog-patient-group');
+    if (wrap) wrap.hidden = present.length === 0;
+    const all = `<button class="sb-pill${patientGroups.size === 0 ? ' active' : ''}" type="button" data-patient="__all" aria-pressed="${patientGroups.size === 0}">ทั้งหมด</button>`;
+    root.innerHTML = all + present.map((g) => `<button class="sb-pill${patientGroups.has(g) ? ' active' : ''}" type="button" data-patient="${g}" aria-pressed="${patientGroups.has(g)}">${g}</button>`).join('');
   }
 
   async function initCatalog() {
@@ -543,7 +551,8 @@
     const patientPill = event.target.closest('#catalog-patient .sb-pill');
     if (!patientPill) return;
     const group = patientPill.dataset.patient;
-    if (patientGroups.has(group)) patientGroups.delete(group); else patientGroups.add(group);
+    if (group === '__all') patientGroups.clear();
+    else if (patientGroups.has(group)) patientGroups.delete(group); else patientGroups.add(group);
     visibleCount = PAGE_SIZE;
     renderPatientChips();
     renderCatalog();
