@@ -56,6 +56,7 @@
             <button class="sb-pill" data-type="ทั่วไป">ทั่วไป</button>
           </div>
           <span id="catalog-count" class="text-muted small ms-auto text-nowrap"></span>
+          <button class="sb-pill" type="button" id="catalog-only-available" aria-pressed="false">พร้อมยืมเท่านั้น</button>
           <label class="visually-hidden" for="catalog-sort">เรียงตาม</label>
           <select id="catalog-sort" class="form-select form-select-sm catalog-sort">
             <option value="name">เรียงตามชื่อ</option>
@@ -78,6 +79,7 @@
       </div>
     </section>
     <aside id="compare-drawer" class="compare-drawer" hidden aria-label="เปรียบเทียบอุปกรณ์"></aside>
+    <div id="quick-view-modal" class="quick-view-modal" hidden aria-hidden="true"></div>
     <section class="py-5">
       <div class="container px-4 px-lg-5 mt-4">
         <div id="equipment-grid" class="row gx-4 gx-lg-5 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 justify-content-center"></div>

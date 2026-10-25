@@ -48,6 +48,12 @@
           ${conflicts ? `<div class="small mt-1">คอร์ส: ${conflicts}</div>` : ''}
         </div>`;
     }).join('');
+    const summary = $('#checkout-rule-summary');
+    if (summary) {
+      summary.innerHTML = rules.length
+        ? `<div class="small text-muted mb-1">กฎการยืมของรายการที่เลือก</div><ul class="small mb-0 ps-3">${rules.map((rule) => `<li><strong>${esc(rule.equipment_name || rule.equipment_id)}</strong>: ${esc(allocationLabel(rule.allocation_type))}${rule.warning ? ` (${esc(rule.warning)})` : ''}</li>`).join('')}</ul>`
+        : '<div class="small text-muted mb-1">เลือกวันที่ยืมเพื่อดูกฎการยืม</div>';
+    }
   }
 
   async function refreshBorrowRules() {
@@ -138,6 +144,10 @@
     }
     if (endDate < startDate) {
       showMessage('warning', 'วันที่คืนต้องไม่อยู่ก่อนวันที่ยืม');
+      return;
+    }
+    if (!$('#accept-borrow-terms')?.checked) {
+      showMessage('warning', 'กรุณายอมรับเงื่อนไขการยืมก่อนส่งคำขอ');
       return;
     }
 

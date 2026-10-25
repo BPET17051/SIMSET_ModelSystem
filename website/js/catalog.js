@@ -3,6 +3,7 @@
   let equipment = [];
   let sortKey = 'name';
   let viewMode = 'grid';
+  let onlyAvailable = false;
   const PAGE_SIZE = 24;
   let visibleCount = PAGE_SIZE;
   const compareIds = new Set();
@@ -129,6 +130,68 @@
     items.forEach((item) => { item.availableQuantity = Math.max(0, byId.get(String(item.id)) ?? 0); });
   }
 
+  function formatDate(iso) {
+    return new Date(`${iso}T00:00:00`).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  let nextSeq = 0;
+
+  function rangeKey() {
+    return `${$('#catalog-start-date')?.value || ''}|${$('#catalog-end-date')?.value || ''}`;
+  }
+
+  function localIso(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function invalidateNext() {
+    nextSeq += 1;
+    equipment.forEach((item) => { delete item.nextState; });
+  }
+
+  function currentNextState(item) {
+    return item.nextState && item.nextState.key === rangeKey() ? item.nextState : null;
+  }
+
+  function nextText(state) {
+    if (state.status === 'loading') return 'กำลังตรวจวันว่าง…';
+    if (state.status === 'found') return `ว่างตั้งแต่ ${formatDate(state.date)}`;
+    if (state.status === 'error') return 'ตรวจวันว่างไม่สำเร็จ';
+    return 'ไม่พบวันว่างใน 30 วัน';
+  }
+
+  async function findNextAvailable(item) {
+    // ponytail: runs only on click, 30 RPC windows of the selected length for this one item. Ceiling: 30 calls per click; move to a server-side next-date RPC if usage grows.
+    const start = $('#catalog-start-date')?.value;
+    const end = $('#catalog-end-date')?.value;
+    if (!start || !end || end < start) return;
+    const key = rangeKey();
+    const seq = nextSeq;
+    const length = Math.round((new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`)) / 86400000) + 1;
+    item.nextState = { key, status: 'loading' };
+    renderCatalog();
+    const base = new Date(`${start}T00:00:00`);
+    const windows = Array.from({ length: 30 }, (_, i) => {
+      const s = new Date(base);
+      s.setDate(base.getDate() + i + 1);
+      const e = new Date(s);
+      e.setDate(s.getDate() + length - 1);
+      return { s: localIso(s), e: localIso(e) };
+    });
+    try {
+      const results = await Promise.all(windows.map((w) => app.supabase.rpc('get_borrow_availability', {
+        p_start_date: w.s, p_end_date: w.e, p_equipment_ids: [item.id]
+      }).then(({ data, error }) => { if (error) throw error; return data || []; })));
+      if (seq !== nextSeq) return;
+      const hit = results.findIndex((rows) => rows.some((row) => String(row.equipment_id) === String(item.id) && Number(row.available_qty || 0) > 0));
+      item.nextState = hit >= 0 ? { key, status: 'found', date: windows[hit].s } : { key, status: 'none' };
+    } catch (error) {
+      if (seq !== nextSeq) return;
+      item.nextState = { key, status: 'error' };
+    }
+    renderCatalog();
+  }
+
   function allocationHelp(allocationType) {
     const help = {
       rotating: 'ยืมได้ตามปกติ',
@@ -227,7 +290,8 @@
     const filtered = sortItems(equipment
       .filter((item) => !(item.sourceTeamCode === 'BLS_ADULT_QCPR' && item.hasLinkedManikin === false))
       .filter((item) => type === 'all' || item.type === type || typeLabel(item.type) === type)
-      .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query)));
+      .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query))
+      .filter((item) => !onlyAvailable || availableOf(item) > 0));
     const visible = filtered.slice(0, visibleCount);
 
     const count = $('#catalog-count');
@@ -239,7 +303,11 @@
       const available = availableOf(item);
       const disabled = available <= 0;
       const readableType = typeLabel(item.type);
-      const availableLabel = borrowerAvailabilityText(available);
+      const nextState = currentNextState(item);
+      const availableLabel = disabled && nextState ? nextText(nextState) : borrowerAvailabilityText(available);
+      const nextButton = disabled && nextState?.status !== 'loading' && nextState?.status !== 'found'
+        ? `<button class="btn btn-link btn-sm px-0 text-start" type="button" data-next-date="${esc(item.id)}">ตรวจวันว่างถัดไป</button>`
+        : '';
       const notice = borrowerRestrictionText(item.allocationType);
       return `
         <div class="col mb-5">
@@ -254,11 +322,13 @@
                 <h5 class="fw-bolder equipment-card-title">${esc(item.name)}</h5>
                 ${item.modelId ? `<div class="small text-muted">Model ID: ${esc(item.modelId)}</div>` : ''}
                 ${notice ? `<div class="equipment-choice-note">${esc(notice)}</div>` : ''}
+                ${nextButton}
               </div>
               <label class="small text-muted mt-auto"><input type="checkbox" class="form-check-input me-1" data-compare-id="${esc(item.id)}" ${compareIds.has(item.id) ? 'checked' : ''}> เปรียบเทียบรุ่นนี้</label>
             </div>
             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
               <div class="d-grid gap-2">
+                <button class="btn btn-outline-dark" type="button" data-quick-view="${esc(item.id)}">ดูตัวอย่าง</button>
                 <a class="btn btn-outline-dark" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียด</a>
                 <button class="btn btn-brand" type="button" data-add-to-cart="${esc(item.id)}" ${disabled ? 'disabled' : ''}>เพิ่มรายการยืม</button>
               </div>
@@ -281,6 +351,24 @@
     const rows = [...compareIds].map((id) => equipment.find((item) => item.id === id)).filter(Boolean).slice(0, 3);
     drawer.hidden = false;
     drawer.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-2"><strong>เปรียบเทียบอุปกรณ์</strong><button type="button" class="btn-close" data-compare-close aria-label="ปิด"></button></div><div class="compare-grid">${rows.map((item) => { const available = item.availableQuantity ?? Math.max(0, item.totalQuantity - item.maintenanceQuantity); return `<div class="compare-item"><strong>${esc(item.name)}</strong><span class="small text-muted">${esc(typeLabel(item.type))}</span><div class="mt-2"><span class="status-pill ${available > 0 ? 'status-ready' : 'status-pending'}">${esc(borrowerAvailabilityText(available))}</span></div><a class="btn btn-outline-dark btn-sm mt-3" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียด</a></div>`; }).join('')}</div>`;
+  }
+
+  function renderQuickView(id) {
+    const modal = $('#quick-view-modal');
+    const item = equipment.find((entry) => entry.id === id);
+    if (!modal || !item) return;
+    const available = availableOf(item);
+    modal.innerHTML = `<div class="quick-view-backdrop" data-quick-view-close></div><section class="quick-view-panel" role="dialog" aria-modal="true" aria-labelledby="quick-view-title"><button class="btn-close quick-view-close" type="button" data-quick-view-close aria-label="ปิด"></button><div class="quick-view-grid"><img src="${item.image}" alt="${esc(item.name)}" data-fallback-src="${item.fallbackImage}"><div><div class="small text-muted mb-2">ตัวอย่างรายละเอียด</div><h2 id="quick-view-title" class="h3">${esc(item.name)}</h2>${item.modelId ? `<div class="small text-muted mt-2">Model ID: ${esc(item.modelId)}</div>` : ''}${item.category ? `<div class="small text-muted mt-1">หมวด: ${esc(item.category)}</div>` : ''}<p class="mt-3 mb-3">${esc(borrowerAvailabilityText(available))}</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-brand" type="button" data-add-to-cart="${esc(item.id)}" ${available <= 0 ? 'disabled' : ''}>เพิ่มรายการยืม</button><a class="btn btn-outline-dark" href="product-details.html?id=${encodeURIComponent(item.id)}">ดูรายละเอียดเต็ม</a></div></div></div></section>`;
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden', 'false');
+    modal.querySelector('[data-quick-view-close]')?.focus();
+  }
+
+  function closeQuickView() {
+    const modal = $('#quick-view-modal');
+    if (!modal) return;
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden', 'true');
   }
 
   async function renderDetails() {
@@ -377,12 +465,19 @@
     renderCompare();
   });
   document.addEventListener('click', (event) => {
+    const quickView = event.target.closest('[data-quick-view]');
+    if (quickView) renderQuickView(quickView.dataset.quickView);
+    if (event.target.closest('[data-quick-view-close]')) closeQuickView();
     if (event.target.closest('#compare-open')) renderCompare();
     if (event.target.closest('[data-compare-close]')) { const drawer = $('#compare-drawer'); if (drawer) drawer.hidden = true; }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeQuickView();
   });
 
   async function refreshAvailability() {
     try {
+      invalidateNext();
       await fetchAvailability(equipment);
       renderCatalog();
       await renderDetails();
@@ -401,6 +496,23 @@
     if (!pill) return;
     document.querySelectorAll('#catalog-filter .sb-pill').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
+    visibleCount = PAGE_SIZE;
+    renderCatalog();
+  });
+
+  document.addEventListener('click', (event) => {
+    const nextButton = event.target.closest('[data-next-date]');
+    if (!nextButton) return;
+    const item = equipment.find((entry) => String(entry.id) === nextButton.dataset.nextDate);
+    if (item) findNextAvailable(item);
+  });
+
+  document.addEventListener('click', (event) => {
+    const toggle = event.target.closest('#catalog-only-available');
+    if (!toggle) return;
+    onlyAvailable = !onlyAvailable;
+    toggle.classList.toggle('active', onlyAvailable);
+    toggle.setAttribute('aria-pressed', String(onlyAvailable));
     visibleCount = PAGE_SIZE;
     renderCatalog();
   });
