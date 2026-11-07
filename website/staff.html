@@ -25,44 +25,57 @@
         <div class="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">
           <div>
             <h1 class="h2 mb-1">Staff Dashboard</h1>
-            <p class="text-muted mb-0">Kanban งานเตรียม จ่าย และรับคืนแบบ real-time ผ่าน Supabase Realtime</p>
+            <p class="text-muted mb-0">Today Queue — เรียงงานตามกำหนดรับ–คืนและความเร่งด่วน</p>
           </div>
           <span class="admin-auth-state" id="staff-auth-state">กำลังตรวจสอบสิทธิ์...</span>
         </div>
         <div id="staff-message" class="alert d-none"></div>
         <div id="staff-alerts" class="staff-alert-list mb-4"></div>
+        <section class="mb-4" aria-labelledby="sync-conflicts-heading">
+          <h2 id="sync-conflicts-heading" class="h5">T14 Sync Conflicts</h2>
+          <div id="staff-sync-conflicts" class="staff-card-list"></div>
+        </section>
         <section class="attention-summary mb-4" aria-label="Staff focus summary">
-          <article class="attention-card attention-card-primary">
-            <span>งานที่ต้องทำก่อน</span>
+            <article class="attention-card attention-card-primary">
+            <span>รอเตรียม</span>
             <strong id="staff-focus-prepare">0</strong>
-            <small>เตรียมของและกด Confirm Pickup</small>
+            <small>ตรวจรายการและเตรียมอุปกรณ์</small>
           </article>
           <article class="attention-card">
-            <span>กำลังใช้งาน</span>
-            <strong id="staff-focus-checked-out">0</strong>
-            <small>รอรับคืนตามกำหนด</small>
+            <span>เกินกำหนด</span>
+            <strong id="staff-focus-overdue">0</strong>
+            <small>เร่งติดตามการคืน</small>
           </article>
           <article class="attention-card">
-            <span>ปิดงานวันนี้</span>
+            <span>คืนแล้ววันนี้</span>
             <strong id="staff-focus-returned">0</strong>
             <small>คืนแล้วภายใน 24 ชั่วโมง</small>
           </article>
         </section>
         <p class="work-fragmentation-note mb-4">ถ้าถูกขัดจังหวะ ให้กลับมาดู “งานที่ต้องทำก่อน” และขั้นตอนถัดไปในการ์ดก่อนเสมอ</p>
+        <div class="queue-legend mb-3"><span><i class="queue-dot queue-dot-urgent"></i>เร่งด่วน/เกินกำหนด</span><span><i class="queue-dot queue-dot-today"></i>กำหนดวันนี้</span><span><i class="queue-dot queue-dot-normal"></i>ตามลำดับ</span></div>
         <section class="staff-board" aria-label="Staff order board">
           <div class="staff-column staff-column-primary">
             <div class="staff-column-head">
-              <h2>ต้องเตรียม</h2>
+              <h2>รอเตรียม</h2>
               <span id="staff-count-prepare">0</span>
             </div>
             <div id="staff-to-prepare" class="staff-card-list"></div>
           </div>
           <div class="staff-column">
+            <div class="staff-column-head"><h2>พร้อมจ่าย</h2><span id="staff-count-ready">0</span></div>
+            <div id="staff-ready" class="staff-card-list"></div>
+          </div>
+          <div class="staff-column">
             <div class="staff-column-head">
-              <h2>จ่ายออกไปแล้ว</h2>
+              <h2>ยืมอยู่</h2>
               <span id="staff-count-checked-out">0</span>
             </div>
             <div id="staff-checked-out" class="staff-card-list"></div>
+          </div>
+          <div class="staff-column">
+            <div class="staff-column-head"><h2>เกินกำหนด</h2><span id="staff-count-overdue">0</span></div>
+            <div id="staff-overdue" class="staff-card-list"></div>
           </div>
           <div class="staff-column">
             <div class="staff-column-head">

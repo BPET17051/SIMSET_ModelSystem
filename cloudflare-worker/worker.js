@@ -4,8 +4,7 @@
  * - Proxies GET and POST requests securely to Supabase.
  * - Enforces allowed paths to prevent arbitrary DB queries.
  * - Rate-limits per IP: 60 requests / minute.
- * - Caches GET responses for 60 seconds (Cloudflare Cache API).
- * - Bypasses cache for POST requests (RPCs).
+ * - Disables response caching for all proxy requests.
  * - Preserves user's JWT Authorization header for DB Row-Level Security.
  *
  * Secrets to set via: wrangler secret put SUPABASE_URL
@@ -58,6 +57,8 @@ const ALLOWED_PATHS = new Set([
     '/rest/v1/rpc/staff_assign_inventory_unit_to_item',
     '/rest/v1/rpc/get_rotation_suggestions',
     '/rest/v1/rpc/sync_manikin_capabilities',
+    '/rest/v1/rpc/get_open_manikin_sync_conflicts',
+    '/rest/v1/rpc/resolve_manikin_sync_conflict',
     '/rest/v1/rpc/delete_location_atomic',
 ]);
 
@@ -69,7 +70,6 @@ const ALLOWED_PREFIXES = [
 
 const RATE_LIMIT = 60;          // max requests per window per IP
 const RATE_WINDOW_MS = 60_000;  // 1 minute window
-const CACHE_TTL_S = 60;         // cache lifetime in seconds
 const CLIENT_PLACEHOLDER_KEY = 'worker-managed-key';
 const LINE_PUSH_URL = 'https://api.line.me/v2/bot/message/push';
 
@@ -78,6 +78,8 @@ const rateLimitMap = new Map(); // ip → { count, resetAt }
 const ALLOWED_ORIGINS = new Set([
     'https://simset-showroom.pages.dev',
     'https://encoding-preview.simset-showroom.pages.dev',
+    'https://t16-preview.simset-showroom.pages.dev',
+    'https://t16-interactions.simset-showroom.pages.dev',
     'http://localhost:8788',   // wrangler pages dev
     'http://127.0.0.1:5500',  // local live-server dev
 ]);
@@ -92,6 +94,7 @@ function corsHeaders(origin) {
         'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, apikey, Authorization, x-client-info, Prefer, x-supabase-api-version, content-profile, accept-profile, range, range-unit, x-upsert, cache-control',
         'Vary': 'Origin',
+        'Cache-Control': 'no-store',
     };
 }
 
@@ -254,20 +257,6 @@ export default {
             });
         }
 
-        // ── Cache check (GET only) ────────────────────────────────────────────────
-        const cache = caches.default;
-        const cacheKey = new Request(url.toString());
-
-        if (request.method === 'GET') {
-            const cached = await cache.match(cacheKey);
-            if (cached) {
-                const hit = new Response(cached.body, cached);
-                hit.headers.set('X-Cache', 'HIT');
-                Object.entries(cors).forEach(([k, v]) => hit.headers.set(k, v));
-                return hit;
-            }
-        }
-
         // ── Proxy to Supabase ─────────────────────────────────────────────────────
         // If path is a legacy showroom path (doesn't start with /rest/ or /auth/), prepend /rest/v1
         let upstreamPath = path;
@@ -309,25 +298,11 @@ export default {
         const responseHeaders = new Headers(upstream.headers);
         Object.entries(cors).forEach(([k, v]) => responseHeaders.set(k, v));
 
-        const isError = !upstream.ok;
-
-        if (!isError && request.method === 'GET' && upstream.status === 200) {
-            responseHeaders.set('Cache-Control', `public, max-age=${CACHE_TTL_S}`);
-            responseHeaders.set('X-Cache', 'MISS');
-        } else {
-            responseHeaders.set('Cache-Control', 'no-store');
-        }
-
         const response = new Response(upstream.body, {
             status: upstream.status,
             statusText: upstream.statusText,
             headers: responseHeaders,
         });
-
-        // Store in Cloudflare cache (background) if successful GET
-        if (!isError && request.method === 'GET' && upstream.status === 200) {
-            ctx.waitUntil(cache.put(cacheKey, response.clone()));
-        }
 
         return response;
     },

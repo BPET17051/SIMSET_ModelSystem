@@ -78,6 +78,7 @@
     const rpc = mode === 'pickup' ? 'pickup' : 'return';
     return `
       <form class="snapshot-form mt-3" data-${rpc}-form="${esc(request.id)}">
+        <div class="inspection-checklist mb-2"><strong class="small">Checklist ตรวจรับ</strong><label><input type="checkbox" required> อุปกรณ์และอุปกรณ์เสริมครบ</label><label><input type="checkbox" required> ทดสอบสภาพภายนอกแล้ว</label></div>
         <label class="form-label">สภาพหุ่น</label>
         <select class="form-select form-select-sm" name="condition" required>
           <option value="">เลือกสภาพ</option>
@@ -89,6 +90,7 @@
         <label class="form-label mt-2">หมายเหตุ</label>
         <textarea class="form-control form-control-sm" name="note" rows="2" required></textarea>
         <label class="form-label mt-2">ภาพถ่ายอย่างน้อย 1 ภาพ</label>
+        <div class="form-text">ภาพจะถูกเก็บผ่านพื้นที่จัดเก็บเดิมของระบบ ไม่สร้างข้อมูลจำลอง</div>
         <input class="form-control form-control-sm" name="photos" type="file" accept="image/*" multiple required>
         <button class="btn btn-dark btn-sm mt-3 w-100" type="submit">${label}</button>
       </form>`;
@@ -106,8 +108,14 @@
 
   function orderCard(request, mode) {
     const due = request.return_date || request.returned_at || '-';
+    const dueTime = due === '-' ? Infinity : new Date(due).getTime();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const dueDay = Number.isFinite(dueTime) ? new Date(dueTime) : null;
+    const dueDate = dueDay ? new Date(dueDay.getFullYear(), dueDay.getMonth(), dueDay.getDate()).getTime() : Infinity;
+    const urgency = dueDate < today ? 'is-urgent' : dueDate === today ? 'is-today' : '';
     return `
-      <article class="staff-order-card">
+      <article class="staff-order-card ${urgency}">
         <div class="d-flex justify-content-between gap-2">
           <div>
             <h3>${esc(request.tracking_id)}</h3>
@@ -118,16 +126,35 @@
         <p class="mb-2 mt-3"><strong>ผู้ยืม:</strong> ${esc(request.borrower_name || '-')}</p>
         <p class="mb-2"><strong>กำหนด:</strong> ${esc(due)}</p>
         <ul class="staff-item-list">${itemList(request.items)}</ul>
+        ${request.status === 'approved' && ['staff', 'admin'].includes(currentSession?.user?.app_metadata?.role) ? `<button class="btn btn-outline-primary btn-sm w-100 mt-3" type="button" data-mark-ready="${esc(request.id)}">พร้อมจ่าย</button>` : ''}
         ${nextActionCue(mode)}
         ${mode ? snapshotForm(request, mode) : ''}
       </article>`;
+  }
+
+  async function markReady(requestId) {
+    const { error } = await supabase.rpc('transition_borrow_request_status', {
+      p_request_id: requestId,
+      p_current_status: 'approved',
+      p_next_status: 'ready',
+      p_actor_user_id: (await supabase.auth.getUser()).data.user.id,
+      p_actor_type: 'staff',
+      p_reason: 'Equipment prepared and ready for pickup'
+    });
+    if (error) throw error;
+    showMessage('success', 'ทำเครื่องหมายพร้อมจ่ายแล้ว');
+    await loadBoard();
   }
 
   function renderColumn(id, countId, rows, mode) {
     const root = document.getElementById(id);
     const count = document.getElementById(countId);
     const focusCount = document.getElementById(countId.replace('staff-count-', 'staff-focus-'));
-    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeRows = (Array.isArray(rows) ? rows : []).slice().sort((a, b) => {
+      const aTime = new Date(a.return_date || a.pickup_date || a.returned_at || '2999-12-31').getTime();
+      const bTime = new Date(b.return_date || b.pickup_date || b.returned_at || '2999-12-31').getTime();
+      return aTime - bTime;
+    });
     if (count) count.textContent = safeRows.length;
     if (focusCount) focusCount.textContent = safeRows.length;
     if (!root) return;
@@ -147,12 +174,43 @@
     `).join('');
   }
 
+  function renderSyncConflicts(conflicts) {
+    const root = document.getElementById('staff-sync-conflicts');
+    if (!root) return;
+    const rows = Array.isArray(conflicts) ? conflicts : [];
+    root.innerHTML = rows.length ? rows.map((conflict) => `
+      <article class="staff-order-card">
+        <div class="d-flex justify-content-between gap-2"><strong>${esc(conflict.model_id || conflict.sap_id)}</strong><span class="status-pill status-maintenance">รอยืนยันซ่อมเสร็จ</span></div>
+        <div class="small text-muted mt-2">${esc(conflict.reason || '')}</div>
+        <button class="btn btn-outline-success btn-sm mt-3" type="button" data-resolve-sync-conflict="${esc(conflict.sap_id)}">ยืนยันพร้อมใช้งาน</button>
+      </article>`).join('') : '<div class="empty-state bg-white">ไม่มี Conflict ค้าง</div>';
+  }
+
+  async function resolveSyncConflict(sapId) {
+    const note = window.prompt('หมายเหตุการยืนยันซ่อมเสร็จ', 'ตรวจสภาพแล้วพร้อมใช้งาน');
+    if (!note || !note.trim()) return;
+    const { error } = await supabase.rpc('resolve_manikin_sync_conflict', {
+      p_sap_id: sapId,
+      p_resolution_note: note.trim()
+    });
+    if (error) throw error;
+    showMessage('success', `ยืนยัน ${sapId} เป็นพร้อมใช้งานแล้ว`);
+    await loadBoard();
+  }
+
   async function loadBoard() {
     const { data, error } = await supabase.rpc('get_staff_dashboard_orders');
     if (error) throw error;
     renderAlerts(data?.alerts);
-    renderColumn('staff-to-prepare', 'staff-count-prepare', data?.to_prepare, 'pickup');
-    renderColumn('staff-checked-out', 'staff-count-checked-out', data?.checked_out, 'return');
+    const conflicts = await supabase.rpc('get_open_manikin_sync_conflicts');
+    if (conflicts.error) throw conflicts.error;
+    renderSyncConflicts(conflicts.data);
+    const prepare = Array.isArray(data?.to_prepare) ? data.to_prepare : [];
+    const checkedOut = Array.isArray(data?.checked_out) ? data.checked_out : [];
+    renderColumn('staff-to-prepare', 'staff-count-prepare', prepare.filter((row) => row.status === 'approved'), 'pickup');
+    renderColumn('staff-ready', 'staff-count-ready', prepare.filter((row) => row.status === 'ready'), 'pickup');
+    renderColumn('staff-checked-out', 'staff-count-checked-out', checkedOut.filter((row) => row.status === 'borrowed'), 'return');
+    renderColumn('staff-overdue', 'staff-count-overdue', checkedOut.filter((row) => row.status === 'overdue'), 'return');
     renderColumn('staff-returned-today', 'staff-count-returned', data?.returned_today, null);
   }
 
@@ -244,6 +302,12 @@
   });
 
   document.addEventListener('click', (event) => {
+    const ready = event.target.closest('[data-mark-ready]');
+    if (ready) {
+      markReady(ready.getAttribute('data-mark-ready')).catch((error) => showMessage('danger', error.message));
+      return;
+    }
+
     const suggest = event.target.closest('[data-rotation-suggest]');
     if (suggest) {
       const [equipmentId, sapId, itemId] = suggest.getAttribute('data-rotation-suggest').split(':');
@@ -259,6 +323,11 @@
     }
 
     const assignUnit = event.target.closest('[data-assign-unit]');
+    const resolveConflict = event.target.closest('[data-resolve-sync-conflict]');
+    if (resolveConflict) {
+      resolveSyncConflict(resolveConflict.getAttribute('data-resolve-sync-conflict')).catch((error) => showMessage('danger', error.message));
+      return;
+    }
     if (!assignUnit) return;
     assignInventoryUnit(assignUnit.getAttribute('data-assign-unit')).catch((error) => showMessage('danger', error.message));
   });
@@ -266,7 +335,7 @@
   app.boot(async () => {
     document.getElementById('staff-logout')?.addEventListener('click', logout);
     if (!(await requireStaff())) return;
-    ['staff-to-prepare', 'staff-checked-out', 'staff-returned-today'].forEach((id) => {
+    ['staff-to-prepare', 'staff-ready', 'staff-checked-out', 'staff-overdue', 'staff-returned-today'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '<div class="empty-state text-muted">กำลังโหลด...</div>';
     });
