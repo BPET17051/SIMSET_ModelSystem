@@ -59,6 +59,7 @@ const ALLOWED_PATHS = new Set([
     '/rest/v1/rpc/sync_manikin_capabilities',
     '/rest/v1/rpc/get_open_manikin_sync_conflicts',
     '/rest/v1/rpc/resolve_manikin_sync_conflict',
+    '/rest/v1/rpc/get_manikin_usage_conflicts',
     '/rest/v1/rpc/delete_location_atomic',
 ]);
 

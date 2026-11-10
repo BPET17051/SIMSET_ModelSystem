@@ -8,7 +8,8 @@ function syncManikinStatus() {
 
   const sheetId = props.getProperty('MODELS_SHEET_ID');
   if (!sheetId) throw new Error('Missing MODELS_SHEET_ID');
-  const sheet = SpreadsheetApp.openById(sheetId).getSheetByName('Models_Data');
+  const spreadsheet = SpreadsheetApp.openById(sheetId);
+  const sheet = spreadsheet.getSheetByName('Models_Data');
   if (!sheet) throw new Error('Sheet Models_Data not found');
   const values = sheet.getDataRange().getValues();
   values.shift();
@@ -43,7 +44,67 @@ function syncManikinStatus() {
   PropertiesService.getScriptProperties().deleteProperty('LAST_SYNC_ERROR');
   // Shown in Executions > the run's log (returned values are not shown there).
   Logger.log('sync ok: rows_sent=%s result=%s', payload.length, response.getContentText());
+  // Usage sync (Sessions tab) must never break the status sync above: its own try/catch, its own error property.
+  try {
+    syncManikinUsage_(supabaseUrl, anonKey, syncJwt, spreadsheet);
+    props.deleteProperty('LAST_USAGE_SYNC_ERROR');
+  } catch (e) {
+    props.setProperty('LAST_USAGE_SYNC_ERROR', redactSecrets_(e.message));
+    Logger.log('usage sync failed: %s', redactSecrets_(e.message));
+  }
   return response.getContentText();
+}
+
+// --- Manikin usage: Sessions tab (written by the timer project) -> Supabase manikin_usage_blocks. ---
+// Stage 1 = staff warnings only. ACTIVE and CONFLICT both mean "this manikin is in a course that day"
+// (the timer project marks CONFLICT when one manikin is booked twice in overlapping times).
+const USAGE_BLOCKING_STATUSES_ = ['ACTIVE', 'CONFLICT'];
+
+// Pure on purpose (no Apps Script services) so scripts/check-usage-rows.js can test it in Node.
+// Columns are found by header name, so reordering columns in Sessions cannot silently shift the data.
+function buildUsageRows_(values, todayYmd, formatDate) {
+  if (!values.length) throw new Error('Sessions sheet is empty');
+  const header = values[0].map((h) => String(h).trim());
+  const col = {};
+  ['session_id', 'sap_code', 'session_date', 'status', 'course_name'].forEach((name) => {
+    col[name] = header.indexOf(name);
+    if (col[name] < 0) throw new Error(`Sessions is missing column ${name}`);
+  });
+  const rows = [];
+  let skipped = 0;
+  values.slice(1).forEach((row) => {
+    const status = String(row[col.status] ?? '').trim().toUpperCase();
+    if (!USAGE_BLOCKING_STATUSES_.includes(status)) return;
+    const raw = row[col.session_date];
+    const date = raw instanceof Date ? formatDate(raw) : String(raw ?? '').trim();
+    const sessionId = String(row[col.session_id] ?? '').trim();
+    const sapId = String(row[col.sap_code] ?? '').trim();
+    // ponytail: only ISO yyyy-mm-dd (or a real Date) is understood; anything else is counted as skipped and logged.
+    if (!sessionId || !sapId || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { skipped++; return; }
+    if (date < todayYmd) return;
+    rows.push({ session_id: sessionId, sap_id: sapId, usage_date: date, course_name: String(row[col.course_name] ?? '').trim(), status });
+  });
+  return { rows, skipped };
+}
+
+function syncManikinUsage_(supabaseUrl, anonKey, syncJwt, spreadsheet) {
+  const sheet = spreadsheet.getSheetByName('Sessions');
+  if (!sheet) throw new Error('Sheet Sessions not found');
+  const ymd = (d) => Utilities.formatDate(d, 'Asia/Bangkok', 'yyyy-MM-dd');
+  const { rows, skipped } = buildUsageRows_(sheet.getDataRange().getValues(), ymd(new Date()), ymd);
+  if (!rows.length) {
+    Logger.log('usage sync: no current/future sessions (skipped=%s), nothing sent', skipped);
+    return;
+  }
+  const response = UrlFetchApp.fetch(`${supabaseUrl}/rest/v1/rpc/sync_manikin_usage_from_sheet`, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: `Bearer ${syncJwt}`, apikey: anonKey },
+    payload: JSON.stringify({ p_rows: rows }),
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() >= 300) throw new Error(`Usage sync failed (${response.getResponseCode()}): ${redactSecrets_(response.getContentText())}`);
+  Logger.log('usage sync ok: rows_sent=%s skipped=%s result=%s', rows.length, skipped, response.getContentText());
 }
 
 // Read-only reconciliation; intentionally does not write metadata or availability.

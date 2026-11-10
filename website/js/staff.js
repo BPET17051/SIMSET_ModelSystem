@@ -186,6 +186,23 @@
       </article>`).join('') : '<div class="empty-state bg-white">ไม่มี Conflict ค้าง</div>';
   }
 
+  // Advisory panel: open requests whose assigned manikin is in a course on a day of the borrow window.
+  function renderUsageConflicts(rows, failed) {
+    const root = document.getElementById('staff-usage-conflicts');
+    if (!root) return;
+    if (failed) {
+      root.innerHTML = '<div class="empty-state bg-white">ตรวจการชนกับคอร์สไม่ได้ในขณะนี้</div>';
+      return;
+    }
+    const list = Array.isArray(rows) ? rows : [];
+    root.innerHTML = list.length ? list.map((c) => `
+      <article class="staff-order-card is-urgent">
+        <div class="d-flex justify-content-between gap-2"><strong>${esc(c.tracking_id)}</strong><span class="status-pill status-maintenance">ชนกับคอร์ส</span></div>
+        <div class="small mt-2">${esc(c.model_id || c.sap_id)} (${esc(c.sap_id)}) ใช้ในคอร์สวันที่ ${esc((c.dates || []).join(', '))}</div>
+        <div class="small text-muted">${esc((c.courses || []).join(', ') || 'ไม่ระบุคอร์ส')} · ผู้ยืม ${esc(c.borrower_name || '-')}</div>
+      </article>`).join('') : '<div class="empty-state bg-white">ไม่มีหุ่นที่ชนกับคอร์ส</div>';
+  }
+
   async function resolveSyncConflict(sapId) {
     const note = window.prompt('หมายเหตุการยืนยันซ่อมเสร็จ', 'ตรวจสภาพแล้วพร้อมใช้งาน');
     if (!note || !note.trim()) return;
@@ -205,6 +222,9 @@
     const conflicts = await supabase.rpc('get_open_manikin_sync_conflicts');
     if (conflicts.error) throw conflicts.error;
     renderSyncConflicts(conflicts.data);
+    // Advisory only: if the usage RPC is missing/failing the board must still load.
+    const usage = await supabase.rpc('get_manikin_usage_conflicts');
+    renderUsageConflicts(usage.data, Boolean(usage.error));
     const prepare = Array.isArray(data?.to_prepare) ? data.to_prepare : [];
     const checkedOut = Array.isArray(data?.checked_out) ? data.checked_out : [];
     renderColumn('staff-to-prepare', 'staff-count-prepare', prepare.filter((row) => row.status === 'approved'), 'pickup');
