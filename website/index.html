@@ -46,6 +46,12 @@
     </header>
     <section class="py-3 border-bottom catalog-toolbar">
       <div class="container px-4 px-lg-5">
+        <div class="catalog-primary" aria-label="ช่วงวันที่ต้องการยืม">
+          <div class="catalog-date"><label class="form-label small mb-1" for="catalog-start-date">รับอุปกรณ์</label><input id="catalog-start-date" class="form-control form-control-sm" type="date"></div>
+          <div class="catalog-date"><label class="form-label small mb-1" for="catalog-end-date">คืนอุปกรณ์</label><input id="catalog-end-date" class="form-control form-control-sm" type="date"></div>
+          <button class="sb-pill" type="button" id="catalog-only-available" aria-pressed="false">พร้อมยืมเท่านั้น</button>
+          <p class="recognition-hint catalog-recognition-hint catalog-hint">ดูชื่ออุปกรณ์และจำนวนพร้อมยืมได้ทันที ถ้าต้องดูข้อมูลเพิ่มเติมให้กด "ดูรายละเอียด" ก่อนเพิ่มรายการยืม</p>
+        </div>
         <div class="filter-groups">
           <div class="filter-group">
             <span class="filter-label">ประเภทอุปกรณ์</span>
@@ -60,7 +66,7 @@
             <span class="filter-label">กลุ่มผู้ป่วย</span>
             <div class="sb-filter-pills" id="catalog-patient" role="group" aria-label="กลุ่มผู้ป่วย"></div>
           </div>
-          <div class="filter-group">
+          <div class="filter-group filter-group-wide">
             <span class="filter-label">หมวดหมู่</span>
             <div class="sb-filter-pills" id="catalog-filter" role="group" aria-label="หมวดหมู่อุปกรณ์">
               <button class="sb-pill active" data-type="all">ทั้งหมด</button>
@@ -73,7 +79,6 @@
         </div>
         <div class="catalog-tools">
           <span id="catalog-count" class="text-muted small text-nowrap me-auto"></span>
-          <button class="sb-pill" type="button" id="catalog-only-available" aria-pressed="false">พร้อมยืมเท่านั้น</button>
           <label class="visually-hidden" for="catalog-sort">เรียงตาม</label>
           <select id="catalog-sort" class="form-select form-select-sm catalog-sort">
             <option value="name">เรียงตามชื่อ</option>
@@ -86,13 +91,6 @@
           </div>
           <button class="btn btn-outline-dark btn-sm" type="button" id="compare-open" disabled><i class="bi-columns-gap me-1"></i>เปรียบเทียบ <span id="compare-count">0</span></button>
         </div>
-        <div class="row g-2 mt-3" aria-label="ช่วงวันที่ต้องการยืม">
-          <div class="col-6 col-sm-5 col-md-3"><label class="form-label small mb-1" for="catalog-start-date">รับอุปกรณ์</label><input id="catalog-start-date" class="form-control form-control-sm" type="date"></div>
-          <div class="col-6 col-sm-5 col-md-3"><label class="form-label small mb-1" for="catalog-end-date">คืนอุปกรณ์</label><input id="catalog-end-date" class="form-control form-control-sm" type="date"></div>
-        </div>
-        <p class="recognition-hint catalog-recognition-hint mt-3 mb-0">
-          ดูชื่ออุปกรณ์และจำนวนพร้อมยืมได้ทันที ถ้าต้องดูข้อมูลเพิ่มเติมให้กด "ดูรายละเอียด" ก่อนเพิ่มรายการยืม
-        </p>
       </div>
     </section>
     <aside id="compare-drawer" class="compare-drawer" hidden aria-label="เปรียบเทียบอุปกรณ์"></aside>

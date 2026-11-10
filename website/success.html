@@ -36,21 +36,23 @@
         <div class="row g-4">
           <div class="col-lg-8">
             <div class="bg-white border rounded p-4">
-              <h1 class="h3">Borrow request submitted</h1>
-              <p class="text-muted">Keep this confirmation for tracking and pickup coordination.</p>
-              <div id="success-message" class="alert d-none"></div>
+              <h1 class="h3">ส่งคำขอยืมแล้ว</h1>
+              <p class="text-muted">เก็บรหัสติดตามนี้ไว้สำหรับตรวจสอบสถานะและประสานการรับอุปกรณ์</p>
+              <p class="small text-muted">เจ้าหน้าที่จะติดต่อกลับทางเบอร์โทรที่คุณระบุไว้ ถ้าต้องการสอบถามความคืบหน้า ให้แจ้งรหัสติดตามนี้กับเจ้าหน้าที่ หรือเปิดหน้า "ติดตามคำขอ" เพื่อดูสถานะล่าสุด</p>
+              <div id="success-message" class="alert d-none" role="status" aria-live="polite"></div>
+              <div class="document-status-strip mb-3"><span class="is-current">ส่งคำขอแล้ว</span><span>รออนุมัติ</span><span>พร้อมจ่าย</span><span>รับ–คืน</span></div>
               <div id="receipt-content"></div>
               <div class="d-flex gap-2 mt-4">
-                <button id="print-receipt" class="btn btn-dark" type="button">Print</button>
-                <a id="claim-link" class="btn btn-outline-dark" href="history.html">Save to my history</a>
-                <a id="track-link" class="btn btn-outline-dark" href="track.html">Track request</a>
+                <a id="track-link" class="btn btn-primary" href="track.html">ติดตามคำขอ</a>
+                <a id="claim-link" class="btn btn-outline-secondary" href="history.html">บันทึกในประวัติ</a>
+                <button id="print-receipt" class="btn btn-outline-secondary" type="button">พิมพ์ใบยืนยัน</button>
               </div>
             </div>
           </div>
           <div class="col-lg-4">
             <div class="bg-white border rounded p-4 text-center">
-              <h2 class="h5">Tracking QR</h2>
-              <img id="tracking-qr" class="img-fluid my-3" alt="Tracking QR code">
+              <h2 class="h5">รหัสติดตาม</h2>
+              <div id="tracking-qr" class="border rounded p-3 my-3 bg-light" role="img" aria-label="ลิงก์ติดตามคำขอภายในระบบ"></div>
               <p id="tracking-url" class="small text-muted text-break"></p>
               <button id="copy-tracking-url" class="btn btn-outline-secondary btn-sm" type="button">คัดลอกลิงก์</button>
             </div>
