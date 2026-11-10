@@ -234,13 +234,35 @@
     renderColumn('staff-returned-today', 'staff-count-returned', data?.returned_today, null);
   }
 
+  // Phone photos are 3-5 MB; re-encode to JPEG at max 1600 px before upload. Falls back to the original file
+  // if the browser cannot decode it (e.g. HEIC) so a photo is never silently dropped.
+  // ponytail: canvas re-encode, no library; quality 0.8 is good enough for condition evidence. Upgrade path: none needed.
+  async function shrinkImage(file) {
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close?.();
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+      if (!blob || blob.size >= file.size) return file;
+      return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+    } catch {
+      return file;
+    }
+  }
+
   async function uploadImages(requestId, files) {
     const list = Array.from(files || []);
     if (!list.length) throw new Error('กรุณาแนบภาพถ่ายอย่างน้อย 1 ภาพ');
     if (!supabase.storage?.from) throw new Error('Supabase Storage is not available.');
 
     const urls = [];
-    for (const file of list) {
+    for (const original of list) {
+      const file = await shrinkImage(original);
       const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const path = `${requestId}/${Date.now()}-${safeName}`;
       const { data, error } = await supabase.storage.from('condition-snapshots').upload(path, file, { upsert: false });
