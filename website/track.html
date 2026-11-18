@@ -35,12 +35,13 @@
     </nav>
     <main class="py-5">
       <div class="container px-4 px-lg-5">
-        <h1 class="h2">ติดตามสถานะ</h1>
+        <h1 class="h2">ติดตามสถานะคำขอ</h1>
+        <p class="text-muted">ดูขั้นตอนถัดไป วันรับ–คืน และรายการอุปกรณ์จากเลขติดตามเดียวกัน</p>
         <form id="track-form" class="row g-2 my-4">
-          <div class="col-md-9"><input id="track-id" class="form-control form-control-lg" placeholder="กรอก Tracking ID เช่น BR-2026-ABC123"></div>
+          <div class="col-md-9"><label class="form-label" for="track-id">รหัสติดตาม</label><input id="track-id" class="form-control form-control-lg" autocomplete="off" placeholder="เช่น BR-2026-ABC123" required></div>
           <div class="col-md-3 d-grid"><button class="btn btn-dark btn-lg" type="submit">ค้นหา</button></div>
         </form>
-        <div id="track-result"></div>
+        <div id="track-result" aria-live="polite"></div>
       </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>

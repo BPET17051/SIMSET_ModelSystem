@@ -5,11 +5,26 @@
   const $ = (selector) => document.querySelector(selector);
   const esc = app.esc;
 
+  const WORKFLOW = [
+    ['pending', 'ส่งคำขอ'], ['approved', 'อนุมัติแล้ว'], ['ready', 'พร้อมจ่าย'],
+    ['borrowed', 'ยืมอยู่'], ['returned', 'คืนแล้ว']
+  ];
+
+  function workflow(request) {
+    const terminal = ['rejected', 'cancelled'].includes(request.status);
+    const overdue = request.status === 'overdue';
+    const steps = terminal ? [['pending', 'ส่งคำขอ'], [request.status, STATUS_LABELS[request.status] || request.status]]
+      : overdue ? [...WORKFLOW.slice(0, 4), ['overdue', STATUS_LABELS.overdue || 'เกินกำหนดคืน']]
+      : WORKFLOW;
+    const current = steps.findIndex(([status]) => status === request.status);
+    return `<div class="progress-steps mb-3" aria-label="ลำดับสถานะคำขอ">${steps.map(([status, label], index) => `<span class="progress-step ${index <= current ? 'is-current' : ''} ${status === request.status ? 'fw-bold' : ''}">${esc(label)}</span>`).join('')}</div>`;
+  }
+
   function render(request) {
     const root = $('#track-result');
     if (!root) return;
     if (!request) {
-      root.innerHTML = '<div class="empty-state">ยังไม่พบคำขอ กรุณากรอก Tracking ID</div>';
+      root.innerHTML = '<div class="alert alert-warning" role="alert">ยังไม่พบคำขอ กรุณาตรวจสอบรหัสติดตาม</div>';
       return;
     }
     const items = request.items || [];
@@ -23,6 +38,7 @@
             </div>
             <span class="status-pill status-${esc(request.status)}">${esc(STATUS_LABELS[request.status] || request.status)}</span>
           </div>
+          ${workflow(request)}
           <hr>
           <p class="mb-1"><strong>วัตถุประสงค์:</strong> ${esc(request.purpose || '-')}</p>
           <p class="mb-3"><strong>วันที่ส่งคำขอ:</strong> ${esc(request.created_at || '-')}</p>

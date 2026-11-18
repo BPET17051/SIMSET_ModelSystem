@@ -34,7 +34,7 @@
   }
 
   function itemRows(items) {
-    const rows = (items || []).slice(0, 5).map((item, index) => {
+    const rows = (items || []).map((item, index) => {
       const code = item.asset_code || item.manikin_sap_id || item.unit_code || '';
       return `
         <tr>
@@ -46,8 +46,16 @@
           <td></td>
         </tr>`;
     });
-    while (rows.length < 5) rows.push('<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>');
-    return rows.join('');
+    return rows.length ? rows.join('') : '<tr><td colspan="6">ไม่มีรายการอุปกรณ์</td></tr>';
+  }
+
+  function documentStatus(request) {
+    const labels = {
+      pending: 'รออนุมัติ', approved: 'อนุมัติแล้ว', ready: 'พร้อมจ่าย', borrowed: 'ยืมอยู่',
+      overdue: 'เกินกำหนดคืน', returned: 'คืนแล้ว', inspection: 'รอตรวจรับ', completed: 'เสร็จสิ้น',
+      damaged: 'พบชำรุด', lost: 'สูญหาย', rejected: 'ไม่อนุมัติ', cancelled: 'ยกเลิกแล้ว', expired: 'หมดอายุ'
+    };
+    return labels[request.status] || request.status || 'ไม่ทราบสถานะ';
   }
 
   function renderReceipt(request) {
@@ -64,16 +72,19 @@
     const owner = request.borrow_purpose_owner || purposePart(request, 'owner');
     const workPurpose = request.work_purpose || purposePart(request, 'work');
     const usageLocation = request.usage_location || purposePart(request, 'location');
+    const approvedAt = request.approved_at ? splitDate(String(request.approved_at).slice(0, 10)) : null;
+    const checkedOutAt = request.checked_out_at ? splitDate(String(request.checked_out_at).slice(0, 10)) : null;
+    const returnedAt = request.returned_at ? splitDate(String(request.returned_at).slice(0, 10)) : null;
     document.getElementById('track-link').href = `track.html?id=${encodeURIComponent(trackingId)}`;
     document.getElementById('claim-link').href = `history.html?claim=${encodeURIComponent(trackingId)}`;
     document.getElementById('tracking-url').textContent = trackUrl;
-    document.getElementById('tracking-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(trackUrl)}`;
+    document.getElementById('tracking-qr').textContent = `เปิดลิงก์ติดตามนี้จากอุปกรณ์เดียวกัน หรือคัดลอกลิงก์ด้านล่าง`;
 
     root.innerHTML = `
       <section class="borrow-form-print">
         <div class="borrow-form-meta">
-          <span>Tracking ID: <strong>${esc(trackingId)}</strong></span>
-          <span>Status: ${esc(STATUS_LABELS[request.status] || request.status)}</span>
+          <span>รหัสติดตาม: <strong>${esc(trackingId)}</strong></span>
+          <span>สถานะ: ${esc(documentStatus(request))}</span>
         </div>
         <div class="borrow-form-date">วันที่ ${esc(createdDate.day)} เดือน ${esc(createdDate.month)} พ.ศ. ${esc(createdDate.year)}</div>
         <h2>ส่วนที่ 1 สำหรับผู้ยืม</h2>
@@ -94,6 +105,20 @@
           </thead>
           <tbody>${itemRows(request.items)}</tbody>
         </table>
+        <h2>ส่วนที่ 2 ผลการอนุมัติ</h2>
+        <div class="borrow-form-line">ผลการอนุมัติ <strong>${esc(documentStatus(request))}</strong></div>
+        <div class="borrow-form-line">วันที่อนุมัติ ${approvedAt ? `${approvedAt.day}/${approvedAt.month}/${approvedAt.year}` : 'ยังไม่มีข้อมูล'}</div>
+        <div class="borrow-form-sign-grid">
+          <div>ลงชื่อผู้อนุมัติ ........................................<br>วันที่ .......... / .......... / ..........</div>
+          <div>ลงชื่อผู้อนุมัติ ........................................<br>วันที่ .......... / .......... / ..........</div>
+        </div>
+        <h2>ส่วนที่ 3 การส่งคืนและสภาพอุปกรณ์</h2>
+        <div class="borrow-form-line">วันที่จ่ายอุปกรณ์ ${checkedOutAt ? `${checkedOutAt.day}/${checkedOutAt.month}/${checkedOutAt.year}` : 'ยังไม่มีข้อมูล'}</div>
+        <div class="borrow-form-line">วันที่คืนอุปกรณ์ ${returnedAt ? `${returnedAt.day}/${returnedAt.month}/${returnedAt.year}` : 'ยังไม่มีข้อมูล'}</div>
+        <div class="borrow-form-sign-grid">
+          <div>ผู้ส่งคืน ........................................<br>สภาพอุปกรณ์ ........................................</div>
+          <div>เจ้าหน้าที่ผู้รับคืน ........................................<br>สภาพอุปกรณ์ ........................................</div>
+        </div>
         <div class="borrow-form-sign-grid">
           <div>ผู้รับอุปกรณ์ ........................................<br>วันที่ .......... / .......... / ..........</div>
           <div>ผู้จ่ายอุปกรณ์ ........................................<br>วันที่ .......... / .......... / ..........</div>
