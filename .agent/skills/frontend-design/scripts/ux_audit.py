@@ -113,7 +113,7 @@ class UXAuditor:
 
         # Pre-calculate common flags
         has_long_text = bool(re.search(r'<p|<div.*class=.*text|article|<span.*text', content, re.IGNORECASE))
-        has_form = bool(re.search(r'<form|<input|password|credit|card|payment', content, re.IGNORECASE))
+        has_form = bool(re.search(r'<form|<input|<select|<textarea', content, re.IGNORECASE))  # ponytail: markup only; keywords like 'card' caused false positives
         complex_elements = len(re.findall(r'<input|<select|<textarea|<option', content, re.IGNORECASE))
 
         # --- 1. PSYCHOLOGY LAWS ---
@@ -173,7 +173,7 @@ class UXAuditor:
         # --- 1.6 TRUST BUILDING (Enhanced) ---
 
         # Security signals
-        if has_form:
+        if has_form and filepath.endswith(('.html', '.tsx', '.jsx', '.vue', '.svelte')):
             security_signals = re.findall(r'ssl|secure|encrypt|lock|padlock|https', content, re.IGNORECASE)
             if len(security_signals) == 0 and not re.search(r'checkout|payment', content, re.IGNORECASE):
                 self.warnings.append(f"[Trust] {filename}: Form without security indicators. Add 'SSL Secure' or lock icon.")
@@ -208,7 +208,7 @@ class UXAuditor:
             self.warnings.append(f"[Cognitive Load] {filename}: High visual noise detected. Many colors and borders increase cognitive load.")
 
         # Familiar patterns
-        if has_form:
+        if has_form and filepath.endswith(('.html', '.tsx', '.jsx', '.vue', '.svelte')):
             has_standard_labels = bool(re.search(r'<label|placeholder|aria-label', content, re.IGNORECASE))
             if not has_standard_labels:
                 self.issues.append(f"[Cognitive Load] {filename}: Form inputs without labels. Use <label> for accessibility and clarity.")
@@ -216,7 +216,7 @@ class UXAuditor:
         # --- 1.8 PERSUASIVE DESIGN (Ethical) ---
 
         # Smart defaults
-        if has_form:
+        if has_form and filepath.endswith(('.html', '.tsx', '.jsx', '.vue', '.svelte')):
             has_defaults = bool(re.search(r'checked|selected|default|value=["\'].*["\']', content))
             radio_inputs = len(re.findall(r'type=["\']radio', content, re.IGNORECASE))
             if radio_inputs > 0 and not has_defaults:
@@ -236,7 +236,7 @@ class UXAuditor:
                 self.warnings.append(f"[Persuasion] {filename}: Social proof without specific numbers. Use 'Join 10,000+' format.")
 
         # Progress indicators
-        if has_form:
+        if has_form and filepath.endswith(('.html', '.tsx', '.jsx', '.vue', '.svelte')):
             has_progress = bool(re.search(r'progress|step \d+|complete|%|bar', content, re.IGNORECASE))
             if complex_elements > 5 and not has_progress:
                 self.warnings.append(f"[Persuasion] {filename}: Long form without progress indicator. Add progress bar or 'Step X of Y'.")
