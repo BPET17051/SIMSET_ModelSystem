@@ -6,6 +6,7 @@
   let onlyAvailable = false;
   let assetKind = 'all';
   const patientGroups = new Set();
+  const trainingSkills = new Set();
   // Display only: generic stored type values are shown by Thai asset-kind label instead.
   const GENERIC_TYPES = new Set(['manikin', 'kit', 'equipment']);
   const KIND_LABEL = { manikin: 'หุ่นฝึก', kit: 'กล่องอุปกรณ์', tracked_unit: 'อุปกรณ์อื่น' };
@@ -263,7 +264,25 @@
     if (!root) return;
     // Generic stored values already covered by the asset-kind filter are hidden from this row only; filtering still matches them under "ทั้งหมด".
     const categories = [...new Set(equipment.map((item) => typeLabel(item.type)).filter((label) => label && !GENERIC_TYPES.has(String(label).toLowerCase())))];
-    root.innerHTML = ['ทั้งหมด', ...categories].map((label, index) => `<button class="sb-pill ${index === 0 ? 'active' : ''}" data-type="${esc(index === 0 ? 'all' : label)}" type="button">${esc(label)}</button>`).join('');
+    root.innerHTML = ['ทั้งหมด', ...categories].map((label, index) => `<button class="sb-pill ${index === 0 ? 'active' : ''}" data-type="${esc(index === 0 ? 'all' : label)}" type="button" aria-pressed="${index === 0}">${esc(label)}</button>`).join('');
+  }
+
+  function renderSelectedFilters() {
+    const labels = [];
+    const query = ($('#catalog-search')?.value || '').trim();
+    if (query) labels.push(`ค้นหา: ${query}`);
+    if (assetKind !== 'all') labels.push(KIND_LABEL[assetKind] || assetKind);
+    const category = $('#catalog-filter .sb-pill.active');
+    if (category && category.dataset.type !== 'all') labels.push(category.textContent.trim());
+    patientGroups.forEach((group) => labels.push(group));
+    trainingSkills.forEach((skill) => labels.push(skill));
+    if (onlyAvailable) labels.push('พร้อมยืมเท่านั้น');
+    const count = $('#catalog-active-filter-count');
+    if (count) count.textContent = String(labels.length);
+    const root = $('#catalog-active-filters');
+    if (root) root.innerHTML = labels.length
+      ? `<span class="catalog-active-label">ตัวกรองที่เลือก</span>${labels.map((label) => `<span class="badge rounded-pill text-bg-light border">${esc(label)}</span>`).join('')}`
+      : '<span class="text-muted small">กำลังแสดงอุปกรณ์ทั้งหมด</span>';
   }
 
   function availableOf(item) {
@@ -301,6 +320,7 @@
       .filter((item) => !(item.sourceTeamCode === 'BLS_ADULT_QCPR' && item.hasLinkedManikin === false))
       .filter((item) => assetKind === 'all' || item.inventoryMode === assetKind)
       .filter((item) => patientGroups.size === 0 || [...patientGroups].some((g) => item.patientGroups?.has(g)))
+      .filter((item) => trainingSkills.size === 0 || [...trainingSkills].some((skill) => item.trainingSkills?.has(skill)))
       .filter((item) => type === 'all' || item.type === type || typeLabel(item.type) === type)
       .filter((item) => !query || `${item.name} ${item.id} ${item.type} ${typeLabel(item.type)}`.toLowerCase().includes(query))
       .filter((item) => !onlyAvailable || availableOf(item) > 0));
@@ -308,6 +328,7 @@
 
     const count = $('#catalog-count');
     if (count) count.textContent = `${filtered.length} รายการ`;
+    renderSelectedFilters();
     grid.classList.toggle('is-list', viewMode === 'list');
     setViewButtons();
 
@@ -350,9 +371,9 @@
           </div>
         </div>`;
     }).join('') || '<div class="col-12"><div class="empty-state">ไม่พบอุปกรณ์ตามเงื่อนไขที่ค้นหา</div></div>';
-    // ponytail: animates every re-render (<=24 cards); cap stagger so large pages stay snappy.
+    // ponytail: animates <=24 cards; 12ms stagger keeps the full entrance under ~620ms.
     if (window.anime && visible.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      anime.animate(grid.querySelectorAll('.equipment-card'), { opacity: [0, 1], translateY: [16, 0], duration: 420, ease: 'outCubic', delay: anime.stagger(25, { start: 0 }) });
+      anime.animate(grid.querySelectorAll('.equipment-card'), { opacity: [0, 1], translateY: [12, 0], duration: 340, ease: 'outCubic', delay: anime.stagger(12, { start: 0 }) });
     }
     if (filtered.length > visible.length) {
       grid.insertAdjacentHTML('beforeend', `<div class="col-12 text-center mb-5"><button class="btn btn-outline-dark" type="button" id="catalog-load-more">แสดงเพิ่ม (${filtered.length - visible.length} รายการ)</button></div>`);
@@ -450,12 +471,15 @@
     if (!app.features?.equipmentTags || !app.supabase) return;
     const { data, error } = await app.supabase.rpc('get_public_equipment_tags');
     if (error) return;
-    equipment.forEach((item) => { item.patientGroups = new Set(); });
+    equipment.forEach((item) => { item.patientGroups = new Set(); item.trainingSkills = new Set(); });
     (data || []).forEach((row) => {
       const item = equipment.find((entry) => String(entry.id) === String(row.equipment_id));
-      if (item && row.tag_group === 'patient_group') item.patientGroups.add(row.tag_value);
+      if (!item) return;
+      if (row.tag_group === 'patient_group') item.patientGroups.add(row.tag_value);
+      if (row.tag_group === 'skill') item.trainingSkills.add(row.tag_value);
     });
     renderPatientChips();
+    renderSkillChips();
   }
 
   function renderPatientChips() {
@@ -467,6 +491,46 @@
     if (wrap) wrap.hidden = present.length === 0;
     const all = `<button class="sb-pill${patientGroups.size === 0 ? ' active' : ''}" type="button" data-patient="__all" aria-pressed="${patientGroups.size === 0}">ทั้งหมด</button>`;
     root.innerHTML = all + present.map((g) => `<button class="sb-pill${patientGroups.has(g) ? ' active' : ''}" type="button" data-patient="${g}" aria-pressed="${patientGroups.has(g)}">${g}</button>`).join('');
+  }
+
+  function renderSkillChips() {
+    const root = $('#catalog-skill');
+    const wrap = $('#catalog-skill-group');
+    if (!root || !wrap) return;
+    const skills = [...new Set(equipment.flatMap((item) => [...(item.trainingSkills || [])]))].sort((a, b) => a.localeCompare(b));
+    wrap.hidden = false;
+    root.innerHTML = skills.length
+      ? skills.map((skill) => `<button class="sb-pill${trainingSkills.has(skill) ? ' active' : ''}" type="button" data-skill="${esc(skill)}" aria-pressed="${trainingSkills.has(skill)}">${esc(skill)}</button>`).join('')
+      : '<p class="small text-muted mb-0">ยังไม่มีข้อมูลทักษะที่ยืนยันใน Catalog</p>';
+  }
+
+  function clearCatalogFilters() {
+    const search = $('#catalog-search');
+    if (search) search.value = '';
+    assetKind = 'all';
+    onlyAvailable = false;
+    patientGroups.clear();
+    trainingSkills.clear();
+    document.querySelectorAll('#catalog-kind .sb-pill').forEach((pill) => {
+      const active = pill.dataset.kind === 'all';
+      pill.classList.toggle('active', active);
+      pill.setAttribute('aria-pressed', String(active));
+    });
+    document.querySelectorAll('#catalog-filter .sb-pill').forEach((pill) => {
+      const active = pill.dataset.type === 'all';
+      pill.classList.toggle('active', active);
+      pill.setAttribute('aria-pressed', String(active));
+    });
+    const availability = $('#catalog-only-available');
+    if (availability) {
+      availability.classList.remove('active');
+      availability.setAttribute('aria-pressed', 'false');
+      availability.setAttribute('aria-checked', 'false');
+    }
+    visibleCount = PAGE_SIZE;
+    renderPatientChips();
+    renderSkillChips();
+    renderCatalog();
   }
 
   async function initCatalog() {
@@ -509,6 +573,7 @@
     renderCompare();
   });
   document.addEventListener('click', (event) => {
+    if (event.target.closest('#catalog-clear-filters')) { clearCatalogFilters(); return; }
     const quickView = event.target.closest('[data-quick-view]');
     if (quickView) renderQuickView(quickView.dataset.quickView);
     if (event.target.closest('[data-quick-view-close]')) closeQuickView();
@@ -538,8 +603,9 @@
   document.addEventListener('click', (event) => {
     const pill = event.target.closest('#catalog-filter .sb-pill');
     if (!pill) return;
-    document.querySelectorAll('#catalog-filter .sb-pill').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#catalog-filter .sb-pill').forEach(p => { p.classList.remove('active'); p.setAttribute('aria-pressed', 'false'); });
     pill.classList.add('active');
+    pill.setAttribute('aria-pressed', 'true');
     visibleCount = PAGE_SIZE;
     renderCatalog();
   });
@@ -563,9 +629,23 @@
   });
 
   document.addEventListener('click', (event) => {
+    const skillPill = event.target.closest('#catalog-skill .sb-pill');
+    if (!skillPill) return;
+    const skill = skillPill.dataset.skill;
+    if (trainingSkills.has(skill)) trainingSkills.delete(skill); else trainingSkills.add(skill);
+    visibleCount = PAGE_SIZE;
+    renderSkillChips();
+    renderCatalog();
+  });
+
+  document.addEventListener('click', (event) => {
     const kindPill = event.target.closest('#catalog-kind .sb-pill');
     if (!kindPill) return;
-    document.querySelectorAll('#catalog-kind .sb-pill').forEach((pill) => pill.classList.toggle('active', pill === kindPill));
+    document.querySelectorAll('#catalog-kind .sb-pill').forEach((pill) => {
+      const active = pill === kindPill;
+      pill.classList.toggle('active', active);
+      pill.setAttribute('aria-pressed', String(active));
+    });
     assetKind = kindPill.dataset.kind;
     visibleCount = PAGE_SIZE;
     renderCatalog();
@@ -577,6 +657,7 @@
     onlyAvailable = !onlyAvailable;
     toggle.classList.toggle('active', onlyAvailable);
     toggle.setAttribute('aria-pressed', String(onlyAvailable));
+    toggle.setAttribute('aria-checked', String(onlyAvailable));
     visibleCount = PAGE_SIZE;
     renderCatalog();
   });

@@ -38,72 +38,81 @@
       </div>
     </nav>
     <header class="hero-borrow">
-      <div class="container px-4 px-lg-5 py-5">
+      <div class="container px-4 px-lg-5">
         <p class="hero-eyebrow mb-2">SIMSET · Equipment Catalog</p>
-        <h1 class="display-5 fw-bolder text-white mb-2">ระบบยืม-คืนอุปกรณ์การแพทย์จำลอง</h1>
-        <p class="text-white-50 mb-4">คณะพยาบาลศาสตร์ มหาวิทยาลัยมหิดล</p>
-        <div class="sb-hero-search">
-          <input id="catalog-search" class="form-control" type="search" placeholder="ค้นหาอุปกรณ์ เช่น หุ่น, CPR, สายสวน...">
-          <button class="btn btn-brand" type="button" id="hero-search-btn">ค้นหา</button>
-        </div>
+        <h1 class="display-6 fw-bolder text-white mb-1">อุปกรณ์ฝึกทางการแพทย์</h1>
+        <p class="text-white-50 mb-0">คณะพยาบาลศาสตร์ มหาวิทยาลัยมหิดล</p>
       </div>
     </header>
     <section class="py-3 border-bottom catalog-toolbar">
       <div class="container px-4 px-lg-5">
-        <div class="catalog-primary" aria-label="ช่วงวันที่ต้องการยืม">
-          <div class="catalog-date"><label class="form-label small mb-1" for="catalog-start-date">รับอุปกรณ์</label><input id="catalog-start-date" class="form-control form-control-sm" type="date"></div>
-          <div class="catalog-date"><label class="form-label small mb-1" for="catalog-end-date">คืนอุปกรณ์</label><input id="catalog-end-date" class="form-control form-control-sm" type="date"></div>
-          <button class="sb-pill" type="button" id="catalog-only-available" aria-pressed="false">พร้อมยืมเท่านั้น</button>
-          <p class="recognition-hint catalog-recognition-hint catalog-hint">ดูชื่ออุปกรณ์และจำนวนพร้อมยืมได้ทันที ถ้าต้องดูข้อมูลเพิ่มเติมให้กด "ดูรายละเอียด" ก่อนเพิ่มรายการยืม</p>
-        </div>
-        <div class="filter-groups">
-          <div class="filter-group">
-            <span class="filter-label">ประเภทอุปกรณ์</span>
-            <div class="sb-filter-pills" id="catalog-kind" role="group" aria-label="ประเภทอุปกรณ์">
-              <button class="sb-pill active" type="button" data-kind="all">ทั้งหมด</button>
-              <button class="sb-pill" type="button" data-kind="manikin">หุ่นฝึก</button>
-              <button class="sb-pill" type="button" data-kind="kit">กล่องอุปกรณ์</button>
-              <button class="sb-pill" type="button" data-kind="tracked_unit">อุปกรณ์อื่น</button>
-            </div>
-          </div>
-          <div class="filter-group" id="catalog-patient-group" hidden>
-            <span class="filter-label">กลุ่มผู้ป่วย</span>
-            <div class="sb-filter-pills" id="catalog-patient" role="group" aria-label="กลุ่มผู้ป่วย"></div>
-          </div>
-          <div class="filter-group filter-group-wide">
-            <span class="filter-label">หมวดหมู่</span>
-            <div class="sb-filter-pills" id="catalog-filter" role="group" aria-label="หมวดหมู่อุปกรณ์">
-              <button class="sb-pill active" data-type="all">ทั้งหมด</button>
-              <button class="sb-pill" data-type="ผู้ใหญ่">ผู้ใหญ่</button>
-              <button class="sb-pill" data-type="เด็ก">เด็ก</button>
-              <button class="sb-pill" data-type="ทารก">ทารก</button>
-              <button class="sb-pill" data-type="ทั่วไป">ทั่วไป</button>
-            </div>
-          </div>
-        </div>
-        <div class="catalog-tools">
-          <span id="catalog-count" class="text-muted small text-nowrap me-auto"></span>
-          <label class="visually-hidden" for="catalog-sort">เรียงตาม</label>
-          <select id="catalog-sort" class="form-select form-select-sm catalog-sort">
-            <option value="name">เรียงตามชื่อ</option>
-            <option value="available">พร้อมยืมมากที่สุด</option>
-            <option value="type">เรียงตามประเภท</option>
-          </select>
-          <div class="btn-group btn-group-sm catalog-view-toggle" role="group" aria-label="มุมมองรายการ">
-            <button class="btn btn-outline-dark active" type="button" data-view="grid" aria-pressed="true" aria-label="มุมมองการ์ด"><i class="bi-grid-3x3-gap"></i></button>
-            <button class="btn btn-outline-dark" type="button" data-view="list" aria-pressed="false" aria-label="มุมมองรายการ"><i class="bi-list-ul"></i></button>
-          </div>
-          <button class="btn btn-outline-dark btn-sm" type="button" id="compare-open" disabled><i class="bi-columns-gap me-1"></i>เปรียบเทียบ <span id="compare-count">0</span></button>
+        <div class="catalog-primary" aria-label="ค้นหาและช่วงวันที่ต้องการยืม">
+          <div class="catalog-search"><label class="visually-hidden" for="catalog-search">ค้นหาอุปกรณ์</label><div class="input-group"><span class="input-group-text bg-white"><i class="bi-search" aria-hidden="true"></i></span><input id="catalog-search" class="form-control" type="search" placeholder="ค้นหาอุปกรณ์ ชื่อ รุ่น หรือรหัส..."></div></div>
+          <div class="catalog-date"><label class="form-label small mb-1" for="catalog-start-date">รับอุปกรณ์</label><input id="catalog-start-date" class="form-control" type="date"></div>
+          <div class="catalog-date"><label class="form-label small mb-1" for="catalog-end-date">คืนอุปกรณ์</label><input id="catalog-end-date" class="form-control" type="date"></div>
+          <button class="catalog-available-toggle" type="button" id="catalog-only-available" role="switch" aria-checked="false" aria-pressed="false"><span class="catalog-switch" aria-hidden="true"></span><span>พร้อมยืมเท่านั้น</span></button>
+          <button class="btn btn-outline-dark d-lg-none catalog-filter-open" type="button" id="catalog-filter-open" data-bs-toggle="offcanvas" data-bs-target="#catalogFilterPanel" aria-controls="catalogFilterPanel"><i class="bi-sliders me-2" aria-hidden="true"></i>ตัวกรอง <span class="badge rounded-pill text-bg-secondary ms-1" id="catalog-active-filter-count">0</span></button>
         </div>
       </div>
     </section>
     <aside id="compare-drawer" class="compare-drawer" hidden aria-label="เปรียบเทียบอุปกรณ์"></aside>
     <div id="quick-view-modal" class="quick-view-modal" hidden aria-hidden="true"></div>
-    <section class="py-5">
-      <div class="container px-4 px-lg-5 mt-4">
-        <div id="equipment-grid" class="row gx-4 gx-lg-5 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 justify-content-center"></div>
+    <main class="catalog-main py-4 py-lg-5">
+      <div class="container px-4 px-lg-5">
+        <div class="row g-4 g-xl-5 align-items-start">
+          <aside class="col-lg-3 col-xl-3">
+            <div id="catalogFilterPanel" class="offcanvas offcanvas-lg offcanvas-start catalog-filter-panel" tabindex="-1" aria-labelledby="catalogFilterTitle">
+              <div class="offcanvas-header">
+                <h2 class="offcanvas-title h5" id="catalogFilterTitle">ตัวกรองอุปกรณ์</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิดตัวกรอง"></button>
+              </div>
+              <div class="offcanvas-body">
+                <div class="catalog-filter-heading"><div><p class="eyebrow mb-1">REFINE RESULTS</p><h2 class="h5 mb-0">ตัวกรอง</h2></div><button class="btn btn-link btn-sm p-0" type="button" id="catalog-clear-filters">ล้างตัวกรอง</button></div>
+                <div class="filter-groups">
+                  <details class="filter-accordion" open>
+                    <summary>ประเภทอุปกรณ์</summary>
+                    <div class="sb-filter-pills" id="catalog-kind" role="group" aria-label="ประเภทอุปกรณ์">
+                      <button class="sb-pill active" type="button" data-kind="all" aria-pressed="true">ทั้งหมด</button>
+                      <button class="sb-pill" type="button" data-kind="manikin" aria-pressed="false">หุ่นฝึก</button>
+                      <button class="sb-pill" type="button" data-kind="kit" aria-pressed="false">กล่องอุปกรณ์</button>
+                      <button class="sb-pill" type="button" data-kind="tracked_unit" aria-pressed="false">อุปกรณ์อื่น</button>
+                    </div>
+                  </details>
+                  <details class="filter-accordion" id="catalog-patient-group" hidden>
+                    <summary>กลุ่มผู้ป่วย</summary>
+                    <div class="sb-filter-pills" id="catalog-patient" role="group" aria-label="กลุ่มผู้ป่วย"></div>
+                  </details>
+                  <details class="filter-accordion">
+                    <summary>หมวดหมู่</summary>
+                    <div class="sb-filter-pills" id="catalog-filter" role="group" aria-label="หมวดหมู่อุปกรณ์"></div>
+                  </details>
+                  <details class="filter-accordion" id="catalog-skill-group" hidden>
+                    <summary>ทักษะที่ฝึกได้</summary>
+                    <div class="sb-filter-pills" id="catalog-skill" role="group" aria-label="ทักษะที่ฝึกได้"></div>
+                  </details>
+                </div>
+                <div class="catalog-filter-footer d-lg-none"><button type="button" class="btn btn-brand w-100" data-bs-dismiss="offcanvas">แสดงผลอุปกรณ์</button></div>
+              </div>
+            </div>
+          </aside>
+          <section class="col-lg-9 col-xl-9" aria-labelledby="catalog-results-title">
+            <div class="catalog-results-heading"><div><p class="eyebrow mb-1">SIMULATION EQUIPMENT</p><h2 class="h4 mb-1" id="catalog-results-title">รายการอุปกรณ์</h2><span id="catalog-count" class="text-muted small" aria-live="polite"></span></div>
+              <div class="catalog-tools">
+                <label class="visually-hidden" for="catalog-sort">เรียงตาม</label>
+                <select id="catalog-sort" class="form-select form-select-sm catalog-sort"><option value="name">เรียงตามชื่อ</option><option value="available">พร้อมยืมมากที่สุด</option><option value="type">เรียงตามประเภท</option></select>
+                <div class="btn-group btn-group-sm catalog-view-toggle" role="group" aria-label="มุมมองรายการ">
+                  <button class="btn btn-outline-dark active" type="button" data-view="grid" aria-pressed="true" aria-label="มุมมองการ์ด"><i class="bi-grid-3x3-gap" aria-hidden="true"></i></button>
+                  <button class="btn btn-outline-dark" type="button" data-view="list" aria-pressed="false" aria-label="มุมมองรายการ"><i class="bi-list-ul" aria-hidden="true"></i></button>
+                </div>
+                <button class="btn btn-outline-dark btn-sm" type="button" id="compare-open" disabled><i class="bi-columns-gap me-1" aria-hidden="true"></i>เปรียบเทียบ <span id="compare-count">0</span></button>
+              </div>
+            </div>
+            <div id="catalog-active-filters" class="catalog-active-filters" aria-label="ตัวกรองที่เลือก" aria-live="polite"></div>
+            <div id="equipment-grid" class="row gx-4 gx-lg-5 row-cols-1 row-cols-sm-2 row-cols-xl-3 justify-content-center"></div>
+          </section>
+        </div>
       </div>
-    </section>
+    </main>
     <footer class="py-5 bg-dark">
       <div class="container"><p class="m-0 text-center text-white">SIMSET Borrow MVP</p></div>
     </footer>
