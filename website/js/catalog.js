@@ -459,7 +459,7 @@
             <button class="btn btn-brand flex-shrink-0" type="button" data-add-to-cart="${esc(item.id)}" ${available <= 0 ? 'disabled' : ''}>
               <i class="bi-cart-fill me-1"></i> เพิ่มรายการยืม
             </button>
-            <a class="btn btn-outline-dark" href="index.html">กลับหน้าอุปกรณ์</a>
+            <a class="btn btn-outline-dark" href="catalog.html">กลับหน้าอุปกรณ์</a>
           </div>
         </div></div>
       </div>`;
@@ -636,6 +636,14 @@
     visibleCount = PAGE_SIZE;
     renderSkillChips();
     renderCatalog();
+  });
+
+  // Landing-page category cards deep-link here as catalog.html?kind=manikin|kit|tracked_unit.
+  const initialKind = new URLSearchParams(location.search).get('kind');
+  document.querySelectorAll('#catalog-kind .sb-pill').forEach((pill) => {
+    if (pill.dataset.kind !== initialKind) return;
+    assetKind = initialKind;
+    document.querySelectorAll('#catalog-kind .sb-pill').forEach((p) => { p.classList.toggle('active', p === pill); p.setAttribute('aria-pressed', String(p === pill)); });
   });
 
   document.addEventListener('click', (event) => {

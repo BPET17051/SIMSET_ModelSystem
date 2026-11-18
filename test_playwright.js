@@ -49,7 +49,7 @@ async function runViewport(browser, name, width, height, reducedMotion) {
       clearInterval(timer);
     }, 0);
   });
-  await page.goto('http://localhost:8788/index.html', { waitUntil: 'domcontentloaded' });
+  await page.goto('http://localhost:8788/catalog.html', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.querySelectorAll('#equipment-grid .equipment-card').length > 0, null, { timeout: 30000 });
   await page.waitForTimeout(550);
 
