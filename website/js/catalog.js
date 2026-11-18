@@ -350,6 +350,10 @@
           </div>
         </div>`;
     }).join('') || '<div class="col-12"><div class="empty-state">ไม่พบอุปกรณ์ตามเงื่อนไขที่ค้นหา</div></div>';
+    // ponytail: animates every re-render (<=24 cards); cap stagger so large pages stay snappy.
+    if (window.anime && visible.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      anime.animate(grid.querySelectorAll('.equipment-card'), { opacity: [0, 1], translateY: [16, 0], duration: 420, ease: 'outCubic', delay: anime.stagger(25, { start: 0 }) });
+    }
     if (filtered.length > visible.length) {
       grid.insertAdjacentHTML('beforeend', `<div class="col-12 text-center mb-5"><button class="btn btn-outline-dark" type="button" id="catalog-load-more">แสดงเพิ่ม (${filtered.length - visible.length} รายการ)</button></div>`);
     }

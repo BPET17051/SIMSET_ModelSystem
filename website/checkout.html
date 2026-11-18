@@ -38,6 +38,9 @@
           <p class="lead">กรอกข้อมูลผู้ยืมและช่วงวันที่ใช้งาน โดยไม่ต้องเข้าสู่ระบบผู้ยืม</p>
           <p class="recognition-hint mx-auto">ข้อมูลที่กรอกจะถูกนำไปใช้ในใบยืมและหน้าติดตามสถานะ โปรดกรอกตามข้อมูลจริงที่เจ้าหน้าที่ใช้ติดต่อกลับได้</p>
         </div>
+        <nav class="workflow-stepper mb-5" aria-label="ขั้นตอนการยืม">
+          <span class="is-done"><b>1</b> เลือกอุปกรณ์</span><span class="is-current"><b>2</b> ตรวจสอบข้อมูล</span><span><b>3</b> ส่งคำขอ</span><span><b>4</b> รออนุมัติ</span>
+        </nav>
         <div class="row g-5">
           <div class="col-md-5 col-lg-4 order-md-last">
             <h4 class="d-flex justify-content-between align-items-center mb-3">
@@ -126,6 +129,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="vendor/supabase.min.js"></script>
+    <script src="vendor/anime.iife.min.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/cart.js"></script>

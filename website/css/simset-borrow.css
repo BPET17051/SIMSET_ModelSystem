@@ -34,6 +34,7 @@ body {
 
 .hero-borrow {
   background: linear-gradient(135deg, #0f766e 0%, #064e3b 100%);
+  overflow: hidden;
   padding-top: 3rem;
   padding-bottom: 3rem;
 }

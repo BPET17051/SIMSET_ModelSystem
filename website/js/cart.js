@@ -59,8 +59,14 @@
   }
 
   function updateCartBadge() {
+    const n = count();
     document.querySelectorAll('[data-cart-count]').forEach((node) => {
-      node.textContent = count();
+      const changed = node.textContent !== String(n);
+      node.textContent = n;
+      // ponytail: Anime.js is optional polish; skip when absent or reduced motion is requested.
+      if (changed && window.anime && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        anime.animate(node, { scale: [1.5, 1], duration: 400, ease: 'outBack' });
+      }
     });
   }
 
