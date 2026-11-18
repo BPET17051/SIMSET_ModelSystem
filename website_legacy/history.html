@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประวัติคำขอยืมของฉัน - SiMSET</title>
+    <meta name="description" content="ดูประวัติคำขอยืมอุปกรณ์ย้อนหลังของบัญชีผู้ใช้ พร้อมเปิดติดตามสถานะรายคำขอได้ทันที">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .history-page-shell {
+            padding-top: 32px;
+            padding-bottom: 32px;
+        }
+
+        .history-page {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            gap: 24px;
+        }
+
+        .history-overview-card {
+            display: grid;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        .history-overview-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .history-overview-copy {
+            display: grid;
+            gap: 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .history-overview-title {
+            font-size: clamp(1.8rem, 4vw, 2.3rem);
+            line-height: 1.12;
+            letter-spacing: -0.03em;
+            font-weight: 800;
+        }
+
+        .history-overview-sub {
+            max-width: 62ch;
+            color: var(--text-2);
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+        }
+
+        .history-state-line {
+            color: var(--text-3);
+            font-size: 0.92rem;
+            overflow-wrap: anywhere;
+        }
+
+        .history-kpis {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .history-kpi {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-card2);
+        }
+
+        .history-kpi-label {
+            margin-bottom: 6px;
+            color: var(--text-3);
+            font-size: 0.82rem;
+        }
+
+        .history-kpi-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .history-section {
+            display: grid;
+            gap: 12px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .history-section-head {
+            display: grid;
+            gap: 8px;
+        }
+
+        .history-section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .history-section-sub {
+            color: var(--text-2);
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .history-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .history-card {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-card2);
+        }
+
+        .history-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .history-card-code {
+            margin-bottom: 4px;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            font-weight: 700;
+        }
+
+        .history-card-meta {
+            color: var(--text-3);
+            font-size: 0.85rem;
+            overflow-wrap: anywhere;
+        }
+
+        .history-card-body {
+            display: grid;
+            grid-template-columns: 1.35fr .9fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .history-card-purpose {
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .history-card-summary {
+            color: var(--text-3);
+            font-size: 0.88rem;
+            overflow-wrap: anywhere;
+        }
+
+        .history-empty {
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+            padding: 24px;
+            text-align: center;
+            color: var(--text-3);
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+            background: rgba(244, 247, 255, 0.72);
+        }
+
+        @media (max-width: 768px) {
+            .history-page-shell {
+                padding-top: 24px;
+                padding-bottom: 24px;
+            }
+
+            .history-overview-card {
+                padding: 20px;
+            }
+
+            .history-overview-head,
+            .history-card-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .history-kpis,
+            .history-card-body {
+                grid-template-columns: 1fr;
+            }
+
+            .history-card-top .btn-outline {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body class="page-shell">
+    <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก</a>
+    <div id="history-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <div data-partial="nav/history"></div>
+
+    <div class="hero-bg-grid"></div>
+
+    <main id="main-content" class="container app-page history-page-shell">
+        <div id="history-feedback" class="status-banner" style="display:none;" aria-live="polite"></div>
+
+        <section class="history-page">
+            <article class="app-page-card history-overview-card">
+                <div class="history-overview-head">
+                    <div class="history-overview-copy">
+                        <div class="app-page-eyebrow">Request History</div>
+                        <h1 class="history-overview-title">ประวัติคำขอยืมของฉัน</h1>
+                        <div class="history-overview-sub">ดูคำขอล่าสุดของบัญชีนี้ เปิดสถานะแต่ละรายการได้ทันที และไปต่อหน้าติดตามแบบละเอียดเมื่อจำเป็น</div>
+                        <div id="history-state" class="history-state-line"></div>
+                        <div class="app-page-inline-actions">
+                            <button id="btn-history-refresh" class="btn-outline btn-sm" type="button" style="display:none;">รีเฟรชรายการ</button>
+                        </div>
+                    </div>
+
+                    <div class="history-kpis" id="history-kpis" style="display:none;">
+                        <div class="history-kpi">
+                            <div class="history-kpi-label">คำขอล่าสุดที่แสดง</div>
+                            <div class="history-kpi-value" id="history-kpi-total">0</div>
+                        </div>
+                        <div class="history-kpi">
+                            <div class="history-kpi-label">รออนุมัติ</div>
+                            <div class="history-kpi-value" id="history-kpi-pending">0</div>
+                        </div>
+                        <div class="history-kpi">
+                            <div class="history-kpi-label">อนุมัติแล้ว</div>
+                            <div class="history-kpi-value" id="history-kpi-approved">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="history-section">
+                    <div class="history-section-head">
+                        <div class="history-section-title">รายการย้อนหลัง</div>
+                        <div class="history-section-sub">โครงหน้านี้คงที่ทุกครั้ง: ดูสถานะ เปิดรายละเอียด และไปต่อหน้า tracking ได้จากจุดเดียว</div>
+                    </div>
+                    <div id="history-list" class="history-list"></div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <div data-partial="footer/default"></div>
+
+    <script src="js/partials.js"></script>
+    <script src="page-transition.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/status-labels.js"></script>
+    <script src="history.js"></script>
+</body>
+
+</html>

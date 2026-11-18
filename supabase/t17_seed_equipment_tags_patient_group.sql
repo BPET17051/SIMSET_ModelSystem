@@ -163,7 +163,7 @@ BEGIN
   IF v_equipments <> 66 THEN RAISE EXCEPTION 'T17 abort: expected 66 equipments, got %', v_equipments; END IF;
 
   SELECT count(*) INTO v_conflict FROM (
-    SELECT s.category, e.id FROM t17_sheet s JOIN public.manikins m ON m.sap_id = s.sap_id
+    SELECT e.id FROM t17_sheet s JOIN public.manikins m ON m.sap_id = s.sap_id
     JOIN public.equipments e ON e.source_team_code = m.team_code
     GROUP BY e.id HAVING count(DISTINCT s.category) > 1) x;
   IF v_conflict > 0 THEN RAISE EXCEPTION 'T17 abort: % equipments have conflicting patient groups', v_conflict; END IF;
@@ -173,7 +173,8 @@ INSERT INTO public.equipment_tags (equipment_id, tag_group, tag_value, evidence)
 SELECT DISTINCT e.id, 'patient_group', s.category, 'sheet_category'
 FROM t17_sheet s
 JOIN public.manikins m ON m.sap_id = s.sap_id
-JOIN public.equipments e ON e.source_team_code = m.team_code;
+JOIN public.equipments e ON e.source_team_code = m.team_code
+ON CONFLICT (equipment_id, tag_group, tag_value) DO NOTHING;
 
 DO $$
 DECLARE v_tags int;

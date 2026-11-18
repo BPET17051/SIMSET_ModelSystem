@@ -1,0 +1,41 @@
+body {
+    background: #fff !important;
+    color: #000 !important;
+}
+
+.nav,
+.hero-bg-grid,
+.print-hidden,
+.live-pill,
+button,
+a.btn-primary,
+a.btn-outline {
+    display: none !important;
+}
+
+.success-shell,
+.tracking-container,
+.success-card {
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+}
+
+.summary-item,
+.tracking-hero-id,
+.info-grid {
+    border: 1px solid #ccc !important;
+    background: transparent !important;
+}
+
+.status-badge,
+.status-badge-lg {
+    color: #000 !important;
+    background: transparent !important;
+    border: 1px solid #000 !important;
+}

@@ -1,0 +1,721 @@
+[
+  {
+    "id": "TC001",
+    "title": "Submit a borrow request and receive a tracking ID",
+    "description": "Verifies an authenticated borrower can create and submit a borrow request and is shown a success page containing a Tracking ID.",
+    "category": "Borrow Request Submission",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /borrow.html"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid start date"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid end date after the start date"
+      },
+      {
+        "type": "action",
+        "description": "Search for an equipment item that is available for the selected date range"
+      },
+      {
+        "type": "action",
+        "description": "Add the equipment item to the cart"
+      },
+      {
+        "type": "action",
+        "description": "Set the cart quantity to 1"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required borrower information fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the borrow request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the submission success page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a Tracking ID is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Approve a pending borrow request",
+    "description": "Verifies an admin can review a pending request, approve it with a note, and the request reflects an approved status in the dashboard.",
+    "category": "Admin Moderation (Approve/Reject & Return Processing)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/index.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the admin login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a pending borrow request"
+      },
+      {
+        "type": "action",
+        "description": "Fill an approval note into the approval note field"
+      },
+      {
+        "type": "action",
+        "description": "Approve the request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the request shows an approved status in the admin dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Look up a request by Tracking ID and view details",
+    "description": "Verifies a public user can search by Tracking ID and view the request status and item details.",
+    "category": "Tracking Lookup and Cancel Pending Request",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tracking.html"
+      },
+      {
+        "type": "action",
+        "description": "Enter a Tracking ID obtained from a newly submitted request"
+      },
+      {
+        "type": "action",
+        "description": "Submit the tracking search"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify request status details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the requested item list is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Enforce availability when cart quantity exceeds available inventory",
+    "description": "Verifies the borrower cannot submit a request when any cart item quantity exceeds availability for the selected date range and is prompted to adjust quantities.",
+    "category": "Borrow Request Submission",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /borrow.html"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid start date"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid end date after the start date"
+      },
+      {
+        "type": "action",
+        "description": "Search for an equipment item that shows limited availability for the selected date range"
+      },
+      {
+        "type": "action",
+        "description": "Add the equipment item to the cart"
+      },
+      {
+        "type": "action",
+        "description": "Increase the cart quantity to a value greater than the shown available quantity"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required borrower information fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the borrow request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an availability or quantity validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user remains on the borrow request page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Reject a borrow request with a reason",
+    "description": "Verifies an admin can reject a request by providing a rejection reason and the request reflects a rejected status in the dashboard.",
+    "category": "Admin Moderation (Approve/Reject & Return Processing)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/index.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the admin login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a request under review"
+      },
+      {
+        "type": "action",
+        "description": "Fill a rejection reason into the rejection reason field"
+      },
+      {
+        "type": "action",
+        "description": "Reject the request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the request shows a rejected status in the admin dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Record per-item return outcomes for a request",
+    "description": "Verifies an admin can record return outcomes per item on a request and the recorded outcomes appear in the request history view.",
+    "category": "Admin Moderation (Approve/Reject & Return Processing)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/index.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the admin login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a request eligible for return processing"
+      },
+      {
+        "type": "action",
+        "description": "Set at least one item outcome to returned"
+      },
+      {
+        "type": "action",
+        "description": "Set at least one item outcome to returned_pending_inspection or damaged"
+      },
+      {
+        "type": "action",
+        "description": "Save the return outcomes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the request shows recorded return outcomes in its history/details view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Cancel a pending request from tracking view",
+    "description": "Verifies a user can cancel a request when its status is pending and sees confirmation that cancellation was submitted.",
+    "category": "Tracking Lookup and Cancel Pending Request",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /borrow.html"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid start date"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid end date after the start date"
+      },
+      {
+        "type": "action",
+        "description": "Search for an available equipment item and add it to the cart with quantity 1"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required borrower information fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the borrow request"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to track the submitted request"
+      },
+      {
+        "type": "action",
+        "description": "Initiate cancellation for the pending request"
+      },
+      {
+        "type": "action",
+        "description": "Confirm cancellation in the cancellation dialog"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a cancellation submitted confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the request status indicates cancellation is in effect or pending cancellation"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "View borrower request history and jump to tracking details",
+    "description": "Verifies an authenticated borrower can view recent requests in history and open a request to jump to its tracking details.",
+    "category": "Borrower History",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /history.html"
+      },
+      {
+        "type": "action",
+        "description": "Open details for a request in the recent history list"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to view tracking details for the selected request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the tracking page for the selected request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify request status details are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Persist moderation status change after page refresh",
+    "description": "Verifies that after approving or rejecting a request, reloading the dashboard still shows the updated status for that request.",
+    "category": "Admin Moderation (Approve/Reject & Return Processing)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/index.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the admin login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a pending borrow request"
+      },
+      {
+        "type": "action",
+        "description": "Fill an approval note into the approval note field"
+      },
+      {
+        "type": "action",
+        "description": "Approve the request"
+      },
+      {
+        "type": "action",
+        "description": "Reload the page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the same request still shows an approved status in the admin dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "History details show dates, items, and current status for a selected request",
+    "description": "Verifies the borrower can open a history entry and see its dates, item list, and current status.",
+    "category": "Borrower History",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /history.html"
+      },
+      {
+        "type": "action",
+        "description": "Open details for a request in the recent history list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected request shows a date range"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected request shows an item list and a current status"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC011",
+    "title": "Filter or locate pending requests for review",
+    "description": "Verifies an admin can narrow the dashboard to pending requests and open one for review.",
+    "category": "Admin Moderation (Approve/Reject & Return Processing)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/index.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the admin login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select the pending status filter or view"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a pending borrow request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the request review details are displayed for the selected pending request"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC012",
+    "title": "Prevent rejecting without a rejection reason",
+    "description": "Verifies attempting to reject a request without providing a rejection reason is blocked and the request is not rejected.",
+    "category": "Admin Moderation (Approve/Reject & Return Processing)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/index.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the admin login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a request under review"
+      },
+      {
+        "type": "action",
+        "description": "Clear the rejection reason field"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to reject the request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a rejection validation error is visible and the request remains not rejected"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Prevent approving without required approval details",
+    "description": "Verifies attempting to approve a request without required approval details is blocked and the request is not approved.",
+    "category": "Admin Moderation (Approve/Reject & Return Processing)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/index.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the admin login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a pending borrow request"
+      },
+      {
+        "type": "action",
+        "description": "Clear the approval note field"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to approve the request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an approval validation error is visible and the request remains not approved"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Block cancellation when request status is not pending",
+    "description": "Verifies that when a request is not pending, the UI prevents cancellation and explains that cancellation is not allowed for the current status.",
+    "category": "Tracking Lookup and Cancel Pending Request",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tracking.html"
+      },
+      {
+        "type": "action",
+        "description": "Enter a Tracking ID for a request that is in a non-pending status"
+      },
+      {
+        "type": "action",
+        "description": "Submit the tracking search"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to initiate cancellation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an explanation is visible that cancellation is not allowed for the current status"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the request status remains unchanged on the page"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC015",
+    "title": "Prevent submission when start date is after end date",
+    "description": "Verifies the borrower cannot submit a request with an invalid date range and sees a date range validation error.",
+    "category": "Borrow Request Submission",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /borrow.html"
+      },
+      {
+        "type": "action",
+        "description": "Select an end date"
+      },
+      {
+        "type": "action",
+        "description": "Select a start date after the end date"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required borrower information fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the borrow request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a date range validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user remains on the borrow request page"
+      }
+    ],
+    "priority": "Low"
+  }
+]

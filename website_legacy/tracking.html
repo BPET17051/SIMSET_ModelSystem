@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ติดตามคำขอยืม - SiMSET</title>
+    <meta name="description" content="ตรวจสอบสถานะคำขอยืมอุปกรณ์ของ SiMSET พร้อมดูประวัติและพิมพ์เอกสารอ้างอิง">
+    <meta property="og:title" content="ติดตามคำขอยืม - SiMSET">
+    <meta property="og:description" content="ตรวจสอบสถานะคำขอยืมอุปกรณ์ของ SiMSET">
+    <meta property="og:type" content="website">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="print.css" media="print">
+    <style>
+        .tracking-page-shell {
+            padding-top: 32px;
+            padding-bottom: 32px;
+        }
+
+        .tracking-page-layout {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            gap: 24px;
+        }
+
+        .tracking-overview-card {
+            display: grid;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        .tracking-overview-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+            align-items: start;
+            gap: 24px;
+        }
+
+        .tracking-overview-copy {
+            display: grid;
+            gap: 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .tracking-overview-title {
+            font-size: clamp(1.8rem, 4vw, 2.3rem);
+            line-height: 1.12;
+            letter-spacing: -0.03em;
+            font-weight: 800;
+        }
+
+        .tracking-overview-sub {
+            max-width: 62ch;
+            color: var(--text-2);
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+        }
+
+        .tracking-search-area {
+            display: grid;
+            gap: 8px;
+            width: 100%;
+            max-width: 420px;
+            min-width: 0;
+            justify-self: end;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            width: 100%;
+            min-width: 0;
+            align-items: stretch;
+        }
+
+        .search-form input {
+            flex: 1;
+            width: 100%;
+            min-width: 0;
+            min-height: 52px;
+            padding: 0 16px;
+            font-size: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-card2);
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .search-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(47, 91, 255, 0.12);
+            background: #fff;
+        }
+
+        .tracking-search-button {
+            min-width: 156px;
+            max-width: 100%;
+            scroll-margin-top: 120px;
+        }
+
+        .tracking-section {
+            display: grid;
+            gap: 16px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .tracking-section-head {
+            display: grid;
+            gap: 8px;
+        }
+
+        .tracking-section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .tracking-section-sub {
+            color: var(--text-2);
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .tracking-history-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-shell {
+            display: grid;
+            gap: 16px;
+        }
+
+        .history-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .history-card {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-card2);
+        }
+
+        .history-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .history-card-meta {
+            color: var(--text-3);
+            font-size: 0.85rem;
+            overflow-wrap: anywhere;
+        }
+
+        .history-empty {
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+            padding: 24px;
+            text-align: center;
+            color: var(--text-3);
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+            background: rgba(244, 247, 255, 0.72);
+        }
+
+        .tracking-result-card {
+            padding: 24px;
+        }
+
+        .tracking-result-body {
+            display: grid;
+            gap: 24px;
+        }
+
+        .tracking-header {
+            display: grid;
+            gap: 8px;
+        }
+
+        .tracking-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .tracking-status-note {
+            color: var(--text-2);
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .status-badge-lg {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.96rem;
+        }
+
+        .status-badge-lg.pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-badge-lg.approved {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-badge-lg.rejected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-badge-lg.returned {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .status-badge-lg.expired {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-card2);
+        }
+
+        .info-group {
+            display: grid;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .tracking-items {
+            display: grid;
+            gap: 16px;
+        }
+
+        .tracking-items-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table th,
+        .items-table td {
+            padding: 16px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .items-table th {
+            font-size: 0.84rem;
+            color: var(--text-2);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .cancel-panel {
+            display: grid;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid rgba(239, 68, 68, 0.22);
+            border-radius: 16px;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .cancel-panel-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .cancel-panel-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .cancel-panel-sub {
+            margin: 0;
+            max-width: 56ch;
+            color: var(--text-2);
+            line-height: 1.6;
+        }
+
+        .cancel-panel-icon {
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            flex-shrink: 0;
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+        }
+
+        .cancel-panel-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cancel-panel-actions .btn-outline,
+        .cancel-panel-actions .btn-danger {
+            min-height: 46px;
+            padding: 0 18px;
+        }
+
+        .btn-danger {
+            border: 1px solid rgba(239, 68, 68, 0.42);
+            background: rgba(239, 68, 68, 0.12);
+            color: #fda4af;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.18);
+            color: #fff;
+        }
+
+        .tracking-result-empty,
+        .tracking-result-loading {
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+            padding: 24px;
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+        }
+
+        .tracking-result-empty {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .tracking-result-loading {
+            color: var(--text-3);
+            background: rgba(244, 247, 255, 0.72);
+        }
+
+        .tracking-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 160ms ease;
+            background: rgba(3, 7, 18, 0.72);
+            backdrop-filter: blur(10px);
+        }
+
+        .tracking-modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .tracking-modal-card {
+            width: min(100%, 560px);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg-card);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(14px) scale(0.98);
+            transition: transform 180ms ease;
+        }
+
+        .tracking-modal-overlay.open .tracking-modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .tracking-modal-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tracking-modal-title-wrap {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .tracking-modal-icon {
+            width: 46px;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            flex-shrink: 0;
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+        }
+
+        .tracking-modal-head h2 {
+            margin: 0 0 6px;
+            font-size: 1.2rem;
+        }
+
+        .tracking-modal-head p {
+            margin: 0;
+            color: var(--text-2);
+            line-height: 1.55;
+        }
+
+        .tracking-modal-close {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-card2);
+            color: var(--text-2);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .tracking-modal-close:hover {
+            color: var(--text);
+            background: var(--border);
+        }
+
+        .tracking-modal-body {
+            display: grid;
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .tracking-modal-label {
+            display: grid;
+            gap: 8px;
+            font-size: 0.92rem;
+            color: var(--text-2);
+        }
+
+        .tracking-modal-help {
+            margin: 0;
+            font-size: 0.82rem;
+            color: var(--text-3);
+            line-height: 1.5;
+        }
+
+        .tracking-modal-error {
+            display: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(239, 68, 68, 0.22);
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.08);
+            color: #fca5a5;
+            font-size: 0.85rem;
+        }
+
+        .tracking-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .tracking-page-shell {
+                padding-top: 24px;
+                padding-bottom: 24px;
+            }
+
+            .tracking-overview-card,
+            .tracking-result-card {
+                padding: 20px;
+            }
+
+            .tracking-overview-head {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+
+            .history-card-top,
+            .cancel-panel-head,
+            .tracking-modal-head {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-form,
+            .cancel-panel-actions,
+            .tracking-modal-actions {
+                grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+
+            .tracking-search-area,
+            .search-form button,
+            .tracking-history-actions button,
+            .tracking-history-actions a,
+            .history-card-top .btn-outline,
+            .cancel-panel-actions .btn-outline,
+            .cancel-panel-actions .btn-danger,
+            .tracking-modal-actions .btn-outline,
+            .tracking-modal-actions .btn-primary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .items-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+                padding: 0;
+            }
+
+            .nav,
+            .hero-bg-grid,
+            .print-hidden {
+                display: none !important;
+            }
+
+            .tracking-page-shell,
+            .tracking-page-layout,
+            .tracking-result-card,
+            .tracking-result-body {
+                padding: 0;
+                margin: 0;
+                border: none;
+                box-shadow: none;
+                background: #fff;
+            }
+
+            .status-badge-lg {
+                border: 2px solid #000 !important;
+                color: #000 !important;
+                background: transparent !important;
+                border-radius: 0 !important;
+                padding: 4px 12px !important;
+            }
+
+            .info-grid {
+                background: transparent !important;
+                border: 1px solid #000 !important;
+            }
+
+            .info-label {
+                color: #555;
+            }
+
+            .items-table th,
+            .items-table td {
+                border-bottom: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+
+<body class="page-shell">
+    <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก</a>
+    <div id="tracking-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <div data-partial="nav/tracking"></div>
+
+    <div class="hero-bg-grid"></div>
+
+    <main id="main-content" class="container app-page tracking-page-shell">
+        <div class="tracking-page-layout">
+            <section class="app-page-card tracking-overview-card">
+                <div class="tracking-overview-head">
+                    <div class="tracking-overview-copy">
+                        <div class="app-page-eyebrow">Tracking Lookup</div>
+                        <h1 class="tracking-overview-title">ตรวจสอบสถานะคำขอยืม</h1>
+                        <div class="tracking-overview-sub">กรอก Tracking ID เพื่อดูผลอนุมัติ รายการที่ขอยืม และใช้เป็นจุดเดียวสำหรับยกเลิกคำขอที่ยังรออนุมัติ</div>
+                    </div>
+
+                    <div class="tracking-search-area">
+                        <div id="tracking-feedback" class="status-banner" style="display:none;" aria-live="polite"></div>
+                        <div class="search-form print-hidden">
+                            <input type="text" id="tracking-input" placeholder="กรอก Tracking ID เช่น SIM-2026-0001" autocomplete="off" data-testid="tracking-id-input">
+                            <button class="btn-primary tracking-search-button" id="btn-search" type="button" data-testid="tracking-search-button">ตรวจสอบ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="history-section" class="tracking-section history-shell print-hidden" style="display:none;">
+                    <div class="tracking-section-head">
+                        <div class="tracking-section-title">คำขอของฉัน</div>
+                        <div id="history-state" class="tracking-section-sub">เข้าสู่ระบบเพื่อดูประวัติคำขอย้อนหลัง</div>
+                    </div>
+                    <div class="tracking-history-actions">
+                        <button id="btn-history-refresh" class="btn-outline btn-sm print-hidden" type="button" style="display:none;" data-testid="tracking-history-refresh">รีเฟรชรายการของฉัน</button>
+                    </div>
+                    <div id="history-list" class="history-list"></div>
+                </section>
+            </section>
+
+            <section class="app-page-card tracking-result-card">
+                <div class="tracking-result-body">
+                    <div id="result-view" style="display:none;">
+                        <div class="tracking-header">
+                            <div class="tracking-title">สถานะคำขอยืมอุปกรณ์</div>
+                            <div id="status-badge" class="status-badge-lg pending">รอดำเนินการ</div>
+                            <p id="status-detail" class="tracking-status-note">กรอก Tracking ID เพื่อดูสถานะล่าสุดของคำขอ</p>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-group">
+                                <span class="info-label">Tracking ID</span>
+                                <span class="info-value" id="disp-tracking-id" style="font-family: ui-monospace, SFMono-Regular, Consolas, monospace;">---</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">วันที่ส่งคำขอ</span>
+                                <span class="info-value" id="disp-created-at">---</span>
+                            </div>
+                            <div class="info-group" style="grid-column: 1 / -1;">
+                                <span class="info-label">วัตถุประสงค์การใช้งาน</span>
+                                <span class="info-value" id="disp-purpose">---</span>
+                            </div>
+                        </div>
+
+                        <div class="tracking-items">
+                            <div class="tracking-items-title">รายการอุปกรณ์</div>
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่ออุปกรณ์</th>
+                                        <th>วันที่รับของ</th>
+                                        <th>วันที่ส่งคืน</th>
+                                        <th>จำนวน</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="items-body"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="cancel-zone" class="cancel-panel" style="display:none;">
+                            <div class="cancel-panel-head">
+                                <div>
+                                    <div class="cancel-panel-title">ยกเลิกคำร้อง</div>
+                                    <p id="cancel-note" class="cancel-panel-sub"></p>
+                                </div>
+                                <div class="cancel-panel-icon" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="cancel-panel-actions">
+                                <button id="btn-login-cancel" class="btn-outline" style="display:none;" data-testid="tracking-login-cancel">เข้าสู่ระบบเพื่อยกเลิก</button>
+                                <button id="btn-cancel-request" class="btn-danger" style="display:none;" data-testid="tracking-cancel-request">ยืนยันยกเลิกคำร้อง</button>
+                            </div>
+                        </div>
+
+                        <div class="print-hidden" style="text-align:center;">
+                            <button onclick="window.print()" class="btn-outline">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                    <rect x="6" y="14" width="12" height="8"></rect>
+                                </svg>
+                                พิมพ์เอกสารอ้างอิง (PDF)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="loading" class="tracking-result-loading" style="display:none;" aria-live="polite"></div>
+
+                    <div id="error-view" class="tracking-result-empty" style="display:none;">
+                        ไม่พบ Tracking ID นี้ กรุณาตรวจสอบความถูกต้องอีกครั้ง
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="tracking-cancel-modal" class="tracking-modal-overlay" aria-hidden="true">
+        <div class="tracking-modal-card" role="dialog" aria-modal="true" aria-labelledby="tracking-cancel-title" tabindex="-1" data-dialog-panel>
+            <div class="tracking-modal-head">
+                <div class="tracking-modal-title-wrap">
+                    <div class="tracking-modal-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="tracking-cancel-title">ยืนยันการยกเลิกคำร้อง</h2>
+                        <p>หากยืนยันแล้ว ระบบจะยกเลิกคำร้องนี้ทันที และรายการจะไม่สามารถกลับมาใช้งานต่อได้</p>
+                    </div>
+                </div>
+                <button class="tracking-modal-close" id="tracking-cancel-close" aria-label="ปิดกล่องยกเลิกคำร้อง">&times;</button>
+            </div>
+            <div class="tracking-modal-body">
+                <label for="tracking-cancel-reason" class="tracking-modal-label">
+                    <span style="color: var(--text);">เหตุผลการยกเลิก</span>
+                    <textarea id="tracking-cancel-reason" class="input-field" rows="4" placeholder="ระบุเหตุผลสั้น ๆ" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: var(--r); font-family: inherit; resize: vertical;"></textarea>
+                </label>
+                <p class="tracking-modal-help">ระบบจะบันทึกเหตุผลนี้ไว้ในประวัติคำร้องเพื่อให้ผู้ดูแลตรวจสอบย้อนหลังได้</p>
+                <div id="tracking-cancel-error" class="tracking-modal-error"></div>
+                <div class="tracking-modal-actions">
+                    <button id="tracking-cancel-dismiss" class="btn-outline">ย้อนกลับ</button>
+                    <button id="tracking-cancel-submit" class="btn-primary" style="background:#EF4444; color:#fff; border:none;">ยืนยันการยกเลิกคำร้อง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div data-partial="footer/default"></div>
+
+    <script src="js/partials.js"></script>
+    <script src="page-transition.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/status-labels.js"></script>
+    <script src="js/tracking.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legacy Tracking Entry - SiMSET</title>
+  <meta name="description" content="Legacy entry page for tracking requests.">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    body {
+      margin: 0;
+      font-family: "SST", "Helvetica Neue", Arial, "Noto Sans Thai", sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #f5f7fa 100%);
+      color: #1f1f1f;
+    }
+    main {
+      max-width: 640px;
+      margin: 48px auto;
+      background: #fff;
+      border: 1px solid #f3f3f3;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 5px 9px rgba(0, 0, 0, 0.08);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.4rem;
+      font-weight: 300;
+      letter-spacing: -0.1px;
+    }
+    p {
+      margin: 0 0 14px;
+      color: #6b6b6b;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    input, button {
+      min-height: 42px;
+      border-radius: 999px;
+      border: 1px solid #cccccc;
+      font: inherit;
+      transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+    input {
+      padding: 0 12px;
+      min-width: 0;
+      border-radius: 3px;
+    }
+    input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #0070cc;
+      border-color: #cccccc;
+    }
+    button {
+      padding: 0 16px;
+      cursor: pointer;
+      background: #0070cc;
+      color: #fff;
+      border: 2px solid transparent;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+    }
+    button:hover {
+      transform: scale(1.2);
+      background: #1eaedb;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 2px #0070cc;
+    }
+    button:active {
+      opacity: 0.6;
+    }
+    .alt {
+      margin-top: 12px;
+      font-size: 0.88rem;
+    }
+    .alt a {
+      color: #0068bd;
+    }
+    .alt a:hover {
+      color: #1883fd;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Legacy Tracking Entry</h1>
+    <p>กรอก Tracking ID แล้วไปต่อที่หน้าติดตามคำขอใหม่</p>
+    <div class="row">
+      <input id="track-id-input" type="text" placeholder="SIM-2026-0001" autocomplete="off" data-testid="legacy-track-id-input">
+      <button id="btn-track" type="button" data-testid="legacy-track-submit">ไปที่หน้าติดตาม</button>
+    </div>
+    <div class="alt">
+      <a id="fallback-link" href="tracking.html">ข้ามไป tracking.html</a>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const input = document.getElementById('track-id-input');
+      const button = document.getElementById('btn-track');
+      const fallback = document.getElementById('fallback-link');
+      const current = new URL(window.location.href);
+      const initialId = current.searchParams.get('id')
+        || current.searchParams.get('tid')
+        || current.searchParams.get('tracking_id')
+        || '';
+      if (initialId) input.value = initialId;
+
+      function buildTarget() {
+        const target = new URL('tracking.html', current);
+        const tid = input.value.trim();
+        if (tid) target.searchParams.set('id', tid);
+        if (current.searchParams.get('test_mode') === '1') {
+          target.searchParams.set('test_mode', '1');
+        }
+        return target;
+      }
+
+      fallback.href = buildTarget().toString();
+      button.addEventListener('click', function () {
+        window.location.href = buildTarget().toString();
+      });
+      input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          button.click();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

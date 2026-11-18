@@ -1,0 +1,21 @@
+<nav class="nav" id="nav" aria-label="เมนูหลัก">
+    <div class="nav-inner container">
+        <div class="nav-brand">
+            <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                <img src="img/simset_logo.png" alt="SiMSET Logo" style="height: 46px; width: auto; object-fit: contain;">
+            </a>
+        </div>
+        <div class="nav-right">
+            <button id="btn-login" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;">เข้าสู่ระบบ (SSO)</button>
+            <div id="user-profile" style="display: none; align-items: center; gap: 10px;">
+                <span id="user-name" style="font-size: 0.85rem; color: var(--text-2);"></span>
+                <a id="btn-user-history" href="history.html" style="display:none;">History</a>
+                <a id="btn-user-tracking" href="tracking.html" style="display:none;">Tracking</a>
+                <button id="btn-logout" type="button" style="display:none;">Logout</button>
+                <button id="cart-icon-btn" class="cart-icon" type="button" aria-label="เปิดตะกร้า" title="เปิดตะกร้า">
+                    🛒 <span id="cart-badge" class="cart-badge">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>

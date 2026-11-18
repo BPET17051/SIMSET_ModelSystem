@@ -1210,7 +1210,7 @@ BEGIN
                   WHERE existing_bri.equipment_unit_id = eu.id
                     AND existing_bri.start_date <= p_end_date
                     AND existing_bri.end_date >= p_start_date
-                    AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed')
+                    AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
               );
         ELSE
             SELECT COALESCE(SUM(bri.qty_borrowed), 0)
@@ -1220,7 +1220,7 @@ BEGIN
             WHERE bri.equipment_id = eq_id
               AND bri.start_date <= p_end_date
               AND bri.end_date >= p_start_date
-              AND br.status IN ('pending', 'approved', 'ready', 'borrowed');
+              AND br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue');
 
             available_qty := (locked_eq.total_quantity - locked_eq.maintenance_quantity) - used_qty;
         END IF;
@@ -1262,7 +1262,7 @@ BEGIN
                       WHERE existing_bri.manikin_sap_id = m.sap_id
                         AND existing_bri.start_date <= p_end_date
                         AND existing_bri.end_date >= p_start_date
-                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed')
+                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
                   )
                 ORDER BY m.sap_id
                 FOR UPDATE SKIP LOCKED
@@ -1307,7 +1307,7 @@ BEGIN
                       WHERE existing_bri.equipment_unit_id = eu.id
                         AND existing_bri.start_date <= p_end_date
                         AND existing_bri.end_date >= p_start_date
-                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed')
+                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
                   )
                 ORDER BY eu.requires_l1_approval ASC, eu.borrow_count ASC, eu.unit_code
                 FOR UPDATE SKIP LOCKED
@@ -1533,7 +1533,7 @@ BEGIN
                   WHERE existing_bri.equipment_unit_id = eu.id
                     AND existing_bri.start_date <= p_end_date
                     AND existing_bri.end_date >= p_start_date
-                    AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed')
+                    AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
               );
         ELSE
             SELECT COALESCE(SUM(bri.qty_borrowed), 0)
@@ -1543,7 +1543,7 @@ BEGIN
             WHERE bri.equipment_id = eq_id
               AND bri.start_date <= p_end_date
               AND bri.end_date >= p_start_date
-              AND br.status IN ('pending', 'approved', 'ready', 'borrowed');
+              AND br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue');
 
             available_qty := (locked_eq.total_quantity - locked_eq.maintenance_quantity) - used_qty;
         END IF;
@@ -1585,7 +1585,7 @@ BEGIN
                       WHERE existing_bri.manikin_sap_id = m.sap_id
                         AND existing_bri.start_date <= p_end_date
                         AND existing_bri.end_date >= p_start_date
-                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed')
+                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
                   )
                 ORDER BY m.sap_id
                 FOR UPDATE SKIP LOCKED
@@ -1630,7 +1630,7 @@ BEGIN
                       WHERE existing_bri.equipment_unit_id = eu.id
                         AND existing_bri.start_date <= p_end_date
                         AND existing_bri.end_date >= p_start_date
-                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed')
+                        AND existing_br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
                   )
                 ORDER BY eu.requires_l1_approval ASC, eu.borrow_count ASC, eu.unit_code
                 FOR UPDATE SKIP LOCKED
@@ -1803,6 +1803,9 @@ BEGIN
     SELECT jsonb_build_object(
         'tracking_id', br.tracking_id,
         'status', br.status,
+        'approved_at', br.approved_at,
+        'checked_out_at', br.checked_out_at,
+        'returned_at', br.returned_at,
         'created_at', br.created_at,
         'borrower_name', br.borrower_name,
         'borrower_position', br.borrower_position,
@@ -1880,7 +1883,9 @@ BEGIN
         SELECT
             e.id AS base_equipment_id,
             e.total_quantity,
-            e.maintenance_quantity
+            e.maintenance_quantity,
+            e.inventory_mode,
+            e.source_team_code
         FROM public.equipments e
         WHERE e.borrow_enabled = true
           AND (
@@ -1896,7 +1901,7 @@ BEGIN
         JOIN public.borrow_requests br ON br.id = bri.request_id
         WHERE bri.start_date <= p_end_date
           AND bri.end_date >= p_start_date
-          AND br.status IN ('pending', 'approved', 'ready', 'borrowed')
+          AND br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
           AND (
               p_equipment_ids IS NULL
               OR bri.equipment_id IN (SELECT r.requested_equipment_id FROM requested_ids r)
@@ -1907,8 +1912,54 @@ BEGIN
         b.base_equipment_id AS equipment_id,
         b.total_quantity::integer AS total_qty,
         b.maintenance_quantity::integer AS maintenance_qty,
-        COALESCE(u.used_qty, 0)::integer AS used_qty,
-        GREATEST((b.total_quantity - b.maintenance_quantity) - COALESCE(u.used_qty, 0), 0)::integer AS available_qty
+        CASE WHEN b.inventory_mode IN ('tracked_unit', 'kit') THEN
+            GREATEST((b.total_quantity - b.maintenance_quantity) - (SELECT count(*)::integer FROM public.equipment_units eu
+             WHERE eu.equipment_id = b.base_equipment_id
+               AND eu.status = 'ready' AND eu.is_active = true
+               AND NOT EXISTS (
+                   SELECT 1 FROM public.borrow_request_items bri
+                   JOIN public.borrow_requests br ON br.id = bri.request_id
+                   WHERE bri.equipment_unit_id = eu.id
+                     AND bri.start_date <= p_end_date AND bri.end_date >= p_start_date
+                     AND br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
+               )), 0)::integer
+          WHEN b.inventory_mode = 'manikin' THEN
+            GREATEST((b.total_quantity - b.maintenance_quantity) - (SELECT count(*)::integer FROM public.manikins m
+             WHERE m.team_code = b.source_team_code
+               AND m.status = 'ready' AND m.is_active = true
+               AND COALESCE(m.needs_review, false) = false AND m.deleted_at IS NULL
+               AND NOT EXISTS (
+                   SELECT 1 FROM public.borrow_request_items bri
+                   JOIN public.borrow_requests br ON br.id = bri.request_id
+                   WHERE bri.manikin_sap_id = m.sap_id
+                     AND bri.start_date <= p_end_date AND bri.end_date >= p_start_date
+                     AND br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
+               )), 0)::integer
+          ELSE COALESCE(u.used_qty, 0)::integer END AS used_qty,
+        CASE WHEN b.inventory_mode IN ('tracked_unit', 'kit') THEN
+            (SELECT count(*)::integer FROM public.equipment_units eu
+             WHERE eu.equipment_id = b.base_equipment_id
+               AND eu.status = 'ready' AND eu.is_active = true
+               AND NOT EXISTS (
+                   SELECT 1 FROM public.borrow_request_items bri
+                   JOIN public.borrow_requests br ON br.id = bri.request_id
+                   WHERE bri.equipment_unit_id = eu.id
+                     AND bri.start_date <= p_end_date AND bri.end_date >= p_start_date
+                     AND br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
+               ))
+          WHEN b.inventory_mode = 'manikin' THEN
+            (SELECT count(*)::integer FROM public.manikins m
+             WHERE m.team_code = b.source_team_code
+               AND m.status = 'ready' AND m.is_active = true
+               AND COALESCE(m.needs_review, false) = false AND m.deleted_at IS NULL
+               AND NOT EXISTS (
+                   SELECT 1 FROM public.borrow_request_items bri
+                   JOIN public.borrow_requests br ON br.id = bri.request_id
+                   WHERE bri.manikin_sap_id = m.sap_id
+                     AND bri.start_date <= p_end_date AND bri.end_date >= p_start_date
+                     AND br.status IN ('pending', 'approved', 'ready', 'borrowed', 'overdue')
+               ))
+          ELSE GREATEST((b.total_quantity - b.maintenance_quantity) - COALESCE(u.used_qty, 0), 0)::integer END AS available_qty
     FROM base b
     LEFT JOIN used u ON u.used_equipment_id = b.base_equipment_id
     ORDER BY b.base_equipment_id;
@@ -2418,7 +2469,7 @@ BEGIN
                     WHERE bri.request_id = br.id
                 )
             )
-        ) FILTER (WHERE br.status = 'approved'), '[]'::jsonb),
+        ) FILTER (WHERE br.status IN ('approved', 'ready')), '[]'::jsonb),
         'checked_out', COALESCE(jsonb_agg(
             jsonb_build_object(
                 'id', br.id,
@@ -2495,7 +2546,7 @@ BEGIN
     )
     INTO result
     FROM public.borrow_requests br
-    WHERE br.status IN ('approved', 'borrowed', 'overdue', 'returned', 'inspection', 'completed', 'damaged', 'lost');
+    WHERE br.status IN ('approved', 'ready', 'borrowed', 'overdue', 'returned', 'inspection', 'completed', 'damaged', 'lost');
 
     RETURN result;
 END;
@@ -2587,7 +2638,7 @@ BEGIN
 
     v_result := simset_private.apply_borrow_request_status_transition(
         p_request_id,
-        'approved',
+        'ready',
         'borrowed',
         auth.uid(),
         v_actor_type,

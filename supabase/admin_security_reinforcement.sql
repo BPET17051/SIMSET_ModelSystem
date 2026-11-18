@@ -3,7 +3,7 @@
 -- Run in: Supabase Dashboard → SQL Editor
 -- ============================================================
 -- 1. Adds internal role checks to RPCs
--- 2. Restricts Admin RLS policies to @simset.ac.th email domain
+-- 2. Restricts Admin RLS policies to @mahidol.ac.th email domain
 -- ============================================================
 
 -- ============================================================
@@ -65,55 +65,55 @@ $$;
 
 -- ============================================================
 -- Modify RLS Policies to Enforce Domain Restriction
--- Requires both role='admin' AND email ends with '@simset.ac.th'
+-- Requires both role='admin' AND email ends with '@mahidol.ac.th'
 -- ============================================================
 
 DROP POLICY IF EXISTS "admin_all_manikins" ON manikins;
 CREATE POLICY "admin_all_manikins" ON manikins FOR ALL TO authenticated
 USING (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 ) WITH CHECK (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 );
 
 DROP POLICY IF EXISTS "admin_all_locations" ON locations;
 CREATE POLICY "admin_all_locations" ON locations FOR ALL TO authenticated
 USING (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 ) WITH CHECK (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 );
 
 DROP POLICY IF EXISTS "admin_all_capabilities" ON capabilities;
 CREATE POLICY "admin_all_capabilities" ON capabilities FOR ALL TO authenticated
 USING (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 ) WITH CHECK (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 );
 
 DROP POLICY IF EXISTS "admin_all_manikin_capabilities" ON manikin_capabilities;
 CREATE POLICY "admin_all_manikin_capabilities" ON manikin_capabilities FOR ALL TO authenticated
 USING (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 ) WITH CHECK (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 );
 
 DROP POLICY IF EXISTS "admin_all_audit_logs" ON audit_logs;
 CREATE POLICY "admin_all_audit_logs" ON audit_logs FOR ALL TO authenticated
 USING (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 ) WITH CHECK (
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    AND auth.jwt() ->> 'email' LIKE '%@simset.ac.th'
+    AND auth.jwt() ->> 'email' LIKE '%@mahidol.ac.th'
 );

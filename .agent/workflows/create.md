@@ -31,6 +31,12 @@ This command starts a new application creation process.
      - `backend-specialist` → API
      - `frontend-specialist` → UI
 
+   - For operational list views, use a table-hybrid row layout:
+     - Include a header row for `Name`, `Availability`, and `Action`
+     - Keep list rows scan-friendly while preserving card-level details where useful
+     - Add a single-row selection state for row-level operations
+     - If the workflow needs stronger side-by-side decisions, add compare mode instead of forcing multi-select behavior
+
 4. **Preview**
    - Start with `auto_preview.py` when complete
    - Present URL to user

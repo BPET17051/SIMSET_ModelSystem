@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ส่งคำขอสำเร็จ - SiMSET</title>
+    <meta name="description" content="สรุปคำขอยืมอุปกรณ์หลังส่งสำเร็จ พร้อม Tracking ID และปุ่มพิมพ์เอกสารอ้างอิง">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="print.css" media="print">
+</head>
+
+<body class="page-shell">
+    <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก</a>
+    <div id="success-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <div data-partial="nav/success"></div>
+
+    <div class="hero-bg-grid"></div>
+
+    <main id="main-content" class="container success-shell">
+        <div id="success-feedback" class="status-banner" style="display:none;" aria-live="polite"></div>
+
+        <section class="success-card" id="success-card">
+            <div class="success-header">
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <div class="success-mark" aria-hidden="true">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="success-title">ส่งคำขอยืมสำเร็จ</div>
+                        <div class="success-subtitle">ระบบสร้าง Tracking ID ให้แล้ว กรุณาเก็บไว้สำหรับติดตามผลและใช้อ้างอิงกับเจ้าหน้าที่</div>
+                    </div>
+                </div>
+                <div class="inline-actions print-hidden">
+                    <button id="btn-copy-tracking" class="btn-outline" type="button">คัดลอกรหัส</button>
+                    <button id="btn-print-success" class="btn-primary" type="button">พิมพ์เอกสาร</button>
+                </div>
+            </div>
+
+            <div class="tracking-hero-id">
+                <div>
+                    <div class="summary-label">Tracking ID</div>
+                    <div class="tracking-id-value" id="success-tracking-id">-</div>
+                </div>
+                <div id="success-status" class="status-badge">รอโหลดข้อมูล</div>
+            </div>
+        </section>
+
+        <section class="success-card">
+            <div class="section-title" style="margin-bottom:18px;">สรุปคำขอ</div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">วันที่ส่งคำขอ</span>
+                    <div class="summary-value" id="success-created-at">-</div>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">สถานะปัจจุบัน</span>
+                    <div class="summary-value" id="success-status-text">-</div><div class="sr-only" id="success-request-status-keyword">Request status</div>
+                </div>
+                <div class="summary-item span-2">
+                    <span class="summary-label">วัตถุประสงค์การใช้งาน</span>
+                    <div class="summary-value" id="success-purpose">-</div>
+                </div>
+                <div class="summary-item span-2">
+                    <span class="summary-label">รายการอุปกรณ์</span>
+                    <div id="success-items" class="summary-value">-</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="success-card">
+            <div class="section-title" style="margin-bottom:14px;">ขั้นตอนถัดไป</div>
+            <ul class="bullet-list">
+                <li id="success-next-action">รอโหลดข้อมูลคำขอ</li>
+                <li>หากยังอยู่ในสถานะรออนุมัติ คุณสามารถยกเลิกคำขอได้จากหน้าติดตามคำขอ</li>
+                <li>ปุ่มพิมพ์ในหน้านี้ใช้สำหรับเอกสารอ้างอิงจากเบราว์เซอร์โดยตรง</li>
+            </ul>
+            <div class="inline-actions" style="margin-top:18px;">
+                <a id="btn-go-tracking" class="btn-primary" href="tracking.html">ดูสถานะคำขอ</a>
+                <a class="btn-outline" href="history.html">ดูประวัติคำขอของฉัน</a>
+                <a class="btn-outline" href="borrow.html">ยืมอุปกรณ์เพิ่ม</a>
+            </div>
+        </section>
+    </main>
+
+    <div data-partial="footer/default"></div>
+
+    <script src="js/partials.js"></script>
+    <script src="page-transition.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/status-labels.js"></script>
+    <script src="success.js"></script>
+</body>
+
+</html>
+

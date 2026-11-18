@@ -1,0 +1,20 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:4180",
+  "loginUser": "apisit.tan@mahidol.ac.th",
+  "loginPassword": "Jed_13631",
+  "executionArgs": {
+    "projectName": "SIMSET_ModelSystem",
+    "projectPath": "D:\\Jedi_EX_HDX_BAC01\\01.Jedi_SIMSET\\SIMSET_Project\\SIMSET_ModelSystem",
+    "testIds": [],
+    "additionalInstruction": "Run the existing generated frontend suite against the currently running local app at http://localhost:4180. Use the current 17-case MCP/frontend set already present in this repo, keep the original assertions, and return a fresh pass/fail report for the current code.",
+    "serverMode": "production",
+    "envs": {
+      "API_KEY": "sk-user-akl1iyKLPgKh9ww3zfq8hMa7V9gQ4Z944yM7mR2YBmpBNIW13YWZCLbkpBKhYrM2VfjNsQSPrEjYIu91N6il4q4rgt-Fzux4A1Bf3wLuY8Nr-5YjekYyhDZ_z45EV9C7d4Q"
+    }
+  },
+  "serverPort": 55673,
+  "proxy": "http://9b8ec1fa-c37a-4189-9eee-a9f6a7016798:irHPuQoBXpeWToPIKoYHr5r2wdhiAD1i@tun.testsprite.com:8080"
+}

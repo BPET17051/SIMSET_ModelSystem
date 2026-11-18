@@ -6,15 +6,20 @@ Encoding Guard
 Detects text-encoding corruption patterns and terminal escape artifacts:
 - UTF-8 decode failures
 - Unicode replacement character (U+FFFD)
-- Common mojibake signatures
+- Common mojibake signatures, including Thai UTF-8 misdecode markers
 - ANSI escape sequences
+
+Outputs exact line numbers and code snippets to integrate with CI tracking easily.
 """
 
 import argparse
 import re
 import sys
+import io
 from pathlib import Path
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 EXCLUDE_DIRS = {
     ".git",
@@ -50,6 +55,8 @@ SKIP_SUFFIXES = {
     ".exe",
     ".so",
     ".class",
+    ".pyc",
+    ".map",
 }
 
 MOJIBAKE_PATTERNS_ESCAPED = (
@@ -63,6 +70,8 @@ MOJIBAKE_PATTERNS_ESCAPED = (
     "\\u00ef\\u00bf\\u00bd",
     "\\u0393\\u00a3",
     "\\u0393\\u00a5",
+    "\\u00e0\\u00b8", # Thai mojibake marker 1 (UTF-8 bytes misread as Latin1/Win-1252)
+    "\\u00e0\\u00b9", # Thai mojibake marker 2
 )
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
@@ -87,22 +96,38 @@ def scan_file(path: Path) -> list[str]:
     if is_binary(raw):
         return issues
 
+    # Try to decode, replace invalid sequences so we can still get line numbers
     try:
         text = raw.decode("utf-8")
     except UnicodeDecodeError as exc:
-        issues.append(f"utf8_decode_error at byte {exc.start}")
-        return issues
+        text = raw.decode("utf-8", errors="replace")
+        issues.append(f"Global: utf8_decode_error (Replaced invalid bytes to scan lines)")
 
-    if "\uFFFD" in text:
-        issues.append("replacement_char_U+FFFD")
+    lines = text.splitlines()
+    for i, line in enumerate(lines, 1):
+        line_issues = []
+        
+        if "\uFFFD" in line:
+            line_issues.append("replacement_char_U+FFFD")
 
-    for marker in MOJIBAKE_PATTERNS:
-        if marker in text:
-            issues.append(f"mojibake_marker:{marker}")
-            break
+        for marker in MOJIBAKE_PATTERNS:
+            if marker in line:
+                if marker in ("\u00e0\u00b8", "\u00e0\u00b9"):
+                    line_issues.append("thai_mojibake(thai_utf8_misdecode)")
+                else:
+                    line_issues.append(f"mojibake")
+                
+        if ANSI_RE.search(line):
+            line_issues.append("ansi_escape_sequence")
 
-    if ANSI_RE.search(text):
-        issues.append("ansi_escape_sequence")
+        if line_issues:
+            # Deduplicate line issues while preserving order
+            uniq_issues = list(dict.fromkeys(line_issues))
+            # Create a small snippet for debugging in CI
+            snippet = line.strip()[:80]
+            if len(line.strip()) > 80:
+                snippet += "..."
+            issues.append(f"  Line {i}: {', '.join(uniq_issues)} | Code: {snippet}")
 
     return issues
 
@@ -124,17 +149,33 @@ def main() -> int:
         rel = path.relative_to(root)
         if should_skip(rel):
             continue
-        issues = scan_file(path)
-        if issues:
-            failures.append((rel, issues))
+            
+        try:
+            issues = scan_file(path)
+            if issues:
+                failures.append((rel, issues))
+        except Exception as e:
+            failures.append((rel, [f"Global: Error during scan ({str(e)})"]))
 
     if failures:
-        print("[FAIL] Encoding Guard found issues:")
+        print("="*60)
+        print("[FAIL] ENCODING GUARD: FOUND CORRUPTED FILES/LINES!")
+        print("="*60)
+        total_issues = 0
         for rel, issues in failures:
-            print(f" - {rel}: {', '.join(issues)}")
+            print(f"\n[FAIL] {rel}")
+            for issue in issues:
+                print(issue)
+                # Count only line-specific issues to avoid overcounting globals
+                if issue.strip().startswith("Line "):
+                    total_issues += 1
+                elif issue.startswith("Global"):
+                    total_issues += 1
+        print(f"\n[!] Total detected issues: {total_issues}")
+        print("="*60)
         return 1
 
-    print("[OK] Encoding Guard: no encoding artifacts found")
+    print("[OK] Encoding Guard: no encoding artifacts or mojibake found")
     return 0
 
 

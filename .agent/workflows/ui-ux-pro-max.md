@@ -258,6 +258,22 @@ These are frequently overlooked issues that make UI look unprofessional:
 | **Content padding** | Account for fixed navbar height | Let content hide behind fixed elements |
 | **Consistent max-width** | Use same `max-w-6xl` or `max-w-7xl` | Mix different container widths |
 
+### Date Range Selection
+
+Use this pattern when a user must choose a date range across mobile and desktop, especially when the full calendar consumes too much vertical space.
+
+| Rule | Do | Don't |
+|------|----|----- |
+| **Default state** | Collapse the calendar into a one-row summary bar after selection | Keep the full month calendar visible all the time |
+| **Summary content** | Show selected date range only, e.g. `3 May - 7 May 2026`, with a `Change` action | Show time fields or time-slot controls |
+| **Interaction** | Tap/click the summary bar or `Change` to expand the calendar | Force the user to scroll past an always-open picker |
+| **Mobile behavior** | Open the calendar in a bottom sheet or full-width modal | Push all page content downward with a tall inline calendar |
+| **Desktop behavior** | Open the calendar in a popover or centered modal | Use a mobile-only layout on large screens |
+| **Confirmation** | Require `Confirm` and support `Cancel` before collapsing back to the summary | Auto-collapse before the user can verify the range |
+| **Animation** | Use smooth 200-300ms expand/collapse transitions and avoid layout jumps | Use abrupt jumps or long animations over 500ms |
+| **Range clarity** | Clearly mark start date, end date, and in-between dates | Make selected range rely on color alone |
+| **No time picker** | Remove time selection entirely unless the user explicitly requests it | Include start time, end time, or availability slots by default |
+
 ---
 
 ## Pre-Delivery Checklist

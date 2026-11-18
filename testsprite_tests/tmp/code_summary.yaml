@@ -1,0 +1,120 @@
+version: "2"
+type: frontend
+tech_stack:
+  - JavaScript (ES2020+)
+  - HTML5
+  - CSS3
+  - Vanilla JS
+  - Supabase JavaScript client
+routes:
+  - path: /
+    file: website/index.html
+    auth_required: false
+    description: Landing page with links to borrow, tracking, and history.
+  - path: /borrow.html
+    file: website/borrow.html
+    auth_required: true
+    description: Borrow flow with date selection, catalog browsing, cart, and submit.
+  - path: /history.html
+    file: website/history.html
+    auth_required: true
+    description: Borrower history list and status summary.
+  - path: /tracking.html
+    file: website/tracking.html
+    auth_required: false
+    description: Tracking ID lookup and request status detail.
+  - path: /track.html
+    file: website/track.html
+    auth_required: false
+    description: Legacy tracking entry that routes users into tracking.html.
+  - path: /success.html
+    file: website/success.html
+    auth_required: false
+    description: Submission success page with Tracking ID summary.
+  - path: /admin/index.html
+    file: website/admin/index.html
+    auth_required: false
+    description: Admin login screen.
+  - path: /admin/dashboard.html
+    file: website/admin/dashboard.html
+    auth_required: true
+    description: Admin dashboard for request review, approvals, and returns.
+features:
+  - name: Borrow Request Submission
+    description: Borrower selects date range, adds equipment, and submits a request.
+    files:
+      - website/borrow.html
+      - website/borrow.js
+    entry_route: /borrow.html
+    user_interactions:
+      - Select start and end dates.
+      - Filter and search equipment.
+      - Add items to cart and set quantity.
+      - Fill borrower information and confirm submit.
+    api_calls:
+      - method: RPC
+        endpoint: supabase.rpc('submit_borrow_request')
+      - method: GET
+        endpoint: /website/data/*.json
+    auth_required: true
+  - name: Tracking Lookup and Cancel Pending Request
+    description: Users search by Tracking ID and can cancel while status is pending.
+    files:
+      - website/tracking.html
+      - website/js/tracking.js
+    entry_route: /tracking.html
+    user_interactions:
+      - Enter Tracking ID and search.
+      - Review request details and item list.
+      - Open cancel modal and confirm cancellation.
+    api_calls:
+      - method: RPC
+        endpoint: supabase.rpc('get_borrow_request_status')
+      - method: RPC
+        endpoint: supabase.rpc('cancel_borrow_request')
+    auth_required: false
+  - name: Borrower History
+    description: Authenticated user views recent requests and opens details.
+    files:
+      - website/history.html
+      - website/history.js
+      - website/js/tracking.js
+    entry_route: /history.html
+    user_interactions:
+      - Sign in as borrower.
+      - Open recent request history.
+      - Jump to tracking details for a selected request.
+    api_calls:
+      - method: SELECT
+        endpoint: supabase.from('borrow_requests').select(...)
+    auth_required: true
+  - name: Admin Moderation
+    description: Admin approves/rejects requests and records return outcomes.
+    files:
+      - website/admin/index.html
+      - website/admin/dashboard.html
+      - website/admin/login.js
+      - website/admin/admin.js
+      - website/admin/borrow-admin.js
+    entry_route: /admin/index.html
+    user_interactions:
+      - Log into admin panel.
+      - Review pending borrow requests.
+      - Approve or reject with reason.
+      - Process item return states.
+    api_calls:
+      - method: AUTH
+        endpoint: supabase.auth.*
+      - method: SELECT/UPDATE/RPC
+        endpoint: supabase.from(...), supabase.rpc(...)
+    auth_required: true
+known_limitations:
+  - issue: Supabase URL and publishable key are embedded in frontend scripts.
+    location: website/borrow.js, website/js/tracking.js, website/history.js, website/success.js, website/admin/*.js
+    impact: Security depends heavily on correct Supabase RLS and backend policies.
+  - issue: Legacy and new tracking entry points coexist.
+    location: website/track.html and website/tracking.html
+    impact: Duplicate flows may produce overlapping tests and route confusion.
+  - issue: LocalStorage-based test mode can differ from real backend behavior.
+    location: website/borrow.js and website/js/tracking.js
+    impact: Some tests may pass in test mode while hiding production integration issues.

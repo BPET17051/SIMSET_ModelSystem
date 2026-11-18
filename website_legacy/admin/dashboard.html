@@ -1,0 +1,1339 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>SiMSET Admin Dashboard</title>
+    <meta name="description" content="Admin Dashboard for SiMSET - Medical Manikin Management System" />
+
+    <!-- SEO / Open Graph -->
+    <meta property="og:title" content="SiMSET Admin Dashboard" />
+    <meta property="og:description" content="Manage and review medical manikin inventory." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://simset.com/admin-og.jpg" />
+    <meta name="twitter:card" content="summary" />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="admin.css?v=2" />
+</head>
+
+<body>
+    <!-- Skip link for keyboard accessibility -->
+    <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก</a>
+
+    <div class="dashboard-layout">
+        <div data-partial="shell/sidebar"></div>
+
+        <div class="main-content" role="main">
+            <div data-partial="shell/topbar"></div>
+
+            <div class="page-content" id="main-content">
+
+                <!-- ======================== TAB 1: DASHBOARD ======================== -->
+                <div class="tab-pane active" id="tab-dashboard">
+                    <section class="dashboard-hero">
+                        <div class="dashboard-primary-card" id="dash-primary-card" role="button" tabindex="0" data-dashboard-target="borrow-requests">
+                            <div class="dashboard-primary-head">
+                                <span class="dashboard-eyebrow" id="dash-primary-eyebrow">ลำดับความสำคัญ</span>
+                                <span class="dashboard-status-chip" id="dash-primary-chip">กำลังโหลด</span>
+                            </div>
+                            <div class="dashboard-primary-body">
+                                <div>
+                                    <h2 class="dashboard-primary-title" id="dash-primary-title">กำลังสรุปงานสำคัญของวันนี้</h2>
+                                    <p class="dashboard-primary-copy" id="dash-primary-copy">ระบบกำลังประมวลผลงานที่ควรเริ่มก่อน เพื่อให้ทีมไม่ต้องคิดเองว่าจะกดตรงไหนต่อ</p>
+                                </div>
+                                <div class="dashboard-primary-metric">
+                                    <div class="dashboard-primary-value" id="dash-primary-value">-</div>
+                                    <div class="dashboard-primary-meta" id="dash-primary-meta">รายการที่ต้องติดตาม</div>
+                                </div>
+                            </div>
+                            <div class="dashboard-primary-actions">
+                                <span class="dashboard-primary-cta" id="dash-primary-cta">เปิดคิวงาน</span>
+                                <span class="dashboard-primary-footnote" id="dash-primary-footnote">คลิกเพื่อไปยังหน้าที่เกี่ยวข้องทันที</span>
+                            </div>
+                        </div>
+                        <aside class="dashboard-hero-side">
+                            <div class="dashboard-empty-panel" id="dash-empty-panel">
+                                <div class="dashboard-empty-title" id="dash-empty-title">กำลังโหลดสถานะระบบ</div>
+                                <div class="dashboard-empty-copy" id="dash-empty-copy">เมื่อโหลดเสร็จ ระบบจะบอกทั้งสถานะล่าสุด งานด่วน และทางไปต่อ</div>
+                            </div>
+                            <div class="dashboard-quick-actions">
+                                <button class="btn btn-primary" id="btn-dash-primary-action">จัดการงานด่วน</button>
+                                <button class="btn btn-ghost" id="btn-dash-review-secondary">ตรวจรายการรออนุมัติ</button>
+                            </div>
+                        </aside>
+                    </section>
+                    <div class="stats-row">
+                        <div class="stat-card stat-card-overview" id="card-total">
+                            <div class="stat-top">
+                                <div class="stat-icon" style="background:var(--blue-pale);color:var(--blue-light)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+                                </div>
+                            </div>
+                            <div class="stat-val" id="d-total">—</div>
+                            <div class="stat-label">หุ่นทั้งหมดในคลัง</div>
+                            <div class="stat-sub">ภาพรวมสถานะทั้งหมด</div>
+                        </div>
+                        <div class="stat-card stat-card-overview" id="card-ready">
+                            <div class="stat-top">
+                                <div class="stat-icon"
+                                    style="background:var(--status-ready-bg);color:var(--status-ready)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            </div>
+                            <div class="stat-val" style="color:var(--status-ready)" id="d-ready">—</div>
+                            <div class="stat-label">พร้อมใช้งาน</div>
+                            <div class="stat-sub">พร้อมให้ทีมใช้งานต่อได้ทันที</div>
+                        </div>
+                        <div class="stat-card stat-card-overview" id="card-maintenance">
+                            <div class="stat-top">
+                                <div class="stat-icon"
+                                    style="background:var(--status-maintenance-bg);color:var(--status-maintenance)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                </div>
+                            </div>
+                            <div class="stat-val" style="color:var(--status-maintenance)" id="d-maintenance">—</div>
+                            <div class="stat-label">รอซ่อม / ซ่อมอยู่</div>
+                            <div class="stat-sub">ต้องติดตามการซ่อมหรือส่งต่อ</div>
+                        </div>
+                        <div class="stat-card stat-card-overview" id="card-broken">
+                            <div class="stat-top">
+                                <div class="stat-icon"
+                                    style="background:var(--status-broken-bg);color:var(--status-broken)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                            </div>
+                            <div class="stat-val" style="color:var(--status-broken)" id="d-broken">—</div>
+                            <div class="stat-label">ใช้งานไม่ได้</div>
+                            <div class="stat-sub">ต้องแก้ไขก่อนกลับมาใช้งาน</div>
+                        </div>
+                        <div class="stat-card stat-card-overview" id="card-review" role="button" tabindex="0" data-dashboard-target="review">
+                            <div class="stat-top">
+                                <div class="stat-icon"
+                                    style="background:var(--status-inuse-bg);color:var(--status-inuse)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                            </div>
+                            <div class="stat-val" style="color:var(--status-inuse)" id="d-review">—</div>
+                            <div class="stat-label">รออนุมัติ</div>
+                            <div class="stat-sub">คลิกเพื่อเปิดคิวตรวจรายการใหม่</div>
+                        </div>
+                        <div class="stat-card stat-card-overview" id="card-overdue" role="button" tabindex="0" data-dashboard-target="borrow-requests">
+                            <div class="stat-top">
+                                <div class="stat-icon" style="background:rgba(239,68,68,0.12);color:#ef4444" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                </div>
+                            </div>
+                            <div class="stat-val" style="color:#ef4444" id="b-overdue">-</div>
+                            <div class="stat-label">เลยวันรับของ</div>
+                            <div class="stat-sub">ถ้ามีค่า ให้เปิดคิวคำขอยืมทันที</div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">งานเร่งด่วนวันนี้</div>
+                            <div class="section-sub">ดึงงานที่ทีมต้องเปิดดูทันทีหลังเข้าสู่ระบบ</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-dash-borrow-requests">ดูคำร้องทั้งหมด →</button>
+                    </div>
+                    <div id="urgent-work-grid">
+                        <div class="stat-card dashboard-action-card" id="urgent-overdue-card" role="button" tabindex="0" data-dashboard-target="borrow-requests">
+                            <div class="dashboard-action-top">
+                                <span class="dashboard-action-kicker dashboard-action-kicker-danger">ต้องจัดการก่อน</span>
+                                <span class="dashboard-action-arrow">→</span>
+                            </div>
+                            <div class="stat-val" style="color:#ef4444" id="dash-b-overdue-pickups">—</div>
+                            <div class="stat-label">เลยวันรับของ</div>
+                            <div class="stat-sub">เปิดหน้าคิวคำขอเพื่อแก้รายการค้าง</div>
+                        </div>
+                        <div class="stat-card dashboard-action-card" id="urgent-pending-card" role="button" tabindex="0" data-dashboard-target="borrow-requests">
+                            <div class="dashboard-action-top">
+                                <span class="dashboard-action-kicker dashboard-action-kicker-warn">รอดำเนินการ</span>
+                                <span class="dashboard-action-arrow">→</span>
+                            </div>
+                            <div class="stat-val" style="color:#f59e0b" id="dash-b-pending">—</div>
+                            <div class="stat-label">รออนุมัติ</div>
+                            <div class="stat-sub">ตรวจและตัดสินใจคำร้องที่ยังค้าง</div>
+                        </div>
+                        <div class="stat-card dashboard-action-card" id="urgent-returns-card" role="button" tabindex="0" data-dashboard-target="borrow-requests">
+                            <div class="dashboard-action-top">
+                                <span class="dashboard-action-kicker dashboard-action-kicker-info">ครบกำหนดวันนี้</span>
+                                <span class="dashboard-action-arrow">→</span>
+                            </div>
+                            <div class="stat-val" style="color:#3b82f6" id="dash-b-returns-today">—</div>
+                            <div class="stat-label">ครบกำหนดคืนวันนี้</div>
+                            <div class="stat-sub">เตรียมติดตามการคืนและตรวจรับ</div>
+                        </div>
+                        <div class="stat-card dashboard-action-card" id="urgent-preparing-card" role="button" tabindex="0" data-dashboard-target="borrow-requests">
+                            <div class="dashboard-action-top">
+                                <span class="dashboard-action-kicker dashboard-action-kicker-ok">เตรียมล่วงหน้า</span>
+                                <span class="dashboard-action-arrow">→</span>
+                            </div>
+                            <div class="stat-val" style="color:#10b981" id="dash-b-preparing">—</div>
+                            <div class="stat-label">ต้องเตรียมของพรุ่งนี้</div>
+                            <div class="stat-sub">เช็กของล่วงหน้าให้พร้อมก่อนวันใช้งาน</div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">สัดส่วนสถานะหุ่นทั้งหมด</div>
+                            <div class="section-sub">เฉพาะหุ่นที่ Active อยู่</div>
+                        </div>
+                    </div>
+                    <div class="report-grid" style="margin-bottom:24px">
+                        <div class="report-card" id="status-bar-chart">
+                            <div class="report-card-title">สถานะตามจำนวน</div>
+                            <div id="status-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span>โหลด...</div>
+                            </div>
+                        </div>
+                        <div class="report-card" id="age-bar-chart">
+                            <div class="report-card-title">สัดส่วนช่วงวัย</div>
+                            <div id="age-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span>โหลด...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <div class="section-title">หุ่นรออนุมัติล่าสุด</div>
+                        <button class="btn btn-primary btn-sm" id="btn-dash-review">ดูทั้งหมด →</button>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>SAP ID</th>
+                                    <th>ชื่อหุ่น</th>
+                                    <th>ช่วงวัย</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-review-tbody">
+                                <tr>
+                                    <td colspan="4" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB: BORROW REQUESTS ======================== -->
+                <div class="tab-pane" id="tab-borrow-requests">
+                    <div class="stats-row" style="margin-bottom: 24px;">
+                        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+                            <div class="stat-val" style="color:#f59e0b" id="b-pending">—</div>
+                            <div class="stat-label">รออนุมัติวันนี้</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #3b82f6;">
+                            <div class="stat-val" style="color:#3b82f6" id="b-receiving">—</div>
+                            <div class="stat-label">คืนรอตรวจเช็ค</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #10b981;">
+                            <div class="stat-val" style="color:#10b981" id="b-preparing">—</div>
+                            <div class="stat-label">เตรียมของพรุ่งนี้</div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">จัดการคำขอยืมจากผู้ใช้</div>
+                            <div class="section-sub">ตรวจสอบ อนุมัติ ปฏิเสธ และตรวจรับคืนคำขอยืมจากผู้ใช้งาน</div>
+                        </div>
+                        <div style="display:flex;gap:8px; align-items:center;">
+                            <span data-testid="admin-approved-keyword" style="font-size:0.75rem; color:var(--text-muted);">Approved</span>
+                            <!-- Removed local refresh button -->
+                        </div>
+                    </div>
+
+                    <div class="admin-table-wrap borrow-workspace">
+                        <div class="result-context-bar">
+                            <div class="result-context-main">
+                                <span class="result-context-kicker">BORROW REQUESTS</span>
+                                <strong id="borrow-results-summary">กำลังโหลดรายการคำขอ...</strong>
+                            </div>
+                            <div class="result-context-actions">
+                                <label class="field-inline" for="borrow-saved-filters">
+                                    <span>Saved filter</span>
+                                    <select class="status-select" id="borrow-saved-filters">
+                                        <option value="">มุมมองปัจจุบัน</option>
+                                    </select>
+                                </label>
+                                <label class="field-inline" for="borrow-sort">
+                                    <span>เรียงตาม</span>
+                                    <select class="status-select" id="borrow-sort">
+                                        <option value="newest">ล่าสุดก่อน</option>
+                                        <option value="oldest">เก่าสุดก่อน</option>
+                                        <option value="pickup-soon">วันเบิกใกล้สุด</option>
+                                        <option value="status">สถานะ</option>
+                                    </select>
+                                </label>
+                                <button type="button" class="btn btn-ghost btn-sm" id="btn-borrow-save-filter">บันทึก preset</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="btn-borrow-delete-filter">ลบ preset</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="btn-borrow-set-default-filter">ตั้งเป็นค่าเริ่มต้น</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="btn-borrow-clear-default-filter">ล้างค่าเริ่มต้น</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="btn-borrow-columns">คอลัมน์</button>
+                            </div>
+                        </div>
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                <input class="table-search" id="borrow-search"
+                                    placeholder="ค้นหาชื่อผู้ยืม, โครงการ, Tracking ID…" autocomplete="off" />
+                            </div>
+                            <select class="status-select" id="borrow-status-filter">
+                                <option value="">ทุกสถานะ</option>
+                                <option value="pending">รออนุมัติ</option>
+                                <option value="approved">อนุมัติแล้ว (รอรับของ/ใช้งานอยู่)</option>
+                                <option value="returned_pending_inspection">รับคืนแล้ว (รอตรวจเช็ค)</option>
+                                <option value="returned">คืนสมบูรณ์</option>
+                                <option value="cancelled">ยกเลิก</option>
+                                <option value="rejected">ถูกปฏิเสธ</option>
+                            </select>
+                        </div>
+                        <div class="helper-panel borrow-helper-panel">
+                            <div class="helper-title">กติกาการเลือกหลายรายการ</div>
+                            <div class="helper-note">เลือกแบบหลายรายการได้เฉพาะคำขอที่ยังรออนุมัติ การเลือกจะคงอยู่ข้าม pagination ภายในผลลัพธ์ชุดเดียวกัน และถ้า filter หรือ sort ใหม่ทำให้บางรายการหลุดออกจากผลลัพธ์ ระบบจะแจ้งเตือนก่อนล้าง selection ส่วนนั้น</div>
+                        </div>
+                        <div class="status-banner inline-warning-banner" id="borrow-selection-warning" style="display:none;" aria-live="polite"></div>
+                        <div class="active-filter-row" id="borrow-active-filters" aria-live="polite"></div>
+                        <table class="admin-table">
+                            <thead id="borrow-thead">
+                                <tr>
+                                    <th class="checkbox-col"><input type="checkbox" id="borrow-select-all" aria-label="เลือกคำขอทั้งหมดในหน้านี้" /></th>
+                                    <th data-borrow-col="tracking">Tracking ID</th>
+                                    <th data-borrow-col="borrower">ผู้ยืม</th>
+                                    <th data-borrow-col="purpose">โครงการ</th>
+                                    <th data-borrow-col="pickup">วันที่เบิก</th>
+                                    <th data-borrow-col="status">สถานะ</th>
+                                    <th data-borrow-col="actions">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="borrow-tbody">
+                                <tr>
+                                    <td colspan="7" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="borrow-pagination"></div>
+                    </div>
+                    <div class="bulk-action-bar hidden" id="borrow-bulk-action-bar">
+                        <div class="bulk-action-info">
+                            <div class="bulk-action-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 11 12 14 22 4" />
+                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                                </svg>
+                            </div>
+                            <div class="bulk-action-copy">
+                                <span>
+                                    เลือก <strong id="borrow-bulk-count">0</strong> คำขอที่รออนุมัติ
+                                    <span class="selection-scope-badge" id="borrow-bulk-scope-badge" hidden>เลือกบางรายการ</span>
+                                </span>
+                                <span class="bulk-action-meta" id="borrow-bulk-meta">ยังไม่ได้เลือกผลลัพธ์ทั้งหมด</span>
+                            </div>
+                        </div>
+                        <div class="bulk-action-btns">
+                            <button class="btn btn-outline" id="btn-borrow-select-all-results">เลือกผลลัพธ์ทั้งหมด</button>
+                            <button class="btn btn-success" id="btn-borrow-bulk-approve">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                อนุมัติที่เลือก
+                            </button>
+                            <button class="btn btn-danger" id="btn-borrow-bulk-reject">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                ปฏิเสธที่เลือก
+                            </button>
+                            <button class="btn btn-ghost" id="btn-borrow-bulk-clear">ล้างการเลือก</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 2: REVIEW QUEUE ======================== -->
+                <div class="tab-pane" id="tab-review">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">รายการหุ่นใหม่รอเข้าคลัง</div>
+                            <div class="section-sub">หุ่นที่ดึงมาจาก Google Sheet รอตรวจสอบและอนุมัติก่อนเผยแพร่เข้าสู่คลังหลัก</div>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-success btn-sm" id="btn-approve-all">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                อนุมัติทั้งหมดที่แสดง
+                            </button>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <div class="result-context-bar">
+                            <div class="result-context-main">
+                                <span class="result-context-kicker">APPROVE INCOMING STOCK</span>
+                                <strong id="review-results-summary">กำลังโหลดรายการอนุมัติเข้าคลัง...</strong>
+                            </div>
+                            <div class="result-context-actions">
+                                <label class="field-inline" for="review-sort">
+                                    <span>เรียงตาม</span>
+                                    <select class="status-select" id="review-sort">
+                                        <option value="name-asc">ชื่อหุ่น A-Z</option>
+                                        <option value="name-desc">ชื่อหุ่น Z-A</option>
+                                        <option value="sap-asc">SAP ID น้อยไปมาก</option>
+                                        <option value="sap-desc">SAP ID มากไปน้อย</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                    <input class="table-search" id="review-search" placeholder="ค้นหาชื่อหุ่น, SAP ID…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="active-filter-row" id="review-active-filters" aria-live="polite"></div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="review-select-all" /></th>
+                                    <th>SAP ID</th>
+                                    <th>ชื่อหุ่น</th>
+                                    <th>ช่วงวัย</th>
+                                    <th>Asset Code</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="review-tbody">
+                                <tr>
+                                    <td colspan="6" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="review-pagination"></div>
+                    </div>
+
+                    <!-- Floating Bulk Action Bar -->
+                    <div class="bulk-action-bar hidden" id="bulk-action-bar">
+                        <div class="bulk-action-info">
+                            <div class="bulk-action-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 11 12 14 22 4" />
+                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                                </svg>
+                            </div>
+                            <span>เลือก <strong id="bulk-count">0</strong> รายการ</span>
+                        </div>
+                        <div class="bulk-action-btns">
+                            <button class="btn btn-success" id="btn-bulk-approve">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                อนุมัติที่เลือก
+                            </button>
+                            <button class="btn btn-danger" id="btn-bulk-reject">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                ปฏิเสธที่เลือก
+                            </button>
+                            <button class="btn btn-ghost" id="btn-bulk-clear">
+                                ล้างการเลือก
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 3: MANIKINS CRUD ======================== -->
+                <div class="tab-pane" id="tab-manikins">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">คลังหุ่นจำลอง</div>
+                            <div class="section-sub">แก้ไขสถานะ, ที่ตั้ง, และหมายเหตุ</div>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <div class="result-context-bar">
+                            <div class="result-context-main">
+                                <span class="result-context-kicker">MANIKIN INVENTORY</span>
+                                <strong id="manikin-results-summary">กำลังโหลดรายการในคลัง...</strong>
+                            </div>
+                            <div class="result-context-actions">
+                                <label class="field-inline" for="manikin-sort">
+                                    <span>เรียงตาม</span>
+                                    <select class="status-select" id="manikin-sort">
+                                        <option value="name-asc">ชื่อหุ่น A-Z</option>
+                                        <option value="name-desc">ชื่อหุ่น Z-A</option>
+                                        <option value="status">สถานะ</option>
+                                        <option value="location">ที่ตั้ง</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                <input class="table-search" id="manikin-search"
+                                    placeholder="ค้นหาชื่อหุ่น, SAP ID…" autocomplete="off" />
+                            </div>
+                            <select class="status-select" id="manikin-status-filter">
+                                <option value="">ทุกสถานะ</option>
+                                <option value="ready">ใช้งานได้ปกติ</option>
+                                <option value="in_session">กำลังใช้งานอยู่</option>
+                                <option value="in_use">ถูกยืม</option>
+                                <option value="maintenance">รอซ่อม ใช้งานได้</option>
+                                <option value="broken">รอซ่อม ใช้งานไม่ได้</option>
+                                <option value="pending_disposal">รอจำหน่าย</option>
+                                <option value="disposed">จำหน่ายแล้ว/ส่งคืน</option>
+                                <option value="dept_purchase">จัดซื้อให้หน่วยงาน/ภาควิชา</option>
+                                <option value="pending_transfer">รอโอนย้าย</option>
+                                <option value="transferred">โอนย้ายแล้ว</option>
+                            </select>
+                        </div>
+                        <div class="active-filter-row" id="manikin-active-filters" aria-live="polite"></div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>SAP ID</th>
+                                    <th>ชื่อหุ่น</th>
+                                    <th>ช่วงวัย</th>
+                                    <th>สถานะ</th>
+                                    <th>ที่ตั้ง</th>
+                                    <th>หมายเหตุ</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manikin-tbody">
+                                <tr>
+                                    <td colspan="8" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="manikin-pagination"></div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB: RECYCLE BIN ======================== -->
+                <div class="tab-pane" id="tab-recycle">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">ประวัติการปฏิเสธ (ถังขยะ)</div>
+                            <div class="section-sub">ข้อมูลหุ่นที่แอดมินเคยกดปฏิเสธไปแล้ว
+                                เพื่อป้องกันไม่ให้โชว์ในหน้ารออนุมัติ</div>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <div class="result-context-bar">
+                            <div class="result-context-main">
+                                <span class="result-context-kicker">RECYCLE HISTORY</span>
+                                <strong id="recycle-results-summary">กำลังโหลดประวัติการปฏิเสธ...</strong>
+                            </div>
+                            <div class="result-context-actions">
+                                <label class="field-inline" for="recycle-sort">
+                                    <span>เรียงตาม</span>
+                                    <select class="status-select" id="recycle-sort">
+                                        <option value="deleted-desc">ล่าสุดก่อน</option>
+                                        <option value="deleted-asc">เก่าสุดก่อน</option>
+                                        <option value="name-asc">ชื่อหุ่น A-Z</option>
+                                        <option value="sap-asc">SAP ID น้อยไปมาก</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <input type="text" class="table-search" id="recycle-search"
+                                    placeholder="ค้นหา รหัส, ชื่อ…" />
+                            </div>
+                        </div>
+                        <div class="active-filter-row" id="recycle-active-filters" aria-live="polite"></div>
+                        <div style="overflow-x:auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>SAP ID</th>
+                                        <th>Asset Name</th>
+                                        <th>Asset Code</th>
+                                        <th>วันที่ลบ</th>
+                                        <th>จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recycle-tbody">
+                                    <!-- rows generate by js -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer">
+                            <div class="pagination" id="recycle-pagination"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 4: LOCATIONS ======================== -->
+                <div class="tab-pane" id="tab-locations">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">จัดการสถานที่</div>
+                            <div class="section-sub">อาคารและห้องที่เก็บหุ่นจำลอง</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-add-location">+ เพิ่มสถานที่</button>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <div class="result-context-bar">
+                            <div class="result-context-main">
+                                <span class="result-context-kicker">LOCATIONS</span>
+                                <strong id="locations-results-summary">กำลังโหลดรายการสถานที่...</strong>
+                            </div>
+                            <div class="result-context-actions">
+                                <label class="field-inline" for="locations-sort">
+                                    <span>เรียงตาม</span>
+                                    <select class="status-select" id="locations-sort">
+                                        <option value="building-asc">อาคาร A-Z</option>
+                                        <option value="building-desc">อาคาร Z-A</option>
+                                        <option value="room-asc">ห้อง A-Z</option>
+                                        <option value="count-desc">จำนวนหุ่นมากสุด</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="table-toolbar">
+                            <div class="table-search-wrap">
+                                <svg class="table-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <input class="table-search" id="locations-search" placeholder="ค้นหาอาคาร, ห้อง หรือ ID…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="active-filter-row" id="locations-active-filters" aria-live="polite"></div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>อาคาร</th>
+                                    <th>ห้อง</th>
+                                    <th>หุ่นที่มี</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="locations-tbody">
+                                <tr>
+                                    <td colspan="5" class="tbl-loading"><span class="spinner-sm"></span>โหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="locations-pagination"></div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB 5: REPORTS ======================== -->
+                <div class="tab-pane" id="tab-reports">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">รายงานและสถิติ (Analytics)</div>
+                            <div class="section-sub">สรุปข้อมูลคลังหุ่นจำลอง และการยืม-คืน</div>
+                        </div>
+                        <div class="analytics-toolbar">
+                            <label class="analytics-toggle" for="reports-auto-refresh">
+                                <input type="checkbox" id="reports-auto-refresh" checked />
+                                <span>รีเฟรชอัตโนมัติ</span>
+                            </label>
+                            <span class="analytics-refresh-note" id="reports-refresh-note">รีเฟรชใน 60 วินาที</span>
+                            <div class="analytics-export-group">
+                                <select class="status-select" id="export-range" title="เลือกช่วงข้อมูลสำหรับ export">
+                                    <option value="month">Export เดือนนี้</option>
+                                    <option value="all">Export ทั้งหมด</option>
+                                </select>
+                                <button class="btn btn-primary btn-sm" id="btn-export" title="ดาวน์โหลดข้อมูลรายงานตามช่วงที่เลือก">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Export CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-hero">
+                        <div class="analytics-summary-card">
+                            <div class="analytics-summary-kicker">สรุปให้ตัดสินใจเร็วขึ้น</div>
+                            <div class="analytics-summary-title" id="reports-summary-title">กำลังสรุปแนวโน้มการใช้งาน</div>
+                            <div class="analytics-summary-copy" id="reports-summary-copy">ระบบกำลังเปรียบเทียบข้อมูลเดือนนี้กับช่วงก่อนหน้า เพื่อบอกว่าตอนนี้ดีขึ้น แย่ลง หรือยังไม่มีสัญญาณที่ต้องทำต่อ</div>
+                            <div class="analytics-summary-foot" id="reports-summary-foot">ใช้ส่วนนี้เป็นคำตอบเร็วว่าควรลงมือทำอะไรต่อใน reports tab</div>
+                        </div>
+                        <div class="analytics-empty-state" id="reports-empty-state">
+                            <div class="analytics-empty-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>
+                            </div>
+                            <div class="analytics-empty-title" id="reports-empty-title">กำลังตรวจว่ามีข้อมูลเพียงพอหรือไม่</div>
+                            <div class="analytics-empty-copy" id="reports-empty-copy">ถ้ายังไม่มีข้อมูล ระบบจะบอกชัดว่าเป็น empty state ไม่ใช่ข้อผิดพลาดของระบบ</div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-kpi-grid">
+                        <div class="stat-card analytics-kpi-card" id="kpi-approved-card" title="สัดส่วนคำร้องที่จบด้วยสถานะอนุมัติหรือใช้งานสำเร็จ เมื่อเทียบกับคำร้องทั้งหมดในช่วงที่วิเคราะห์">
+                            <div class="analytics-kpi-icon analytics-kpi-icon-ok">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <div class="stat-val" style="color:#10b981" id="kpi-approved">—%</div>
+                            <div class="stat-label">อัตราการจองสำเร็จ</div>
+                            <div class="analytics-kpi-context" id="kpi-approved-context">กำลังเปรียบเทียบกับเดือนก่อน</div>
+                            <div class="analytics-kpi-insight" id="kpi-approved-insight">ระบบกำลังสรุปว่าค่านี้ดีหรือแย่</div>
+                        </div>
+                        <div class="stat-card analytics-kpi-card" id="kpi-cancelled-card" title="สัดส่วนคำร้องที่ถูกยกเลิกหรือปฏิเสธ ยิ่งต่ำยิ่งดี เพราะหมายถึงมี friction น้อยลง">
+                            <div class="analytics-kpi-icon analytics-kpi-icon-danger">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </div>
+                            <div class="stat-val" style="color:#ef4444" id="kpi-cancelled">—%</div>
+                            <div class="stat-label">อัตราถูกยกเลิก/ปฏิเสธ</div>
+                            <div class="analytics-kpi-context" id="kpi-cancelled-context">กำลังเปรียบเทียบกับเดือนก่อน</div>
+                            <div class="analytics-kpi-insight" id="kpi-cancelled-insight">ระบบกำลังสรุปว่าค่านี้ดีหรือแย่</div>
+                        </div>
+                        <div class="stat-card analytics-kpi-card" id="kpi-leadtime-card" title="จำนวนวันเฉลี่ยระหว่างวันที่สร้างคำขอและวันที่เริ่มใช้งานจริง ช่วยบอกว่าผู้ใช้วางแผนล่วงหน้ามากน้อยแค่ไหน">
+                            <div class="analytics-kpi-icon analytics-kpi-icon-info">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                            <div class="stat-val" style="color:#14b8a6" id="kpi-leadtime">— วัน</div>
+                            <div class="stat-label">เวลาจองล่วงหน้าเฉลี่ย</div>
+                            <div class="analytics-kpi-context" id="kpi-leadtime-context">กำลังเปรียบเทียบกับเดือนก่อน</div>
+                            <div class="analytics-kpi-insight" id="kpi-leadtime-insight">ระบบกำลังสรุปความหมายของค่าเฉลี่ยนี้</div>
+                        </div>
+                        <div class="stat-card analytics-kpi-card" id="kpi-topusage-card" title="รุ่นหุ่นหรืออุปกรณ์ที่ถูกขอใช้งานมากที่สุดในเดือนนี้ ใช้เพื่อเตรียมของหรือวางแผน stock">
+                            <div class="analytics-kpi-icon analytics-kpi-icon-warn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            </div>
+                            <div class="stat-val analytics-kpi-title-value" style="color:#f59e0b;" id="kpi-topusage">—</div>
+                            <div class="stat-label">หุ่นยอดนิยม (เดือนนี้)</div>
+                            <div class="analytics-kpi-context" id="kpi-topusage-context">กำลังตรวจว่ามีข้อมูลการใช้งานหรือไม่</div>
+                            <div class="analytics-kpi-insight" id="kpi-topusage-insight">ถ้าไม่มีข้อมูล ระบบจะแสดง empty state ที่มีความหมายแทน</div>
+                        </div>
+                    </div>
+
+                    <div class="report-grid analytics-report-grid" id="report-grid">
+                        <div class="report-card analytics-report-card">
+                            <div class="report-card-title">สถานะความพร้อมใช้งานของรุ่นต่างๆ (ชิ้น)</div>
+                            <div class="report-card-subtitle">อ่านเพื่อดูว่าต้องแก้ปัญหา stock หรือซ่อมบำรุงตรงไหนก่อน</div>
+                            <div class="analytics-scale"><span>0</span><span id="rpt-status-scale-max">0</span></div>
+                            <div id="rpt-status-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span></div>
+                            </div>
+                            <div class="analytics-insight-line" id="rpt-status-insight">กำลังสรุป insight</div>
+                        </div>
+                        <div class="report-card analytics-report-card">
+                            <div class="report-card-title">แบ่งตามช่วงวัย</div>
+                            <div class="report-card-subtitle">ช่วยดูว่าคลังเอียงไปทางกลุ่มผู้ใช้แบบไหน และกลุ่มไหนอาจยังขาด coverage</div>
+                            <div class="analytics-scale"><span>0%</span><span>100%</span></div>
+                            <div id="rpt-age-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span></div>
+                            </div>
+                            <div class="analytics-insight-line" id="rpt-age-insight">กำลังสรุป insight</div>
+                        </div>
+                        <div class="report-card analytics-report-card analytics-report-card-wide">
+                            <div class="report-card-title">รุ่นหุ่นที่มีมากที่สุด (Top 10)</div>
+                            <div class="report-card-subtitle">ใช้ตัดสินใจว่า model ไหนควรเตรียมเพิ่มหรือจัดวางให้เข้าถึงง่ายขึ้น</div>
+                            <div class="analytics-scale"><span>0</span><span id="rpt-model-scale-max">0</span></div>
+                            <div id="rpt-model-bars">
+                                <div class="tbl-loading"><span class="spinner-sm"></span></div>
+                            </div>
+                            <div class="analytics-insight-line" id="rpt-model-insight">กำลังสรุป insight</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== TAB: TEAMS ======================== -->
+                <div class="tab-pane" id="tab-teams">
+
+                    <!-- Alert banner for skipped manikins -->
+                    <div class="team-alert-banner hidden" id="team-skip-alert">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                        <span id="team-skip-msg">มีหุ่นถูกข้ามในการจ่าย</span>
+                        <button id="btn-close-team-skip-alert" aria-label="ปิดการแจ้งเตือน"
+                            style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;padding:4px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="teams-layout">
+                        <!-- Left: Team List -->
+                        <div class="teams-sidebar">
+                            <div class="teams-sidebar-header">
+                                <span>กลุ่ม (Teams)</span>
+                                <button class="btn btn-primary btn-sm" id="btn-new-team">+ สร้าง</button>
+                            </div>
+                            <div id="teams-list" class="teams-list">
+                                <div class="tbl-loading"><span class="spinner-sm"></span></div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Team Members -->
+                        <div class="teams-detail">
+                            <div id="teams-detail-empty" class="teams-empty-state">
+                                <div style="color:var(--text-dim);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                                <div style="color:var(--text-secondary);margin-top:8px;">เลือก Team ทางซ้ายเพื่อดูสมาชิก
+                                </div>
+                            </div>
+                            <div id="teams-detail-content" class="hidden">
+                                <div class="teams-detail-header">
+                                    <div>
+                                        <div class="teams-detail-code" id="detail-team-code">—</div>
+                                        <div class="teams-detail-name" id="detail-team-name">—</div>
+                                    </div>
+                                    <div style="display:flex;gap:8px;">
+                                        <button class="btn btn-outline btn-sm" id="btn-add-member">+ เพิ่มหุ่น</button>
+                                        <button class="btn btn-outline btn-sm" id="btn-edit-team"
+                                            style="color:var(--text-secondary);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> แก้ไข</button>
+                                        <button class="btn btn-sm" id="btn-delete-team"
+                                            style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                            ลบ</button>
+                                    </div>
+                                </div>
+
+                                <!-- Smart Dispense Row -->
+                                <div class="team-dispense-bar">
+                                    <span style="font-size:0.82rem;color:var(--text-secondary);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                                        หุ่นที่พร้อมจ่ายถัดไป:</span>
+                                    <span id="dispense-next-badge" class="order-badge"
+                                        style="font-size:0.9rem;">—</span>
+                                    <button class="btn btn-outline btn-sm" id="btn-dispense-check">ตรวจสอบ</button>
+                                </div>
+
+                                <!-- ===== Team Image Manager ===== -->
+                                <div id="team-image-section" class="team-caps-section hidden" style="margin-top:0;">
+                                    <div class="team-caps-header">
+                                        <div class="header-left">
+                                            <span class="header-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> รูปภาพประจำ Team</span>
+                                            <span class="header-subtitle text-dim">รูปปก + รูปรายละเอียดสูงสุด 3 รูป</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cover Image -->
+                                    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px;">
+                                        <!-- Preview -->
+                                        <div id="team-cover-preview-wrap" style="width:180px;flex-shrink:0;">
+                                            <div id="team-cover-preview" style="width:180px;height:135px;background:var(--bg-secondary);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+                                                <span id="team-cover-placeholder" style="color:var(--text-dim);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+                                                <img id="team-cover-img" src="" alt="Team cover" style="display:none;width:100%;height:100%;object-fit:cover;" />
+                                            </div>
+                                            <div style="font-size:0.72rem;color:var(--text-dim);text-align:center;margin-top:4px;">รูปปก (4:3)</div>
+                                        </div>
+                                        <!-- Upload Controls -->
+                                        <div style="flex:1;min-width:200px;">
+                                            <input type="file" id="team-cover-input" accept="image/webp,image/jpeg,image/png" style="display:none;" />
+                                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                                                <button class="btn btn-outline btn-sm" id="btn-cover-upload"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> อัปโหลดรูปปก</button>
+                                                <button class="btn btn-sm" id="btn-cover-delete" style="display:none;color:#ef4444;border:1px solid rgba(239,68,68,0.3);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> ลบรูป</button>
+                                            </div>
+                                            <!-- Upload Progress -->
+                                            <div id="cover-upload-progress" style="display:none;margin-bottom:8px;">
+                                                <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                                                    <div id="cover-upload-bar" style="height:100%;background:var(--blue-light);width:0%;transition:width 0.3s;border-radius:4px;"></div>
+                                                </div>
+                                                <div id="cover-upload-status" style="font-size:0.75rem;color:var(--text-dim);margin-top:4px;">กำลังอัปโหลด...</div>
+                                            </div>
+                                            <div style="font-size:0.75rem;color:var(--text-dim);">รองรับ JPG, WebP, PNG — ขนาดสูงสุด 2 MB</div>
+                                            <div id="cover-upload-error" style="display:none;font-size:0.78rem;color:#ef4444;margin-top:6px;"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Gallery -->
+                                    <div style="border-top:1px solid var(--border);padding-top:14px;">
+                                        <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:10px;font-weight:500;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> รูปรายละเอียดเพิ่มเติม (สูงสุด 3 รูป)</div>
+                                        <div id="team-gallery-grid" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+                                        <div id="team-gallery-error" style="display:none;font-size:0.78rem;color:#ef4444;margin-top:6px;"></div>
+                                        <input type="file" id="team-gallery-input" accept="image/webp,image/jpeg,image/png" style="display:none;" />
+                                    </div>
+                                </div>
+
+                                <!-- Capabilities Section -->
+                                <div id="team-caps-section" class="team-caps-section hidden">
+                                    <div class="team-caps-header">
+                                        <div class="header-left">
+                                            <span class="header-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Default Capabilities ของ Team</span>
+                                            <span
+                                                class="header-subtitle text-dim">หุ่นในกลุ่มนี้ควรจะทำอะไรได้บ้าง?</span>
+                                        </div>
+                                        <button class="btn btn-outline btn-xs" id="btn-sync-caps">
+                                            <span class="icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span> Sync ทุกตัวใน Team
+                                        </button>
+                                    </div>
+                                    <div id="team-caps-checkboxes" class="caps-checkboxes-grid">
+                                        <!-- JS Dynamic Checkboxes -->
+                                    </div>
+                                    <div class="team-caps-footer">
+                                        <button class="btn btn-primary btn-sm" id="btn-save-team-caps">บันทึก
+                                            Capabilities</button>
+                                    </div>
+                                </div>
+
+                                <table class="admin-table" style="margin-top:12px;">
+                                    <thead>
+                                        <tr>
+                                            <th width="80px" style="text-align:center;">ลำดับ</th>
+                                            <th>SAP ID</th>
+                                            <th>ชื่อหุ่น</th>
+                                            <th>สถานะ</th>
+                                            <th width="120px" style="text-align:center;">จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="team-members-tbody">
+                                        <tr>
+                                            <td colspan="5" style="text-align:center;color:var(--text-dim);">ไม่มีสมาชิก
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end page-content -->
+        </div><!-- end main-content -->
+    </div><!-- end layout -->
+
+    <!-- Modal: Edit Manikin (Premium) -->
+    <div class="modal-overlay hidden" id="edit-modal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="modal-header">
+                <div class="modal-icon edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#4a9fd4" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">แก้ไขข้อมูลหุ่น</div>
+                    <div class="modal-desc">เปลี่ยนสถานะ สถานที่ หรือเพิ่มหมายเหตุ</div>
+                </div>
+                <button class="modal-close" id="btn-close-edit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div data-partial="shell/footer"></div>
+            <input type="hidden" id="edit-sap-id" />
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">SAP ID (อ่านอย่างเดียว)</label>
+                    <input class="field-input" id="edit-display-sap" disabled />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">สถานะ</label>
+                    <select class="field-select" id="edit-status">
+                        <option value="ready">ใช้งานได้ปกติ</option>
+                        <option value="in_session">กำลังใช้งานอยู่</option>
+                        <option value="in_use">ถูกยืม</option>
+                        <option value="maintenance">รอซ่อม ใช้งานได้</option>
+                        <option value="broken">รอซ่อม ใช้งานไม่ได้</option>
+                        <option value="pending_disposal">รอจำหน่าย</option>
+                        <option value="disposed">จำหน่ายแล้ว/ส่งคืน</option>
+                        <option value="dept_purchase">จัดซื้อให้หน่วยงาน/ภาควิชา</option>
+                        <option value="pending_transfer">รอโอนย้าย</option>
+                        <option value="transferred">โอนย้ายแล้ว</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">สถานที่</label>
+                    <select class="field-select" id="edit-location">
+                        <option value="">— ยังไม่ได้ระบุ —</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">หมายเหตุ</label>
+                    <textarea class="field-textarea" id="edit-notes" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ช่วงวัย</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="ADULT" />
+                            <span class="radio-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px; color:#f97316;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ผู้ใหญ่</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="CHILD" />
+                            <span class="radio-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px; color:#eab308;"><circle cx="12" cy="8" r="3"/><path d="M7 21v-2a5 5 0 0 1 10 0v2"/></svg> เด็ก</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="INFANT" />
+                            <span class="radio-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px; color:#3b82f6;"><circle cx="12" cy="9" r="2.5"/><path d="M9 22v-3a3 3 0 0 1 6 0v3"/></svg> ทารก</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="edit-manikin-type" value="" />
+                            <span class="radio-label">— ไม่ระบุ</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ฟังก์ชัน / ความสามารถ</label>
+                    <div class="checkbox-group" id="edit-capabilities-wrap">
+                        <span style="color:var(--text-dim);font-size:0.8rem">กำลังโหลด...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="edit-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="edit-save">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add/Edit Location (Premium) -->
+    <div class="modal-overlay hidden" id="location-modal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="modal-header">
+                <div class="modal-icon add" id="loc-modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#4a9fd4" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        <polyline points="9,22 9,12 15,12 15,22" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title" id="loc-modal-title">เพิ่มสถานที่</div>
+                    <div class="modal-desc">ระบุอาคารและห้องที่เก็บหุ่นจำลอง</div>
+                </div>
+                <button class="modal-close" id="btn-close-loc">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="loc-edit-id" />
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">อาคาร</label>
+                    <input class="field-input" id="loc-building" placeholder="เช่น อาคาร 1, SiMSET Building" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ห้อง</label>
+                    <input class="field-input" id="loc-room" placeholder="เช่น SIM Lab 1, ห้องเก็บ A" />
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="loc-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="loc-save">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Return Inspection (Damage Tracking & Partial) -->
+    <div class="modal-overlay hidden" id="return-modal" aria-hidden="true">
+        <div class="modal" style="max-width: 800px; width: 90%;" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="modal-header">
+                <div class="modal-icon edit" style="background: rgba(59, 130, 246, 0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                        <polyline points="9 11 12 14 22 4" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">ตรวจสอบรับคืนอุปกรณ์</div>
+                    <div class="modal-desc">ระบุจำนวนที่รับคืนปกติ และชำรุด/ส่งซ่อม <br><span
+                            style="font-size:0.8rem; color:var(--text-3);" id="return-tid-display"></span></div>
+                </div>
+                <button class="modal-close" id="btn-close-return">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="return-req-id" />
+            <div class="modal-body">
+                <div class="return-bulk-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-outline btn-sm" id="btn-return-all"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> รับคืนปกติทั้งหมด</button>
+                    <button class="btn btn-outline btn-sm" id="btn-maintenance-all"
+                        style="color:#f59e0b; border-color:#f59e0b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> ส่งซ่อมทั้งหมด</button>
+                </div>
+                <div class="helper-panel" id="return-summary-panel">
+                    <div class="helper-title">สรุปการตรวจรับคืน</div>
+                    <div class="return-summary-grid">
+                        <div><span class="helper-k">ยืมทั้งหมด</span><strong id="return-total-borrowed">0</strong></div>
+                        <div><span class="helper-k">ปกติ</span><strong id="return-total-ok">0</strong></div>
+                        <div><span class="helper-k">ชำรุด</span><strong id="return-total-damaged">0</strong></div>
+                        <div><span class="helper-k">ส่งซ่อม</span><strong id="return-total-maintenance">0</strong></div>
+                    </div>
+                    <div class="helper-note" id="return-summary-note">ระบุจำนวนในแต่ละช่องให้รวมกันเท่ากับจำนวนที่ยืมไปในทุกรายการ</div>
+                </div>
+                <div class="return-table-wrap admin-table-wrap">
+                <table class="admin-table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th width="35%">อุปกรณ์</th>
+                            <th width="15%" style="text-align:center">ยืมไป (ชิ้น)</th>
+                            <th width="15%" style="text-align:center">ปกติ</th>
+                            <th width="15%" style="text-align:center">ชำรุด</th>
+                            <th width="20%" style="text-align:center">ส่งซ่อม</th>
+                        </tr>
+                    </thead>
+                    <tbody id="return-items-tbody">
+                        <!-- JS injected rows -->
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="return-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="return-save">บันทึกการรับคืน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Reject Reason -->
+    <div class="modal-overlay hidden" id="reject-modal" aria-hidden="true">
+        <div class="modal" style="max-width: 500px; width: 90%;" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="modal-header">
+                <div class="modal-icon danger" style="background: rgba(239, 68, 68, 0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">ระบุเหตุผลการไม่อนุมัติ</div>
+                    <div class="modal-desc">ข้อมูลนี้จะถูกส่งแจ้งเตือนไปยังผู้ยืม</div>
+                </div>
+                <button class="modal-close" id="btn-close-reject">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="reject-req-id" />
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">สาเหตุหลัก (เลือกจากรายการ)</label>
+                    <select class="field-select" id="reject-reason-select">
+                        <option value="อุปกรณ์ที่คุณต้องการไม่มีคิวว่างในช่วงเวลาดังกล่าว">
+                            อุปกรณ์ที่คุณต้องการไม่มีคิวว่างในช่วงเวลาดังกล่าว</option>
+                        <option value="ข้อมูลโครงการ / วัตถุประสงค์การยืมไม่ชัดเจน">ข้อมูลโครงการ /
+                            วัตถุประสงค์การยืมไม่ชัดเจน</option>
+                        <option value="อุปกรณ์ชำรุด หรืออยู่ระหว่างการซ่อมบำรุง">อุปกรณ์ชำรุด
+                            หรืออยู่ระหว่างการซ่อมบำรุง</option>
+                        <option value="ผู้ยืมมีประวัติค้างส่งคืนอุปกรณ์ หรือชำรุด">ผู้ยืมมีประวัติค้างส่งคืนอุปกรณ์
+                            หรือชำรุด</option>
+                        <option value="other">อื่น ๆ (ระบุเอง)</option>
+                    </select>
+                </div>
+                <div class="helper-panel" id="reject-preview-panel">
+                    <div class="helper-title">ตัวอย่างข้อความที่จะส่งให้ผู้ยืม</div>
+                    <div class="helper-note" id="reject-preview-text">เจ้าหน้าที่จะใช้ข้อความนี้เป็นเหตุผลหลักในการไม่อนุมัติคำขอ</div>
+                </div>
+                <div class="field-group" id="reject-reason-text-group" style="display: none;">
+                    <label class="field-label">ระบุสาเหตุเพิ่มเติม</label>
+                    <textarea class="field-textarea" id="reject-reason-text"
+                        placeholder="พิมพ์เหตุผลที่นี่..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="reject-cancel">ยกเลิก</button>
+                <button class="btn btn-danger" id="reject-save">ยืนยันการปฏิเสธ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog (Custom - replaces native confirm()) -->
+    <div class="confirm-overlay hidden" id="confirm-dialog" aria-hidden="true">
+        <div class="confirm-box" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="confirm-icon danger" id="confirm-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+            </div>
+            <div class="confirm-title" id="confirm-title">ยืนยันการดำเนินการ</div>
+            <div class="confirm-msg" id="confirm-msg">คุณแน่ใจหรือไม่?</div>
+            <div class="confirm-actions">
+                <button class="btn btn-ghost" id="confirm-cancel">ยกเลิก</button>
+                <button class="btn btn-danger" id="confirm-ok">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create / Edit Team -->
+    <div class="modal-overlay hidden" id="team-modal" aria-hidden="true">
+        <div class="modal" style="max-width:440px;width:90%;" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="modal-header">
+                <div class="modal-icon add">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-light)" stroke-width="2"
+                        stroke-linecap="round">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title" id="team-modal-title">สร้าง Team ใหม่</div>
+                    <div class="modal-desc">กำหนดรหัสและชื่อแสดงผลของกลุ่มหุ่น</div>
+                </div>
+                <button class="modal-close" id="btn-close-team-modal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="team-modal-original-code" />
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">Team Code <span style="color:#ef4444">*</span></label>
+                    <input class="field-input" id="team-modal-code" placeholder="เช่น RA, ER, ICU" maxlength="20" />
+                    <div style="font-size:0.75rem;color:var(--text-dim);margin-top:4px;">ใช้ตัวอักษรตัวใหญ่
+                        ไม่มีช่องว่าง เช่น RA</div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ชื่อแสดงผล <span style="color:#ef4444">*</span></label>
+                    <input class="field-input" id="team-modal-name"
+                        placeholder="เช่น Resuscitation Team, Emergency Room" />
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="team-modal-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="team-modal-save">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="borrow-columns-modal" aria-hidden="true">
+        <div class="modal" style="max-width:620px;width:92%;" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="modal-header">
+                <div class="modal-icon edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18" />
+                        <path d="M7 12h10" />
+                        <path d="M10 18h4" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">จัดการคอลัมน์ของ Borrow Requests</div>
+                    <div class="modal-desc">ซ่อนหรือแสดงคอลัมน์ ปรับลำดับ และตรึงคอลัมน์สำคัญทางซ้ายในมุมมองนี้</div>
+                </div>
+                <button class="modal-close" id="btn-close-borrow-columns">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="helper-note compact">ลากสลับลำดับได้ด้วยเมาส์ หรือใช้ปุ่มขึ้นและลงในแต่ละแถว จากนั้นเลือกว่าคอลัมน์ใดควรถูกตรึงทางซ้าย</div>
+                <div class="caps-checkboxes-grid" id="borrow-columns-list"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="borrow-columns-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="borrow-columns-save">บันทึกคอลัมน์</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Manikin to Team -->
+    <div class="modal-overlay hidden" id="add-member-modal" aria-hidden="true">
+        <div class="modal" style="max-width:460px;width:90%;" role="dialog" aria-modal="true" tabindex="-1" data-dialog-panel>
+            <div class="modal-header">
+                <div class="modal-icon add">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-light)" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title">เพิ่มหุ่นเข้า Team <span id="add-member-team-name"
+                            style="color:var(--blue-light);"></span></div>
+                    <div class="modal-desc">เลือกหุ่นที่ยังไม่มี Team และกำหนดลำดับ</div>
+                </div>
+                <button class="modal-close" id="btn-close-add-member">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">เลือกหุ่น (SAP ID)</label>
+                    <div class="combobox-wrap" id="add-member-combobox-wrap">
+                        <input class="field-input" type="text" id="add-member-sap-input"
+                            placeholder="พิมพ์ SAP ID หรือชื่อหุ่นเพื่อค้นหา..." autocomplete="off" />
+                        <input type="hidden" id="add-member-sap" />
+                        <div class="combobox-dropdown hidden" id="add-member-dropdown"></div>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">ลำดับใน Team (team_order)</label>
+                    <input type="number" class="field-input" id="add-member-order" min="1" max="99"
+                        placeholder="เช่น 1 = RA 01" />
+                    <div style="font-size:0.75rem;color:var(--text-dim);margin-top:4px;" id="add-member-order-hint">
+                        ลำดับที่ว่างอยู่จะแสดงอัตโนมัติ</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="add-member-cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="add-member-save">เพิ่มเข้า Team</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" aria-live="polite" aria-atomic="true">
+        <span id="toast-icon"></span>
+        <span id="toast-msg"></span>
+    </div>
+
+    <!-- Supabase JS (self-hosted, SRI-locked) -->
+    <script charset="utf-8" src="../vendor/supabase.min.js"
+        integrity="sha384-YieCqqg9gQufX7+5HcFvCEg/n3KUEdl8/Jb+A6J0npf1mB740VayvwKjTrtCeUoy"
+        crossorigin="anonymous"></script>
+    <!-- DOMPurify — sanitizes innerHTML to prevent XSS (self-hosted, SRI-locked) -->
+    <script charset="utf-8" src="../vendor/purify.min.js"
+        integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu"
+        crossorigin="anonymous"></script>
+    <script src="../js/partials.js"></script>
+    <script charset="utf-8" src="admin.js?v=9"></script>
+    <script charset="utf-8" src="borrow-admin.js?v=9"></script>
+</body>
+
+</html>
