@@ -52,7 +52,39 @@ function syncManikinStatus() {
     props.setProperty('LAST_USAGE_SYNC_ERROR', redactSecrets_(e.message));
     Logger.log('usage sync failed: %s', redactSecrets_(e.message));
   }
+  // New units in the sheet -> Supabase (T21). Own try/catch: it must never break the status sync above.
+  try {
+    importNewManikins_(supabaseUrl, anonKey, syncJwt, values);
+    props.deleteProperty('LAST_IMPORT_ERROR');
+  } catch (e) {
+    props.setProperty('LAST_IMPORT_ERROR', redactSecrets_(e.message));
+    Logger.log('import new manikins failed: %s', redactSecrets_(e.message));
+  }
   return response.getContentText();
+}
+
+// Sends only ready units; the RPC skips the ones Supabase already has. Columns by verified position:
+// A sap, B unit id, D asset code, E display name, G type, I status. ponytail: positions, not headers (the sheet has a
+// duplicate `model_id` header); if columns move, check these first. Check the Logger line "result=" after each run.
+function importNewManikins_(supabaseUrl, anonKey, syncJwt, values) {
+  const rows = values.map((row) => ({
+    sap_id: String(row[0] ?? '').trim(),
+    model_id: String(row[1] ?? '').trim(),
+    asset_code: String(row[3] ?? '').trim(),
+    display_name: String(row[4] ?? '').trim(),
+    model_type: String(row[6] ?? '').trim(),
+    sheet_status: String(row[8] ?? '').trim()
+  })).filter((row) => row.sap_id && row.model_id && row.display_name && row.sheet_status === 'พร้อมใช้งาน');
+  if (!rows.length) return;
+  const response = UrlFetchApp.fetch(`${supabaseUrl}/rest/v1/rpc/import_new_manikins_from_sheet`, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: `Bearer ${syncJwt}`, apikey: anonKey },
+    payload: JSON.stringify({ p_rows: rows }),
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() >= 300) throw new Error(`Import failed (${response.getResponseCode()}): ${redactSecrets_(response.getContentText())}`);
+  Logger.log('import ok: rows_sent=%s result=%s', rows.length, response.getContentText());
 }
 
 // --- Manikin usage: Sessions tab (written by the timer project) -> Supabase manikin_usage_blocks. ---
